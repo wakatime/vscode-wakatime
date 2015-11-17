@@ -1,0 +1,14 @@
+.vscode/**
+typings/**
+out/test/**
+out/wakatime-master/**
+test/**
+**/*.ts
+**/*.map
+.gitignore
+tsconfig.json
+**.vsix
+npm-debug.**
+node_modules/vsce/**
+node_modules/typescript/**
+.DS_Store

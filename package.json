@@ -1,0 +1,49 @@
+{
+    "name": "vscode-wakatime",
+    "displayName": "WakaTime",
+    "description": "Automatic time tracking and metrics about your programming.",
+    "version": "0.0.1",
+    "publisher": "WakaTime",
+    "author": {
+        "name": "WakaTime"
+    },
+    "categories": [
+        "Other"
+    ],
+    "homepage": "https://wakatime.com/",
+    "bugs": {
+        "url": "https://github.com/wakatime/vscode-wakatime/issues"
+    },
+    "license": "BSD 3-Clause; See LICENSE.",
+    "icon": "images/wakatime-logo.svg",
+    "galleryBanner": {
+        "color": "#AEC3D8",
+        "theme": "light"
+    },
+    "activationEvents": [
+        "*"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/wakatime/vscode-wakatime.git"
+    },
+    "engines": {
+        "vscode": "^0.10.x"
+    },
+    "main": "./out/extension",
+    "scripts": {
+        "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
+        "compile": "node ./node_modules/vscode/bin/compile -watch -p ./"
+    },
+    "dependencies": {
+        "adm-zip": "0.4.7",
+        "ini": "1.3.4",
+        "request": "2.61.0",
+        "rimraf": "2.4.3",
+        "winreg": "alanhamlett/node-winreg#32f1ce32e7190d0d5f080232caf80bb3bc5dfce0"
+    },
+    "devDependencies": {
+        "vscode": "0.10.x",
+        "typescript": "latest"
+    }
+}
