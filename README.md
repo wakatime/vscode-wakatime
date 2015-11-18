@@ -8,11 +8,9 @@ Installation
 ------------
 
 1. Press `F1` or `CMD + Shift + P` and type `install`. Pick `Extensions: Install Extension`.
-
 ![type install](./images/type-install.png)
 
 2. Type `wakatime` and hit `enter`.
-
 ![type wakatime](./images/type-wakatime.png)
 
 3. Restart Visual Studio Code.
