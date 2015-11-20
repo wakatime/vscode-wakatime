@@ -187,7 +187,7 @@ class Dependencies {
         } else {
             this.isCoreLatest(function(isLatest) {
                 if (!isLatest) {
-                    this.installPython();
+                    this.installCore();
                 }
             }.bind(this));
         }
@@ -209,6 +209,7 @@ class Dependencies {
                 callback(pythonLocation);
             } else {
                 let locations = [
+                    __dirname + path.sep + 'python',
                     "pythonw",
                     "python",
                     "/usr/local/bin/python",
@@ -288,7 +289,7 @@ class Dependencies {
     
     private _getPythonLocationFromWinRegHive(hive, callback) {
         let parentKey = '\\SOFTWARE\\Python\\PythonCore';
-        if (os.arch() == 'x64') parentKey = '\\SOFTWARE\\Wow6432Node\\Python\\PythonCore';
+        if (os.arch().indexOf('x64') > -1) parentKey = '\\SOFTWARE\\Wow6432Node\\Python\\PythonCore';
         
         try {
             var regKey = new Winreg({
@@ -462,18 +463,17 @@ class Dependencies {
     private installPython() {
         if (os.type() === 'Windows_NT') {
             let ver = '3.5.0';
-            let url = 'https://www.python.org/ftp/python/' + ver + '/python-' + ver + '.msi';
-            if (os.arch().indexOf('x64') > -1) {
-                url = 'https://www.python.org/ftp/python/' + ver + '/python-' + ver + '.amd64.msi';
-            }
+            let arch = 'win32';
+            if (os.arch().indexOf('x64') > -1) arch = 'amd64';
+            let url = 'https://www.python.org/ftp/python/' + ver + '/python-' + ver + '-embed-' + arch + '.zip';
+
             console.log('Downloading python...');
-            let msiFile = __dirname + path.sep + 'python.msi';
-            return this.downloadFile(url, msiFile, function() {
-                console.log('Installing python...');
-                let args = ['/i', msiFile, '/norestart', '/qb!'];
-                let stdout = child_process.execFileSync('msiexec', args);
-                fs.unlink(msiFile);
-                return console.log('Finished installing python.');
+            let zipFile = __dirname + path.sep + 'python.zip';
+            this.downloadFile(url, zipFile, function() {
+
+                console.log('Extracting python...');
+                this.unzip(zipFile, __dirname + path.sep + 'python');
+                console.log('Finished installing python.');
             });
         } else {
             console.error('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
