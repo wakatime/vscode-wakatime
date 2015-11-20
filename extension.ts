@@ -209,7 +209,7 @@ class Dependencies {
                 callback(pythonLocation);
             } else {
                 let locations = [
-                    __dirname + path.sep + 'python',
+                    __dirname + path.sep + 'python' + path.sep + 'pythonw',
                     "pythonw",
                     "python",
                     "/usr/local/bin/python",
