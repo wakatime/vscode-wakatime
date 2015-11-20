@@ -474,7 +474,7 @@ class Dependencies {
                 console.log('Extracting python...');
                 this.unzip(zipFile, __dirname + path.sep + 'python');
                 console.log('Finished installing python.');
-            });
+            }.bind(this));
         } else {
             console.error('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
             // window.alert('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
