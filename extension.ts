@@ -29,7 +29,7 @@ export function activate(ctx: vscode.ExtensionContext) {
 
 export class WakaTime {
 
-    private version:string = '0.0.2';
+    private version:string = '0.1.0';
     private statusBar:vscode.StatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     private disposable:vscode.Disposable;
     private lastFile:string;
