@@ -7,19 +7,21 @@ Quantify your coding inside Visual Studio Code.
 Installation
 ------------
 
-1. Press `F1` or `CMD + Shift + P` and type `install`. Pick `Extensions: Install Extension`.
-![type install](./images/type-install.png)
+  1. Press `F1` or `CMD + Shift + P` and type `install`. Pick `Extensions: Install Extension`.
+    
+    ![type install](./images/type-install.png)
 
-2. Type `wakatime` and hit `enter`.
-![type wakatime](./images/type-wakatime.png)
+  2. Type `wakatime` and hit `enter`.
+    
+    ![type wakatime](./images/type-wakatime.png)
 
-3. Restart Visual Studio Code.
+  3. Restart Visual Studio Code.
 
-4. Enter your [api key](https://wakatime.com/settings?apikey=true), then press `enter`.
+  4. Enter your [api key](https://wakatime.com/settings?apikey=true), then press `enter`.
 
     (If you already have a WakaTime plugin installed, you won't be prompted for your api key.)
 
-5. Use VSCode like you normally do and your time will automatically be tracked for you.
+  5. Use VSCode like you normally do and your time will automatically be tracked for you.
 
 
 Usage
