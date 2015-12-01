@@ -3,6 +3,13 @@ History
 -------
 
 
+1.0.0 (2015-12-01)
+++++++++++++++++++
+
+- fallback to embedded Python when system installed Python is broken
+- get extension version from package.json instead of hard-coding
+
+
 0.1.2 (2015-11-20)
 ++++++++++++++++++
 
