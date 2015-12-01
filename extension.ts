@@ -29,7 +29,7 @@ export function activate(ctx: vscode.ExtensionContext) {
 
 export class WakaTime {
 
-    private version:string = '0.1.2';
+    private extension = vscode.extensions.getExtension("WakaTime.vscode-wakatime").packageJSON;
     private statusBar:vscode.StatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     private disposable:vscode.Disposable;
     private lastFile:string;
@@ -38,7 +38,7 @@ export class WakaTime {
     private options:Options = new Options();
 
     constructor() {
-        console.log('Initializing WakaTime v' + this.version);
+        console.log('Initializing WakaTime v' + this.extension.version);
         this.statusBar.text = '$(clock) WakaTime Initializing...';
         this.statusBar.show();
         
@@ -103,7 +103,7 @@ export class WakaTime {
             if (pythonBinary) {
         
                 let core = this.dependencies.getCoreLocation();
-                let user_agent = 'vscode/' + vscode.version + ' vscode-wakatime/' + this.version;
+                let user_agent = 'vscode/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
                 let args = [core, '--file', file, '--plugin', user_agent];
                 if (isWrite)
                     args.push('--write');
