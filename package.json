@@ -1,7 +1,7 @@
 {
     "name": "vscode-wakatime",
     "displayName": "WakaTime",
-    "description": "Automatic time tracking and metrics about your programming.",
+    "description": "Metrics, insights, and time tracking automatically generated from your programming activity.",
     "version": "0.1.2",
     "publisher": "WakaTime",
     "author": {

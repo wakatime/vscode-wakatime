@@ -1,7 +1,7 @@
 WakaTime for Visual Studio Code
 ===============================
 
-Quantify your coding inside Visual Studio Code.
+Metrics, insights, and time tracking automatically generated from your programming activity.
 
 
 Installation
