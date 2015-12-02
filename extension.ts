@@ -278,7 +278,6 @@ class Dependencies {
             
         callback(null);
 
-        }.bind(this));
     }
 
     public getCoreLocation() {
