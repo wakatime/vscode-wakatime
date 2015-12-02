@@ -11,7 +11,6 @@ var AdmZip = require('adm-zip');
 var ini = require('ini');
 var request = require('request');
 var rimraf = require('rimraf');
-var Winreg = require('winreg');
 
 
 // this method is called when your extension is activated. activation is
@@ -266,81 +265,19 @@ class Dependencies {
             "\\Python26\\python",
         ];
     
-        // get Python location from Windows Registry
-        this.getPythonLocationFromWinReg(function(pythonLocation) {
-            if (pythonLocation)
-                locations.unshift(pythonLocation);
-        
-            let args = ['--version'];
-            for (var i = 0; i < locations.length; i++) {
-                try {
-                    let stdout = child_process.execFileSync(locations[i], args);
-                    this._cachedPythonLocation = locations[i];
-                    return callback(locations[i]);
-                } catch (e) {
-                    console.warn(e);
-                }
+        let args = ['--version'];
+        for (var i = 0; i < locations.length; i++) {
+            try {
+                let stdout = child_process.execFileSync(locations[i], args);
+                this._cachedPythonLocation = locations[i];
+                return callback(locations[i]);
+            } catch (e) {
+                console.warn(e);
             }
-                
-            callback(null);
-
-        }.bind(this));
-    }
-
-    public getPythonLocationFromWinReg(callback) {
-        if (os.platform() != 'win32') return callback(null);
-
-        this._getPythonLocationFromWinRegHive(Winreg.HKCU, function(pythonBinary) {
-            if (pythonBinary) return callback(pythonBinary);
-            this._getPythonLocationFromWinRegHive(Winreg.HKLM, function(pythonBinary) {
-                callback(pythonBinary);
-            }.bind(this));
-        }.bind(this));
-    }
-    
-    private _getPythonLocationFromWinRegHive(hive, callback) {
-        let parentKey = '\\SOFTWARE\\Python\\PythonCore';
-        if (os.arch().indexOf('x64') > -1) parentKey = '\\SOFTWARE\\Wow6432Node\\Python\\PythonCore';
-        
-        try {
-            var regKey = new Winreg({
-                hive: hive,
-                key: parentKey,
-            });
-            regKey.keys(function (err, items) {
-                if (err) {
-                    console.error('Error Reading WinReg (' + parentKey + '): ' + err.toString());
-                } else {
-                    let keys = [];
-                    for (var i in items) {
-                        keys.push(items[i].key);
-                    }
-                    keys.sort().reverse();
-                    this.getPythonLocationFromWinRegKeys(hive, keys, callback);
-                }
-            }.bind(this));
-        } catch (e) {
-            console.error(e);
         }
-    }
+            
+        callback(null);
 
-    public getPythonLocationFromWinRegKeys(hive, keys, callback) {
-        if (keys.length == 0) return callback(null);
-        
-        let key = keys.shift() + '\\InstallPath';
-        
-        var regKey = new Winreg({
-            hive: hive,
-            key: key,
-        });
-        regKey.get('', function(err, item) {
-            if (err) {
-                console.error('Error Reading WinReg (' + key + '): ' + err.toString());
-                this.getPythonLocationFromWinRegKeys(hive, keys, callback);
-            } else {
-                console.log('Python from from: ' + key);
-                callback(item.value + '\\pythonw');
-            }
         }.bind(this));
     }
 
