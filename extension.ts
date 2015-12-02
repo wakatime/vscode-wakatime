@@ -45,7 +45,10 @@ export class WakaTime {
         this._checkApiKey();
 
         this.dependencies = new Dependencies();
-        this.dependencies.checkAndInstall();
+        this.dependencies.checkAndInstall(function() {
+            this.statusBar.text = '$(clock) WakaTime Initialized';
+            this.statusBar.show();
+        }.bind(this));
 
         this._setupEventListeners();
     }
@@ -181,21 +184,30 @@ class Dependencies {
 
     private _cachedPythonLocation: string;
 
-    public checkAndInstall() {
+    public checkAndInstall(callback) {
+        this.isPythonInstalled(function(isInstalled) {
+            if (!isInstalled) {
+                this.installPython(function() {
+                    this.checkAndInstallCore(callback);
+                }.bind(this));
+            } else {
+                this.checkAndInstallCore(callback);
+            }
+        }.bind(this));
+    }
+
+    public checkAndInstallCore(callback) {
         if (!this.isCoreInstalled()) {
-            this.installCore();
+            this.installCore(callback);
         } else {
             this.isCoreLatest(function(isLatest) {
                 if (!isLatest) {
-                    this.installCore();
+                    this.installCore(callback);
+                } else {
+                    callback();
                 }
             }.bind(this));
         }
-
-        this.isPythonInstalled(function(isInstalled) {
-            if (!isInstalled)
-                this.installPython();
-        }.bind(this));
     }
 
     public getPythonLocation(callback) {
@@ -400,13 +412,14 @@ class Dependencies {
         });
     }
 
-    private installCore = function() {
+    private installCore = function(callback) {
         console.log('Downloading wakatime-core...');
         let url = 'https://github.com/wakatime/wakatime/archive/master.zip';
         let zipFile = __dirname + path.sep + 'wakatime-master.zip';
 
         this.downloadFile(url, zipFile, function() {
             this.extractCore(zipFile);
+            callback();
         }.bind(this));
     }
 
@@ -459,7 +472,7 @@ class Dependencies {
         }.bind(this));
     }
 
-    private installPython() {
+    private installPython(callback) {
         if (os.type() === 'Windows_NT') {
             let ver = '3.5.0';
             let arch = 'win32';
@@ -473,6 +486,9 @@ class Dependencies {
                 console.log('Extracting python...');
                 this.unzip(zipFile, __dirname + path.sep + 'python');
                 console.log('Finished installing python.');
+
+                callback();
+
             }.bind(this));
         } else {
             console.error('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
