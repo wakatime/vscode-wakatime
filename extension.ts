@@ -126,14 +126,24 @@ export class WakaTime {
                         this.statusBar.text = '$(clock) WakaTime Active';
                         let today = new Date();
                         this.statusBar.tooltip = 'Last heartbeat sent at ' + this.formatDate(today);
+                    } else if (code == 102) {
+                        this.statusBar.text = '$(clock) WakaTime Offline, will sync once online.';
+                        console.warn('API Error (102); Check your ~/.wakatime.log file for more details.');
+                    } else if (code == 103) {
+                        this.statusBar.text = '$(clock) WakaTime Error';
+                        let error_msg = 'Config Parsing Error (103); Check your ~/.wakatime.log file for more details.';
+                        this.statusBar.tooltip = error_msg;
+                        console.error(error_msg);
+                    } else if (code == 104) {
+                        this.statusBar.text = '$(clock) WakaTime Error';
+                        let error_msg = 'Invalid API Key (104); Make sure your API Key is correct!';
+                        this.statusBar.tooltip = error_msg;
+                        console.error(error_msg);
                     } else {
                         this.statusBar.text = '$(clock) WakaTime Error';
-                        this.statusBar.tooltip = 'Help -> Toggle Developer Tools for more details';
-                        if (code == 102) {
-                            console.error('API Error (102); Check your ~/.wakatime.log file for more details.');
-                        } else if (code == 103) {
-                            console.error('Config Parsing Error (103); Check your ~/.wakatime.log file for more details.');
-                        }
+                        let error_msg = 'Unknown Error (' + code + '); Check your ~/.wakatime.log file for more details.';
+                        this.statusBar.tooltip = error_msg;
+                        console.error(error_msg);
                     }
                 }.bind(this));
                 
@@ -162,6 +172,9 @@ export class WakaTime {
         if (hour > 11) {
             ampm = 'PM';
             hour = hour - 12;
+            if (hour == 0) {
+                hour = 12;
+            }
         }
         let minute = date.getMinutes();
         if (minute < 10) minute = '0' + minute;
