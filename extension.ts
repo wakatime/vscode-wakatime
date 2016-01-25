@@ -172,9 +172,9 @@ export class WakaTime {
         if (hour > 11) {
             ampm = 'PM';
             hour = hour - 12;
-            if (hour == 0) {
-                hour = 12;
-            }
+        }
+        if (hour == 0) {
+            hour = 12;
         }
         let minute = date.getMinutes();
         if (minute < 10) minute = '0' + minute;
