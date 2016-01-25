@@ -112,13 +112,11 @@ export class WakaTime {
         
                 let process = child_process.execFile(pythonBinary, args, function(error, stdout, stderr) {
                     if (error != null) {
-                        this.statusBar.text = '$(clock) WakaTime Error';
-                        this.statusBar.tooltip = 'Help -> Toggle Developer Tools for more details';
                         if (stderr && stderr.toString() != '')
                             console.error(stderr);
                         if (stdout && stdout.toString() != '')
                             console.error(stdout);
-                        console.error(error);
+                        console.log(error);
                     }
                 }.bind(this));
                 process.on('close', function(code, signal) {
@@ -127,7 +125,7 @@ export class WakaTime {
                         let today = new Date();
                         this.statusBar.tooltip = 'Last heartbeat sent at ' + this.formatDate(today);
                     } else if (code == 102) {
-                        this.statusBar.text = '$(clock) WakaTime Offline, will sync once online.';
+                        this.statusBar.text = '$(clock) WakaTime Offline, coding activity will sync when online.';
                         console.warn('API Error (102); Check your ~/.wakatime.log file for more details.');
                     } else if (code == 103) {
                         this.statusBar.text = '$(clock) WakaTime Error';
