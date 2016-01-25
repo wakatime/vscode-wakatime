@@ -127,12 +127,24 @@ export class WakaTime {
                         let today = new Date();
                         this.statusBar.tooltip = 'Last heartbeat sent at ' + this.formatDate(today);
                     } else {
-                        this.statusBar.text = '$(clock) WakaTime Error';
-                        this.statusBar.tooltip = 'Help -> Toggle Developer Tools for more details';
+                        this.statusBar.text = '$(clock) WakaTime Warning';
+                        this.statusBar.tooltip = 'It seems you are not connected to the internet.';
                         if (code == 102) {
+                            this.statusBar.text = '$(clock) WakaTime Error';
+                            this.statusBar.tooltip = 'Help -> Toggle Developer Tools for more details';
                             console.error('API Error (102); Check your ~/.wakatime.log file for more details.');
                         } else if (code == 103) {
+                            this.statusBar.text = '$(clock) WakaTime Error';
+                            this.statusBar.tooltip = 'Help -> Toggle Developer Tools for more details';
                             console.error('Config Parsing Error (103); Check your ~/.wakatime.log file for more details.');
+                        } else if (code == 401) {
+                            this.statusBar.text = '$(clock) WakaTime Error';
+                            this.statusBar.tooltip = 'Help -> Toggle Developer Tools for more details';
+                            console.error('Unauthorized request (401); Check your ~/.wakatime.log file for more details.');
+                        } else {
+                            this.statusBar.text = '$(clock) WakaTime Error';
+                            this.statusBar.tooltip = 'Help -> Toggle Developer Tools for more details';
+                            console.error('Failure in saving heartbeats offline; Check your ~/.wakatime.log file for more details.');
                         }
                     }
                 }.bind(this));
