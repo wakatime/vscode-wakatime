@@ -3,6 +3,13 @@ History
 -------
 
 
+1.0.3 (2016-01-26)
+++++++++++++++++++
+
+- improve status bar feedback messages
+- upgrade embedded windows python version to 3.5.1
+
+
 1.0.2 (2015-12-02)
 ++++++++++++++++++
 
