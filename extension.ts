@@ -423,7 +423,7 @@ class Dependencies {
 
     private installPython(callback) {
         if (os.type() === 'Windows_NT') {
-            let ver = '3.5.0';
+            let ver = '3.5.1';
             let arch = 'win32';
             if (os.arch().indexOf('x64') > -1) arch = 'amd64';
             let url = 'https://www.python.org/ftp/python/' + ver + '/python-' + ver + '-embed-' + arch + '.zip';
