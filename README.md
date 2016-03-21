@@ -29,7 +29,7 @@ Usage
 
 Visit https://wakatime.com to see your coding activity.
 
-![Project Overview](./images/Screen-Shot-2015-11-14.png)
+![Project Overview](./images/Screen-Shot-2016-03-21.png)
 
 
 Configuring
