@@ -230,51 +230,11 @@ class Dependencies {
             "python",
             "/usr/local/bin/python",
             "/usr/bin/python",
-            "\\python38\\pythonw",
-            "\\Python38\\pythonw",
-            "\\python37\\pythonw",
-            "\\Python37\\pythonw",
-            "\\python36\\pythonw",
-            "\\Python36\\pythonw",
-            "\\python35\\pythonw",
-            "\\Python35\\pythonw",
-            "\\python34\\pythonw",
-            "\\Python34\\pythonw",
-            "\\python33\\pythonw",
-            "\\Python33\\pythonw",
-            "\\python32\\pythonw",
-            "\\Python32\\pythonw",
-            "\\python31\\pythonw",
-            "\\Python31\\pythonw",
-            "\\python30\\pythonw",
-            "\\Python30\\pythonw",
-            "\\python27\\pythonw",
-            "\\Python27\\pythonw",
-            "\\python26\\pythonw",
-            "\\Python26\\pythonw",
-            "\\python38\\python",
-            "\\Python38\\python",
-            "\\python37\\python",
-            "\\Python37\\python",
-            "\\python36\\python",
-            "\\Python36\\python",
-            "\\python35\\python",
-            "\\Python35\\python",
-            "\\python34\\python",
-            "\\Python34\\python",
-            "\\python33\\python",
-            "\\Python33\\python",
-            "\\python32\\python",
-            "\\Python32\\python",
-            "\\python31\\python",
-            "\\Python31\\python",
-            "\\python30\\python",
-            "\\Python30\\python",
-            "\\python27\\python",
-            "\\Python27\\python",
-            "\\python26\\python",
-            "\\Python26\\python",
         ];
+        for (var i=40; i>=26; i--) {
+          locations.push('\\python' + i + '\\pythonw');
+          locations.push('\\Python' + i + '\\pythonw');
+        }
     
         let args = ['--version'];
         for (var i = 0; i < locations.length; i++) {
@@ -282,9 +242,7 @@ class Dependencies {
                 let stdout = child_process.execFileSync(locations[i], args);
                 this._cachedPythonLocation = locations[i];
                 return callback(locations[i]);
-            } catch (e) {
-                console.warn(e);
-            }
+            } catch (e) { }
         }
             
         callback(null);
