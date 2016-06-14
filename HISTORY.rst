@@ -3,6 +3,13 @@ History
 -------
 
 
+1.0.6 (2016-06-14)
+++++++++++++++++++
+
+- Use currently open VSCode project as alternate project when not found from
+  revision control folder.
+
+
 1.0.5 (2016-06-14)
 ++++++++++++++++++
 
