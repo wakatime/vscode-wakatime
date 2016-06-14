@@ -107,8 +107,9 @@ export class WakaTime {
                 let core = this.dependencies.getCoreLocation();
                 let user_agent = 'vscode/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
                 let args = [core, '--file', file, '--plugin', user_agent];
-                if (!!vscode.workspace && !!vscode.workspace.rootPath)
-                    args.push('--project', vscode.workspace.rootPath.match(/([^\/^\\]*)[\/\\]*$/)[1]);
+                let project = this._getProjectName();
+                if (project)
+                    args.push('--alternate-project', project);
                 if (isWrite)
                     args.push('--write');
         
@@ -183,6 +184,14 @@ export class WakaTime {
 
     private _enoughTimePassed(time) {
         return this.lastHeartbeat + 120000 < time;
+    }
+
+    private _getProjectName() {
+        if (vscode.workspace && vscode.workspace.rootPath)
+            try {
+                return vscode.workspace.rootPath.match(/([^\/^\\]*)[\/\\]*$/)[1];
+            } catch (e) {}
+        return null;
     }
 
     public dispose() {
