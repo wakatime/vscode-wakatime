@@ -107,6 +107,8 @@ export class WakaTime {
                 let core = this.dependencies.getCoreLocation();
                 let user_agent = 'vscode/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
                 let args = [core, '--file', file, '--plugin', user_agent];
+                if (!!vscode.workspace && !!vscode.workspace.rootPath)
+                    args.push('--project', vscode.workspace.rootPath.match(/([^\/^\\]*)[\/\\]*$/)[1]);
                 if (isWrite)
                     args.push('--write');
         
