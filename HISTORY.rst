@@ -3,6 +3,14 @@ History
 -------
 
 
+1.0.5 (2016-06-14)
+++++++++++++++++++
+
+- Remove core async to fix bug where core not removed before extracting.
+- Update rimraf to v2.5.2.
+- Upgrade request to v2.72.0.
+
+
 1.0.4 (2016-03-21)
 ++++++++++++++++++
 
