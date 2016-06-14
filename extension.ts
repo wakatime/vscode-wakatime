@@ -323,24 +323,32 @@ class Dependencies {
         let zipFile = __dirname + path.sep + 'wakatime-master.zip';
 
         this.downloadFile(url, zipFile, function() {
-            this.extractCore(zipFile);
-            callback();
+            this.extractCore(zipFile, callback);
         }.bind(this));
     }
 
-    private extractCore(zipFile) {
+    private extractCore(zipFile, callback) {
         console.log('Extracting wakatime-core into "' + __dirname + '"...');
-        this.removeCore();
-        this.unzip(zipFile, __dirname);
-        console.log('Finished extracting wakatime-core.');
+        this.removeCore(() => {
+            this.unzip(zipFile, __dirname, callback);
+            console.log('Finished extracting wakatime-core.');
+        });
     }
 
-    private removeCore() {
+    private removeCore(callback) {
         if (fs.existsSync(__dirname + path.sep + 'wakatime-master')) {
             try {
-                rimraf(__dirname + path.sep + 'wakatime-master');
+                rimraf(__dirname + path.sep + 'wakatime-master', function() {
+                    if (callback != null) {
+                        return callback();
+                    }
+                });
             } catch (e) {
-                console.error(e);
+                console.warn(e);
+            }
+        } else {
+            if (callback != null) {
+                return callback();
             }
         }
     }
@@ -358,7 +366,7 @@ class Dependencies {
         });
     }
 
-    private unzip(file, outputDir) {
+    private unzip(file, outputDir, callback) {
         if (fs.existsSync(file)) {
             try {
                 let zip = new AdmZip(file);
@@ -367,6 +375,9 @@ class Dependencies {
                 return console.error(e);
             } finally {
                 fs.unlink(file);
+                if (callback != null) {
+                    return callback();
+                }
             }
         }
     }
