@@ -3,6 +3,12 @@ History
 -------
 
 
+1.0.7 (2017-02-11)
+++++++++++++++++++
+
+- New command pallet command WakaTime Settings, for changing api key.
+
+
 1.0.6 (2016-06-14)
 ++++++++++++++++++
 
