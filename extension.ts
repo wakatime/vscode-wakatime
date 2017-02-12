@@ -20,6 +20,10 @@ export function activate(ctx: vscode.ExtensionContext) {
     // initialize WakaTime
     let wakatime = new WakaTime();
 
+    ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.settings', function (args) {
+        wakatime.settings();
+    }));
+
     // add to a list of disposables which are disposed when this extension
     // is deactivated again.
     ctx.subscriptions.push(wakatime);
@@ -52,17 +56,26 @@ export class WakaTime {
         this._setupEventListeners();
     }
 
-    private _checkApiKey() {
-        this.options.hasApiKey(function(hasApiKey) {
-            if (!hasApiKey) {
-                this.options.promptForApiKey(function(apiKey) {
-                    this.options.setSetting('settings', 'api_key', apiKey);
-                }.bind(this));
+    public settings(): void {
+        this.options.getSetting('settings', 'api_key', function(err, defaultKey) {
+            if (!this.options.isValidApiKey(defaultKey)) {
+                defaultKey = 'Enter your api key from wakatime.com';
             }
+            this.options.promptForApiKey(function(apiKey) {
+                if (this.options.isValidApiKey(apiKey)) {
+                    this.options.setSetting('settings', 'api_key', apiKey);
+                }
+            }.bind(this), defaultKey);
         }.bind(this));
     }
 
-    private _setupEventListeners() {
+    private _checkApiKey() {
+        this.options.hasApiKey(function(hasApiKey) {
+            if (!hasApiKey) this.settings();
+        }.bind(this));
+    }
+
+    private _setupEventListeners(): void {
         // subscribe to selection change and editor activation events
         let subscriptions: vscode.Disposable[] = [];
         vscode.window.onDidChangeTextEditorSelection(this._onChange, this, subscriptions);
@@ -428,11 +441,17 @@ class Dependencies {
 class Options {
 
     private _configFile = path.join(this.getUserHomeDir(), '.wakatime.cfg');
+    
+    public isValidApiKey(key:string): boolean {
+        if (!key) return false;
+        var re = new RegExp('^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', 'i');
+        return re.test(key);
+    }
 
     public hasApiKey(callback) {
         this.getSetting('settings', 'api_key', function(error, apiKey) {
-            callback(!error);
-        });
+            callback(this.isValidApiKey(apiKey));
+        }.bind(this));
     }
 
     public getSetting(section:string, key:string, callback?) {
@@ -441,7 +460,7 @@ class Options {
 
         fs.readFile(this._configFile, 'utf-8', function(err, content) {
             if (err) {
-                callback(new Error('could not read ~/.wakatime.cfg'), null);
+                if (callback) callback(new Error('could not read ~/.wakatime.cfg'), null);
             } else {
                 let currentSection = '';
                 let lines = content.split('\n');
@@ -453,8 +472,7 @@ class Options {
                       let parts = line.split('=');
                       let currentKey = parts[0].trim();
                       if (currentKey === key && parts.length > 1) {
-                          if (callback)
-                              callback(null, parts[1].trim());
+                          if (callback) callback(null, parts[1].trim());
                           return;
                       }
                     }
@@ -471,7 +489,7 @@ class Options {
 
         fs.readFile(this._configFile, 'utf-8', function(err, content) {
             if (err) {
-                callback(new Error('could not read ~/.wakatime.cfg'));
+                if (callback) callback(new Error('could not read ~/.wakatime.cfg'));
             } else {
 
                 let contents = [];
@@ -489,39 +507,37 @@ class Options {
                         currentSection = line.trim().substring(1, line.trim().length - 1).toLowerCase();
                         contents.push(line);
                     } else if (currentSection === section) {
-                      let parts = line.split('=');
-                      let currentKey = parts[0].trim();
-                      if (currentKey === key) {
-                        if (!found) {
-                          contents.push(key + ' = ' + val);
-                          found = true;
+                        let parts = line.split('=');
+                        let currentKey = parts[0].trim();
+                        if (currentKey === key) {
+                            if (!found) {
+                                contents.push(key + ' = ' + val);
+                                found = true;
+                            }
+                        } else {
+                            contents.push(line);
                         }
-                      } else {
-                        contents.push(line);
-                      }
                     } else {
-                      contents.push(line);
+                        contents.push(line);
                     }
                 }
 
                 if (!found) {
                     if (currentSection !== section) {
-                      contents.push('[' + section + ']');
+                        contents.push('[' + section + ']');
                     }
                     contents.push(key + ' = ' + val);
                 }
 
                 fs.writeFile(this._configFile, contents.join('\n'), function(err2) {
                     if (err) {
-                        if (callback)
-                            callback(new Error('could not write to ~/.wakatime.cfg'));
+                        if (callback) callback(new Error('could not write to ~/.wakatime.cfg'));
                     } else {
-                        if (callback)
-                            callback(null);
+                        if (callback) callback(null);
                     }
                 });
             }
-        });
+        }.bind(this));
     }
 
     public promptForApiKey(callback, defaultKey?:string) {

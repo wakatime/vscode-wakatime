@@ -33,7 +33,16 @@
     "main": "./out/extension",
     "scripts": {
         "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
-        "compile": "node ./node_modules/vscode/bin/compile -watch -p ./"
+        "compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
+        "setup": "mkdir -p ./out/test"
+    },
+    "contributes": {
+        "commands": [
+            {
+                "command": "wakatime.settings",
+                "title": "WakaTime Settings"
+            }
+        ]
     },
     "dependencies": {
         "adm-zip": "0.4.7",
