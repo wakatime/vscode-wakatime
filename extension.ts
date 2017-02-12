@@ -40,7 +40,7 @@ export class WakaTime {
         console.log('Initializing WakaTime v' + this.extension.version);
         this.statusBar.text = '$(clock) WakaTime Initializing...';
         this.statusBar.show();
-        
+
         this._checkApiKey();
 
         this.dependencies = new Dependencies();
@@ -56,7 +56,7 @@ export class WakaTime {
         this.options.hasApiKey(function(hasApiKey) {
             if (!hasApiKey) {
                 this.options.promptForApiKey(function(apiKey) {
-                    this.options.setApiKey(apiKey);
+                    this.options.setSetting('settings', 'api_key', apiKey);
                 }.bind(this));
             }
         }.bind(this));
@@ -101,9 +101,9 @@ export class WakaTime {
 
     private _sendHeartbeat(file, isWrite) {
         this.dependencies.getPythonLocation(function(pythonBinary) {
-            
+
             if (pythonBinary) {
-        
+
                 let core = this.dependencies.getCoreLocation();
                 let user_agent = 'vscode/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
                 let args = [core, '--file', file, '--plugin', user_agent];
@@ -112,7 +112,7 @@ export class WakaTime {
                     args.push('--alternate-project', project);
                 if (isWrite)
                     args.push('--write');
-        
+
                 let process = child_process.execFile(pythonBinary, args, function(error, stdout, stderr) {
                     if (error != null) {
                         if (stderr && stderr.toString() != '')
@@ -147,9 +147,9 @@ export class WakaTime {
                         console.error(error_msg);
                     }
                 }.bind(this));
-                
+
             }
-            
+
         }.bind(this));
     }
 
@@ -246,7 +246,7 @@ class Dependencies {
           locations.push('\\python' + i + '\\pythonw');
           locations.push('\\Python' + i + '\\pythonw');
         }
-    
+
         let args = ['--version'];
         for (var i = 0; i < locations.length; i++) {
             try {
@@ -255,7 +255,7 @@ class Dependencies {
                 return callback(locations[i]);
             } catch (e) { }
         }
-            
+
         callback(null);
 
     }
@@ -272,13 +272,13 @@ class Dependencies {
     private isCoreLatest(callback) {
         this.getPythonLocation(function(pythonBinary) {
             if (pythonBinary) {
-    
+
                 let args = [this.getCoreLocation(), '--version'];
                 child_process.execFile(pythonBinary, args, function(error, stdout, stderr) {
                     if (!(error != null)) {
                         let currentVersion = stderr.toString().trim();
                         console.log('Current wakatime-core version is ' + currentVersion);
-    
+
                         console.log('Checking for updates to wakatime-core...');
                         this.getLatestCoreVersion(function(latestVersion) {
                             if (currentVersion === latestVersion) {
@@ -427,44 +427,101 @@ class Dependencies {
 
 class Options {
 
-    private _apiKey:string;
+    private _configFile = path.join(this.getUserHomeDir(), '.wakatime.cfg');
 
     public hasApiKey(callback) {
-        this.getApiKey(function(error, apiKey) {
+        this.getSetting('settings', 'api_key', function(error, apiKey) {
             callback(!error);
         });
     }
 
-    public getApiKey(callback) {
-        let file = path.join(this.getUserHomeDir(), '.wakatime.cfg');
-        fs.readFile(file, 'utf-8', function(err, content) {
+    public getSetting(section:string, key:string, callback?) {
+        String.prototype.startsWith = function(s) { return this.slice(0, s.length) === s; };
+        String.prototype.endsWith = function(s) { return (s === '') || (this.slice(-s.length) === s); };
+
+        fs.readFile(this._configFile, 'utf-8', function(err, content) {
             if (err) {
                 callback(new Error('could not read ~/.wakatime.cfg'), null);
             } else {
-                let configs = ini.parse(content);
-                if (configs && configs.settings && configs.settings.api_key) {
-                    callback(null, configs.settings.api_key);
-                } else {
-                    callback(new Error('wakatime key not found'), null);
+                let currentSection = '';
+                let lines = content.split('\n');
+                for (var i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    if (line.trim().startsWith('[') && line.trim().endsWith(']')) {
+                        currentSection = line.trim().substring(1, line.trim().length - 1).toLowerCase();
+                    } else if (currentSection === section) {
+                      let parts = line.split('=');
+                      let currentKey = parts[0].trim();
+                      if (currentKey === key && parts.length > 1) {
+                          if (callback)
+                              callback(null, parts[1].trim());
+                          return;
+                      }
+                    }
                 }
+
+                if (callback) callback(null, null);
             }
         });
     }
 
-    public setApiKey(apiKey:string, callback?) {
-        if (apiKey) {
-            let file = path.join(this.getUserHomeDir(), '.wakatime.cfg');
-            let content = '[settings]\napi_key = ' + apiKey;
-            fs.writeFile(file, content, function(err) {
-                if (err) {
-                    if (callback)
-                        callback(new Error('could not write to ~/.wakatime.cfg'));
-                } else {
-                    if (callback)
-                        callback(null);
+    public setSetting(section:string, key:string, val:string, callback?) {
+        String.prototype.startsWith = function(s) { return this.slice(0, s.length) === s; };
+        String.prototype.endsWith = function(s) { return (s === '') || (this.slice(-s.length) === s); };
+
+        fs.readFile(this._configFile, 'utf-8', function(err, content) {
+            if (err) {
+                callback(new Error('could not read ~/.wakatime.cfg'));
+            } else {
+
+                let contents = [];
+                let currentSection = '';
+
+                let found = false;
+                let lines = content.split('\n');
+                for (var i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    if (line.trim().startsWith('[') && line.trim().endsWith(']')) {
+                        if ((currentSection === section) && !found) {
+                            contents.push(key + ' = ' + val);
+                            found = true;
+                        }
+                        currentSection = line.trim().substring(1, line.trim().length - 1).toLowerCase();
+                        contents.push(line);
+                    } else if (currentSection === section) {
+                      let parts = line.split('=');
+                      let currentKey = parts[0].trim();
+                      if (currentKey === key) {
+                        if (!found) {
+                          contents.push(key + ' = ' + val);
+                          found = true;
+                        }
+                      } else {
+                        contents.push(line);
+                      }
+                    } else {
+                      contents.push(line);
+                    }
                 }
-            });
-        }
+
+                if (!found) {
+                    if (currentSection !== section) {
+                      contents.push('[' + section + ']');
+                    }
+                    contents.push(key + ' = ' + val);
+                }
+
+                fs.writeFile(this._configFile, contents.join('\n'), function(err2) {
+                    if (err) {
+                        if (callback)
+                            callback(new Error('could not write to ~/.wakatime.cfg'));
+                    } else {
+                        if (callback)
+                            callback(null);
+                    }
+                });
+            }
+        });
     }
 
     public promptForApiKey(callback, defaultKey?:string) {
