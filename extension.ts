@@ -47,7 +47,7 @@ export class WakaTime {
 
         this._checkApiKey();
 
-        this.dependencies = new Dependencies();
+        this.dependencies = new Dependencies(this.options);
         this.dependencies.checkAndInstall(function() {
             this.statusBar.text = '$(clock) WakaTime Initialized';
             this.statusBar.show();
@@ -217,6 +217,11 @@ export class WakaTime {
 class Dependencies {
 
     private _cachedPythonLocation: string;
+    private options: Options;
+
+    constructor(options:Options) {
+        this.options = options;
+    }
 
     public checkAndInstall(callback) {
         this.isPythonInstalled(function(isInstalled) {
@@ -322,22 +327,26 @@ class Dependencies {
 
     private getLatestCoreVersion(callback) {
         let url = 'https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py';
-        request.get(url, function(error, response, body) {
-            let version = null;
-            if (!error && response.statusCode == 200) {
-                let lines = body.split('\n');
-                for (var i = 0; i < lines.length; i++) {
-                    let re = /^__version_info__ = \('([0-9]+)', '([0-9]+)', '([0-9]+)'\)/g;
-                    let match = re.exec(lines[i]);
-                    if (match != null) {
-                        version = match[1] + '.' + match[2] + '.' + match[3];
-                        if (callback)
-                          return callback(version);
+        this.options.getSetting('settings', 'proxy', function(err, proxy) {
+            let options = {url: url};
+            if (proxy && proxy.trim()) options[proxy] = proxy.trim();
+            request.get(options, function(error, response, body) {
+                let version = null;
+                if (!error && response.statusCode == 200) {
+                    let lines = body.split('\n');
+                    for (var i = 0; i < lines.length; i++) {
+                        let re = /^__version_info__ = \('([0-9]+)', '([0-9]+)', '([0-9]+)'\)/g;
+                        let match = re.exec(lines[i]);
+                        if (match != null) {
+                            version = match[1] + '.' + match[2] + '.' + match[3];
+                            if (callback)
+                              return callback(version);
+                        }
                     }
                 }
-            }
-            if (callback)
-                return callback(version);
+                if (callback)
+                    return callback(version);
+            });
         });
     }
 
@@ -378,14 +387,18 @@ class Dependencies {
     }
 
     private downloadFile(url, outputFile, callback) {
-        let r = request(url);
-        let out = fs.createWriteStream(outputFile);
-        r.pipe(out);
-        return r.on('end', function() {
-            return out.on('finish', function() {
-                if (callback != null) {
-                    return callback();
-                }
+        this.options.getSetting('settings', 'proxy', function(err, proxy) {
+            let options = {url: url};
+            if (proxy && proxy.trim()) options[proxy] = proxy.trim();
+            let r = request.get(options);
+            let out = fs.createWriteStream(outputFile);
+            r.pipe(out);
+            return r.on('end', function() {
+                return out.on('finish', function() {
+                    if (callback != null) {
+                        return callback();
+                    }
+                });
             });
         });
     }
@@ -441,7 +454,7 @@ class Dependencies {
 class Options {
 
     private _configFile = path.join(this.getUserHomeDir(), '.wakatime.cfg');
-    
+
     public isValidApiKey(key:string): boolean {
         if (!key) return false;
         var re = new RegExp('^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', 'i');
