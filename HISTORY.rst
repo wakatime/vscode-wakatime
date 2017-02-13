@@ -3,6 +3,12 @@ History
 -------
 
 
+1.0.8 (2017-02-13)
+++++++++++++++++++
+
+- Use proxy from ~/.wakatime.cfg when downloading dependencies. #13
+
+
 1.0.7 (2017-02-11)
 ++++++++++++++++++
 
