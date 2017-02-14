@@ -49,7 +49,7 @@ First, turn on debug mode:
 
 1. Press CMD+SHIFT+p
 2. Type `wakatime.debug`, and press `Enter`.
-3. Type `true`, then press `Enter`.
+3. Select `true`, then press `Enter`.
 
 Next, open your Developer Console to view logs and errors:
 
