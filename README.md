@@ -8,11 +8,11 @@ Installation
 ------------
 
   1. Press `F1` or `CMD + Shift + P` and type `install`. Pick `Extensions: Install Extension`.
-    
+
     ![type install](./images/type-install.png)
 
   2. Type `wakatime` and hit `enter`.
-    
+
     ![type wakatime](./images/type-wakatime.png)
 
   3. Restart Visual Studio Code.
@@ -35,6 +35,8 @@ Visit https://wakatime.com to see your coding activity.
 Configuring
 -----------
 
+Some settings are available from CMD+SHIFT+p, then typing `wakatime`.
+
 Settings are stored in the INI file at `$HOME/.wakatime.cfg`.
 
 More information can be found from [wakatime core](https://github.com/wakatime/wakatime#configuring).
@@ -43,6 +45,19 @@ More information can be found from [wakatime core](https://github.com/wakatime/w
 Troubleshooting
 ---------------
 
-Open your Developer Console to view errors: `Help -> Toggle Developer Tools`.
+First, turn on debug mode:
 
-For more general troubleshooting information, see [wakatime/wakatime#troubleshooting](https://github.com/wakatime/wakatime#troubleshooting).
+1. Press CMD+SHIFT+p
+2. Type `wakatime.debug`, and press `Enter`.
+3. Type `true`, then press `Enter`.
+
+Next, open your Developer Console to view logs and errors:
+
+`Help -> Toggle Developer Tools`
+
+Errors outside the scope of vscode-wakatime go to `~/.wakatime.log` from [wakatime-cli][cli].
+
+For more general troubleshooting information, see [wakatime/wakatime#troubleshooting][cli].
+
+
+[cli]: https://github.com/wakatime/wakatime#troubleshooting
