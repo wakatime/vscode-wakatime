@@ -3,6 +3,13 @@ History
 -------
 
 
+1.0.10 (2017-02-14)
+++++++++++++++++++
+
+- Fix bug causing logging to always be set to debug level.
+- Update log level when debug setting changed, without requiring restart.
+
+
 1.0.9 (2017-02-14)
 ++++++++++++++++++
 
