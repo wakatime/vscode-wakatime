@@ -94,6 +94,10 @@ export class WakaTime {
                 if (!newVal || newVal.trim() !== 'true')
                     newVal = 'false';
                 this.options.setSetting('settings', 'debug', newVal);
+                if (newVal === 'true')
+                    logger.setLevel('debug');
+                else
+                    logger.setLevel('info');
             }.bind(this), val);
         }.bind(this));
     }
