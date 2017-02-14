@@ -3,6 +3,12 @@ History
 -------
 
 
+1.1.1 (2017-02-14)
+++++++++++++++++++
+
+- Display current debug setting when changing from command pallet.
+
+
 1.1.0 (2017-02-14)
 ++++++++++++++++++
 
