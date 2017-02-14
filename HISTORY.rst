@@ -3,6 +3,12 @@ History
 -------
 
 
+1.0.9 (2017-02-14)
+++++++++++++++++++
+
+- Improve logging, only printing debug messages when debug set to true.
+
+
 1.0.8 (2017-02-13)
 ++++++++++++++++++
 
