@@ -1,6 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import vscode = require('vscode');
+import * as vscode from 'vscode';
 
 import fs = require('fs');
 import os = require('os');
@@ -31,6 +31,10 @@ export function activate(ctx: vscode.ExtensionContext) {
 
         ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.apikey', function (args) {
             wakatime.promptForApiKey();
+        }));
+
+        ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.proxy', function (args) {
+            wakatime.promptForProxy();
         }));
 
         ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.debug', function (args) {
@@ -72,33 +76,81 @@ export class WakaTime {
     }
 
     public promptForApiKey(): void {
-        this.options.getSetting('settings', 'api_key', function(err, defaultKey) {
-            if (!this.isValidApiKey(defaultKey)) {
-                defaultKey = 'Enter your api key from wakatime.com';
-            }
-            let promptOptions = {prompt: 'WakaTime API Key', value: defaultKey};
-            vscode.window.showInputBox(promptOptions).then(function(apiKey) {
-                if (this.isValidApiKey(apiKey)) {
-                    this.options.setSetting('settings', 'api_key', apiKey);
-                }
-            }.bind(this), defaultKey);
+        this.options.getSetting('settings', 'api_key', function(err, defaultVal) {
+            if (this.validateKey(defaultVal) != null)
+                defaultVal = '';
+            let promptOptions = {
+                prompt: 'WakaTime API Key',
+                placeHolder: 'Enter your api key from wakatime.com/settings',
+                value: defaultVal,
+                ignoreFocusOut: true,
+                validateInput: this.validateKey.bind(this),
+            };
+            vscode.window.showInputBox(promptOptions).then(function(val) {
+                if (this.validateKey(val) == null)
+                    this.options.setSetting('settings', 'api_key', val);
+            }.bind(this));
         }.bind(this));
     }
 
+    private validateKey(key:string): string {
+        const err = 'Invalid api key... check https://wakatime.com/settings for your key.';
+        if (!key) return err;
+        const re = new RegExp('^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', 'i');
+        if (!re.test(key))
+            return err;
+        return null;
+    }
+
+    public promptForProxy(): void {
+        this.options.getSetting('settings', 'proxy', function(err, defaultVal) {
+            if (!defaultVal)
+                defaultVal = '';
+            let promptOptions = {
+                prompt: 'WakaTime Proxy',
+                placeHolder: 'Proxy format is https://user:pass@host:port',
+                value: defaultVal,
+                ignoreFocusOut: true,
+                validateInput: this.validateProxy.bind(this),
+            };
+            vscode.window.showInputBox(promptOptions).then(function(val) {
+                if (val || val === '')
+                    this.options.setSetting('settings', 'proxy', val);
+            }.bind(this));
+        }.bind(this));
+    }
+
+    private validateProxy(proxy:string): string {
+        const err = 'Invalid proxy. Must be in the format https://user:pass@host:port';
+        if (!proxy) return err;
+        const re = new RegExp('^https?://([^:@]+(:([^:@])+)?@)?[\\w\\.-]+(:\\d+)?$', 'i');
+        if (!re.test(proxy))
+            return err;
+        return null;
+    }
+
     public promptForDebug(): void {
-        this.options.getSetting('settings', 'debug', function(err, val) {
-            if (!val || val.trim() !== 'true')
-                val = 'false';
-            let promptOptions = {prompt: 'WakaTime Debug', value: val};
-            vscode.window.showInputBox(promptOptions).then(function(newVal) {
-                if (!newVal || newVal.trim() !== 'true')
-                    newVal = 'false';
+        this.options.getSetting('settings', 'debug', function(err, defaultVal) {
+            if (!defaultVal || defaultVal.trim() !== 'true')
+                defaultVal = 'false';
+            let items:string[] = ['true', 'false'];
+            let promptOptions = {
+                prompt: 'WakaTime Debug (Currently ' + defaultVal + ')',
+                placeHolder: 'true or false',
+                value: defaultVal,
+                ignoreFocusOut: true,
+            };
+            vscode.window.showQuickPick(items, promptOptions).then(function(newVal) {
+                if (newVal == null)
+                    return;
                 this.options.setSetting('settings', 'debug', newVal);
-                if (newVal === 'true')
+                if (newVal === 'true') {
                     logger.setLevel('debug');
-                else
+                    logger.debug('Debug enabled');
+                } else {
                     logger.setLevel('info');
-            }.bind(this), val);
+                }
+            }.bind(this));
         }.bind(this));
     }
 
@@ -108,15 +160,9 @@ export class WakaTime {
         }.bind(this));
     }
 
-    private isValidApiKey(key:string): boolean {
-        if (!key) return false;
-        var re = new RegExp('^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', 'i');
-        return re.test(key);
-    }
-
     private hasApiKey(callback) {
         this.options.getSetting('settings', 'api_key', function(error, apiKey) {
-            callback(this.isValidApiKey(apiKey));
+            callback(this.validateKey(apiKey) == null);
         }.bind(this));
     }
 
