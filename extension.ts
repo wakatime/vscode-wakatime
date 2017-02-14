@@ -135,8 +135,7 @@ export class WakaTime {
                 defaultVal = 'false';
             let items:string[] = ['true', 'false'];
             let promptOptions = {
-                prompt: 'WakaTime Debug (Currently ' + defaultVal + ')',
-                placeHolder: 'true or false',
+                placeHolder: 'true or false (Currently ' + defaultVal + ')',
                 value: defaultVal,
                 ignoreFocusOut: true,
             };
