@@ -23,7 +23,7 @@ export function activate(ctx: vscode.ExtensionContext) {
     options = new Options();
     logger = new Logger('info');
     options.getSetting('settings', 'debug', function(error, debug) {
-        if (debug)
+        if (debug && debug.trim() === 'true')
             logger.setLevel('debug');
 
         // initialize WakaTime
