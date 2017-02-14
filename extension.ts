@@ -13,20 +13,35 @@ var request = require('request');
 var rimraf = require('rimraf');
 
 
+var logger:Logger;
+var options:Options;
+
+
 // this method is called when your extension is activated. activation is
 // controlled by the activation events defined in package.json
 export function activate(ctx: vscode.ExtensionContext) {
+    options = new Options();
+    logger = new Logger('info');
+    options.getSetting('settings', 'debug', function(error, debug) {
+        if (debug)
+            logger.setLevel('debug');
 
-    // initialize WakaTime
-    let wakatime = new WakaTime();
+        // initialize WakaTime
+        let wakatime = new WakaTime();
 
-    ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.settings', function (args) {
-        wakatime.settings();
-    }));
+        ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.apikey', function (args) {
+            wakatime.promptForApiKey();
+        }));
 
-    // add to a list of disposables which are disposed when this extension
-    // is deactivated again.
-    ctx.subscriptions.push(wakatime);
+        ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.debug', function (args) {
+            wakatime.promptForDebug();
+        }));
+
+        // add to a list of disposables which are disposed when this extension
+        // is deactivated again.
+        ctx.subscriptions.push(wakatime);
+
+    });
 }
 
 
@@ -41,7 +56,7 @@ export class WakaTime {
     private options:Options = new Options();
 
     constructor() {
-        console.log('Initializing WakaTime v' + this.extension.version);
+        logger.debug('Initializing WakaTime v' + this.extension.version);
         this.statusBar.text = '$(clock) WakaTime Initializing...';
         this.statusBar.show();
 
@@ -56,22 +71,48 @@ export class WakaTime {
         this._setupEventListeners();
     }
 
-    public settings(): void {
+    public promptForApiKey(): void {
         this.options.getSetting('settings', 'api_key', function(err, defaultKey) {
-            if (!this.options.isValidApiKey(defaultKey)) {
+            if (!this.isValidApiKey(defaultKey)) {
                 defaultKey = 'Enter your api key from wakatime.com';
             }
-            this.options.promptForApiKey(function(apiKey) {
-                if (this.options.isValidApiKey(apiKey)) {
+            let promptOptions = {prompt: 'WakaTime API Key', value: defaultKey};
+            vscode.window.showInputBox(promptOptions).then(function(apiKey) {
+                if (this.isValidApiKey(apiKey)) {
                     this.options.setSetting('settings', 'api_key', apiKey);
                 }
             }.bind(this), defaultKey);
         }.bind(this));
     }
 
+    public promptForDebug(): void {
+        this.options.getSetting('settings', 'debug', function(err, val) {
+            if (!val || val.trim() !== 'true')
+                val = 'false';
+            let promptOptions = {prompt: 'WakaTime Debug', value: val};
+            vscode.window.showInputBox(promptOptions).then(function(newVal) {
+                if (!newVal || newVal.trim() !== 'true')
+                    newVal = 'false';
+                this.options.setSetting('settings', 'debug', newVal);
+            }.bind(this), val);
+        }.bind(this));
+    }
+
     private _checkApiKey() {
-        this.options.hasApiKey(function(hasApiKey) {
-            if (!hasApiKey) this.settings();
+        this.hasApiKey(function(hasApiKey) {
+            if (!hasApiKey) this.promptForApiKey();
+        }.bind(this));
+    }
+
+    private isValidApiKey(key:string): boolean {
+        if (!key) return false;
+        var re = new RegExp('^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', 'i');
+        return re.test(key);
+    }
+
+    private hasApiKey(callback) {
+        this.options.getSetting('settings', 'api_key', function(error, apiKey) {
+            callback(this.isValidApiKey(apiKey));
         }.bind(this));
     }
 
@@ -125,14 +166,15 @@ export class WakaTime {
                     args.push('--alternate-project', project);
                 if (isWrite)
                     args.push('--write');
+                logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
 
                 let process = child_process.execFile(pythonBinary, args, function(error, stdout, stderr) {
                     if (error != null) {
                         if (stderr && stderr.toString() != '')
-                            console.error(stderr);
+                            logger.error(stderr);
                         if (stdout && stdout.toString() != '')
-                            console.error(stdout);
-                        console.log(error);
+                            logger.error(stdout);
+                        logger.error(error);
                     }
                 }.bind(this));
                 process.on('close', function(code, signal) {
@@ -142,22 +184,22 @@ export class WakaTime {
                         this.statusBar.tooltip = 'Last heartbeat sent at ' + this.formatDate(today);
                     } else if (code == 102) {
                         this.statusBar.text = '$(clock) WakaTime Offline, coding activity will sync when online.';
-                        console.warn('API Error (102); Check your ~/.wakatime.log file for more details.');
+                        logger.warn('API Error (102); Check your ~/.wakatime.log file for more details.');
                     } else if (code == 103) {
                         this.statusBar.text = '$(clock) WakaTime Error';
                         let error_msg = 'Config Parsing Error (103); Check your ~/.wakatime.log file for more details.';
                         this.statusBar.tooltip = error_msg;
-                        console.error(error_msg);
+                        logger.error(error_msg);
                     } else if (code == 104) {
                         this.statusBar.text = '$(clock) WakaTime Error';
                         let error_msg = 'Invalid API Key (104); Make sure your API Key is correct!';
                         this.statusBar.tooltip = error_msg;
-                        console.error(error_msg);
+                        logger.error(error_msg);
                     } else {
                         this.statusBar.text = '$(clock) WakaTime Error';
                         let error_msg = 'Unknown Error (' + code + '); Check your ~/.wakatime.log file for more details.';
                         this.statusBar.tooltip = error_msg;
-                        console.error(error_msg);
+                        logger.error(error_msg);
                     }
                 }.bind(this));
 
@@ -205,6 +247,37 @@ export class WakaTime {
                 return vscode.workspace.rootPath.match(/([^\/^\\]*)[\/\\]*$/)[1];
             } catch (e) {}
         return null;
+    }
+
+    private obfuscateKey(key:string): string {
+        let newKey = '';
+        if (key) {
+            newKey = key;
+            if (key.length > 4)
+                newKey = 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX' + key.substring(key.length - 4);
+        }
+        return newKey;
+    }
+
+    private wrapArg(arg:string): string {
+        if (arg.indexOf(' ') > -1)
+            arg = '"' + arg + '"'
+        return arg
+    }
+
+    private formatArguments(python:string, args:string[]):string {
+        let clone = args.slice(0);
+        clone.unshift(this.wrapArg(python));
+        let newCmds = [];
+        let lastCmd = '';
+        for (let i = 0; i<clone.length; i++) {
+            if (lastCmd == '--key')
+                newCmds.push(this.wrapArg(this.obfuscateKey(clone[i])));
+            else
+                newCmds.push(this.wrapArg(clone[i]));
+            lastCmd = clone[i];
+        }
+        return newCmds.join(' ');
     }
 
     public dispose() {
@@ -295,20 +368,20 @@ class Dependencies {
                 child_process.execFile(pythonBinary, args, function(error, stdout, stderr) {
                     if (!(error != null)) {
                         let currentVersion = stderr.toString().trim();
-                        console.log('Current wakatime-core version is ' + currentVersion);
+                        logger.debug('Current wakatime-core version is ' + currentVersion);
 
-                        console.log('Checking for updates to wakatime-core...');
+                        logger.debug('Checking for updates to wakatime-core...');
                         this.getLatestCoreVersion(function(latestVersion) {
                             if (currentVersion === latestVersion) {
-                                console.log('wakatime-core is up to date.');
+                                logger.debug('wakatime-core is up to date.');
                                 if (callback)
                                     callback(true);
                             } else if (latestVersion) {
-                                console.log('Found an updated wakatime-core v' + latestVersion);
+                                logger.debug('Found an updated wakatime-core v' + latestVersion);
                                 if (callback)
                                     callback(false);
                             } else {
-                                console.log('Unable to find latest wakatime-core version from GitHub.');
+                                logger.debug('Unable to find latest wakatime-core version from GitHub.');
                                 if (callback)
                                     callback(false);
                             }
@@ -351,7 +424,7 @@ class Dependencies {
     }
 
     private installCore = function(callback) {
-        console.log('Downloading wakatime-core...');
+        logger.debug('Downloading wakatime-core...');
         let url = 'https://github.com/wakatime/wakatime/archive/master.zip';
         let zipFile = __dirname + path.sep + 'wakatime-master.zip';
 
@@ -361,10 +434,10 @@ class Dependencies {
     }
 
     private extractCore(zipFile, callback) {
-        console.log('Extracting wakatime-core into "' + __dirname + '"...');
+        logger.debug('Extracting wakatime-core into "' + __dirname + '"...');
         this.removeCore(() => {
             this.unzip(zipFile, __dirname, callback);
-            console.log('Finished extracting wakatime-core.');
+            logger.debug('Finished extracting wakatime-core.');
         });
     }
 
@@ -377,7 +450,7 @@ class Dependencies {
                     }
                 });
             } catch (e) {
-                console.warn(e);
+                logger.warn(e);
             }
         } else {
             if (callback != null) {
@@ -409,7 +482,7 @@ class Dependencies {
                 let zip = new AdmZip(file);
                 zip.extractAllTo(outputDir, true);
             } catch (e) {
-                return console.error(e);
+                return logger.error(e);
             } finally {
                 fs.unlink(file);
                 if (callback != null) {
@@ -432,19 +505,19 @@ class Dependencies {
             if (os.arch().indexOf('x64') > -1) arch = 'amd64';
             let url = 'https://www.python.org/ftp/python/' + ver + '/python-' + ver + '-embed-' + arch + '.zip';
 
-            console.log('Downloading python...');
+            logger.debug('Downloading python...');
             let zipFile = __dirname + path.sep + 'python.zip';
             this.downloadFile(url, zipFile, function() {
 
-                console.log('Extracting python...');
+                logger.debug('Extracting python...');
                 this.unzip(zipFile, __dirname + path.sep + 'python');
-                console.log('Finished installing python.');
+                logger.debug('Finished installing python.');
 
                 callback();
 
             }.bind(this));
         } else {
-            console.error('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
+            logger.error('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
             // window.alert('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
         }
     }
@@ -454,18 +527,6 @@ class Dependencies {
 class Options {
 
     private _configFile = path.join(this.getUserHomeDir(), '.wakatime.cfg');
-
-    public isValidApiKey(key:string): boolean {
-        if (!key) return false;
-        var re = new RegExp('^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$', 'i');
-        return re.test(key);
-    }
-
-    public hasApiKey(callback) {
-        this.getSetting('settings', 'api_key', function(error, apiKey) {
-            callback(this.isValidApiKey(apiKey));
-        }.bind(this));
-    }
 
     public getSetting(section:string, key:string, callback?) {
         String.prototype.startsWith = function(s) { return this.slice(0, s.length) === s; };
@@ -553,14 +614,63 @@ class Options {
         }.bind(this));
     }
 
-    public promptForApiKey(callback, defaultKey?:string) {
-        let options = {prompt: 'WakaTime API Key', value: defaultKey};
-        vscode.window.showInputBox(options).then(function(apiKey) {
-            callback(apiKey);
-        });
-    }
-
     public getUserHomeDir() {
         return process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || '';
+    }
+}
+
+
+class Logger {
+
+    private _level: string;
+    private levels = {
+        debug: 0,
+        info: 1,
+        warn: 2,
+        error: 3,
+    };
+
+    constructor(level:string) {
+        this.setLevel(level)
+    }
+
+    public setLevel(level:string) {
+        if (level in this.levels) {
+            this._level = level
+        } else {
+            throw new TypeError('Invalid level: ' + level)
+        }
+    }
+
+    public log(level:string, msg:string) {
+        if (!(level in this.levels))
+            throw new TypeError('Invalid level: ' + level)
+
+        const current:number = this.levels[level]
+        const cutoff:number = this.levels[this._level]
+
+        if (current >= cutoff) {
+            msg = '[WakaTime] [' + level.toUpperCase() + '] ' + msg
+            if (level == 'debug') console.log(msg)
+            if (level == 'info') console.info(msg)
+            if (level == 'warn') console.warn(msg)
+            if (level == 'error') console.error(msg)
+        }
+    }
+
+    public debug(msg:string) {
+        this.log('debug', msg)
+    }
+
+    public info(msg:string) {
+        this.log('info', msg)
+    }
+
+    public warn(msg:string) {
+        this.log('warn', msg)
+    }
+
+    public error(msg:string) {
+        this.log('error', msg)
     }
 }

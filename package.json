@@ -39,8 +39,12 @@
     "contributes": {
         "commands": [
             {
-                "command": "wakatime.settings",
-                "title": "WakaTime Settings"
+                "command": "wakatime.apikey",
+                "title": "WakaTime API Key"
+            },
+            {
+                "command": "wakatime.debug",
+                "title": "WakaTime Debug"
             }
         ]
     },
