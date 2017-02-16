@@ -121,9 +121,11 @@ export class WakaTime {
     }
 
     private validateProxy(proxy:string): string {
-        const err = 'Invalid proxy. Must be in the format https://user:pass@host:port';
+        const err = 'Invalid proxy. Valid formats are https://user:pass@host:port or socks5://user:pass@host:port or domain\\user:pass.';
         if (!proxy) return err;
-        const re = new RegExp('^https?://([^:@]+(:([^:@])+)?@)?[\\w\\.-]+(:\\d+)?$', 'i');
+        let re = new RegExp('^((https?|socks5)://)?([^:@]+(:([^:@])+)?@)?[\\w\\.-]+(:\\d+)?$', 'i');
+        if (proxy.indexOf('\\') > -1)
+            re = new RegExp('^.*\\\\.+$', 'i');
         if (!re.test(proxy))
             return err;
         return null;
