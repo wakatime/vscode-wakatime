@@ -613,55 +613,55 @@ class Options {
         String.prototype.endsWith = function(s) { return (s === '') || (this.slice(-s.length) === s); };
 
         fs.readFile(this._configFile, 'utf-8', function(err, content) {
-            if (err) {
-                if (callback) callback(new Error('could not read ~/.wakatime.cfg'));
-            } else {
 
-                let contents = [];
-                let currentSection = '';
+            // ignore errors because config file might not exist yet
+            if (err)
+                content = '';
 
-                let found = false;
-                let lines = content.split('\n');
-                for (var i = 0; i < lines.length; i++) {
-                    let line = lines[i];
-                    if (line.trim().startsWith('[') && line.trim().endsWith(']')) {
-                        if ((currentSection === section) && !found) {
+            let contents = [];
+            let currentSection = '';
+
+            let found = false;
+            let lines = content.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                if (line.trim().startsWith('[') && line.trim().endsWith(']')) {
+                    if ((currentSection === section) && !found) {
+                        contents.push(key + ' = ' + val);
+                        found = true;
+                    }
+                    currentSection = line.trim().substring(1, line.trim().length - 1).toLowerCase();
+                    contents.push(line);
+                } else if (currentSection === section) {
+                    let parts = line.split('=');
+                    let currentKey = parts[0].trim();
+                    if (currentKey === key) {
+                        if (!found) {
                             contents.push(key + ' = ' + val);
                             found = true;
                         }
-                        currentSection = line.trim().substring(1, line.trim().length - 1).toLowerCase();
-                        contents.push(line);
-                    } else if (currentSection === section) {
-                        let parts = line.split('=');
-                        let currentKey = parts[0].trim();
-                        if (currentKey === key) {
-                            if (!found) {
-                                contents.push(key + ' = ' + val);
-                                found = true;
-                            }
-                        } else {
-                            contents.push(line);
-                        }
                     } else {
                         contents.push(line);
                     }
+                } else {
+                    contents.push(line);
                 }
-
-                if (!found) {
-                    if (currentSection !== section) {
-                        contents.push('[' + section + ']');
-                    }
-                    contents.push(key + ' = ' + val);
-                }
-
-                fs.writeFile(this._configFile, contents.join('\n'), function(err2) {
-                    if (err) {
-                        if (callback) callback(new Error('could not write to ~/.wakatime.cfg'));
-                    } else {
-                        if (callback) callback(null);
-                    }
-                });
             }
+
+            if (!found) {
+                if (currentSection !== section) {
+                    contents.push('[' + section + ']');
+                }
+                contents.push(key + ' = ' + val);
+            }
+
+            fs.writeFile(this._configFile, contents.join('\n'), function(err2) {
+                if (err) {
+                    if (callback) callback(new Error('could not write to ~/.wakatime.cfg'));
+                } else {
+                    if (callback) callback(null);
+                }
+            });
         }.bind(this));
     }
 
