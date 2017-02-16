@@ -3,6 +3,13 @@ History
 -------
 
 
+1.1.3 (2017-02-16)
+++++++++++++++++++
+
+- Fix bug preventing settings from being saved when config file not already
+  created.
+
+
 1.1.2 (2017-02-15)
 ++++++++++++++++++
 
