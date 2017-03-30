@@ -21,7 +21,7 @@ Installation
 
     (If you already have a WakaTime plugin installed, you won't be prompted for your api key.)
 
-  5. Use VSCode like you normally do and your time will automatically be tracked for you.
+  5. Use VSCode and your coding activity will be displayed on your [WakaTime dashboard](https://wakatime.com).
 
 
 Usage
