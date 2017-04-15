@@ -53,7 +53,7 @@ First, turn on debug mode:
 
 Next, open your Developer Console to view logs and errors:
 
-`Help -> Toggle Developer Tools`
+`Help → Toggle Developer Tools`
 
 Errors outside the scope of vscode-wakatime go to `~/.wakatime.log` from [wakatime-cli][cli].
 
