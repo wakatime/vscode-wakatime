@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.1.4 (2017-02-23)
+
+- When API Key not entered correctly, re-prompt for api key instead of showing
+  an error.
+
+
 ## 1.1.3 (2017-02-16)
 
 - Fix bug preventing settings from being saved when config file not already
