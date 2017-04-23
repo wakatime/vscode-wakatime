@@ -205,57 +205,61 @@ export class WakaTime {
     }
 
     private _sendHeartbeat(file, isWrite) {
-        this.dependencies.getPythonLocation(function(pythonBinary) {
+        this.hasApiKey(function(hasApiKey) {
+            if (hasApiKey) {
+                this.dependencies.getPythonLocation(function(pythonBinary) {
+                    if (pythonBinary) {
 
-            if (pythonBinary) {
+                        let core = this.dependencies.getCoreLocation();
+                        let user_agent = 'vscode/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
+                        let args = [core, '--file', file, '--plugin', user_agent];
+                        let project = this._getProjectName();
+                        if (project)
+                            args.push('--alternate-project', project);
+                        if (isWrite)
+                            args.push('--write');
+                        logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
 
-                let core = this.dependencies.getCoreLocation();
-                let user_agent = 'vscode/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-                let args = [core, '--file', file, '--plugin', user_agent];
-                let project = this._getProjectName();
-                if (project)
-                    args.push('--alternate-project', project);
-                if (isWrite)
-                    args.push('--write');
-                logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
+                        let process = child_process.execFile(pythonBinary, args, function(error, stdout, stderr) {
+                            if (error != null) {
+                                if (stderr && stderr.toString() != '')
+                                    logger.error(stderr);
+                                if (stdout && stdout.toString() != '')
+                                    logger.error(stdout);
+                                logger.error(error);
+                            }
+                        }.bind(this));
+                        process.on('close', function(code, signal) {
+                            if (code == 0) {
+                                this.statusBar.text = '$(clock) WakaTime Active';
+                                let today = new Date();
+                                this.statusBar.tooltip = 'Last heartbeat sent at ' + this.formatDate(today);
+                            } else if (code == 102) {
+                                this.statusBar.text = '$(clock) WakaTime Offline, coding activity will sync when online.';
+                                logger.warn('API Error (102); Check your ~/.wakatime.log file for more details.');
+                            } else if (code == 103) {
+                                this.statusBar.text = '$(clock) WakaTime Error';
+                                let error_msg = 'Config Parsing Error (103); Check your ~/.wakatime.log file for more details.';
+                                this.statusBar.tooltip = error_msg;
+                                logger.error(error_msg);
+                            } else if (code == 104) {
+                                this.statusBar.text = '$(clock) WakaTime Error';
+                                let error_msg = 'Invalid API Key (104); Make sure your API Key is correct!';
+                                this.statusBar.tooltip = error_msg;
+                                logger.error(error_msg);
+                            } else {
+                                this.statusBar.text = '$(clock) WakaTime Error';
+                                let error_msg = 'Unknown Error (' + code + '); Check your ~/.wakatime.log file for more details.';
+                                this.statusBar.tooltip = error_msg;
+                                logger.error(error_msg);
+                            }
+                        }.bind(this));
 
-                let process = child_process.execFile(pythonBinary, args, function(error, stdout, stderr) {
-                    if (error != null) {
-                        if (stderr && stderr.toString() != '')
-                            logger.error(stderr);
-                        if (stdout && stdout.toString() != '')
-                            logger.error(stdout);
-                        logger.error(error);
                     }
                 }.bind(this));
-                process.on('close', function(code, signal) {
-                    if (code == 0) {
-                        this.statusBar.text = '$(clock) WakaTime Active';
-                        let today = new Date();
-                        this.statusBar.tooltip = 'Last heartbeat sent at ' + this.formatDate(today);
-                    } else if (code == 102) {
-                        this.statusBar.text = '$(clock) WakaTime Offline, coding activity will sync when online.';
-                        logger.warn('API Error (102); Check your ~/.wakatime.log file for more details.');
-                    } else if (code == 103) {
-                        this.statusBar.text = '$(clock) WakaTime Error';
-                        let error_msg = 'Config Parsing Error (103); Check your ~/.wakatime.log file for more details.';
-                        this.statusBar.tooltip = error_msg;
-                        logger.error(error_msg);
-                    } else if (code == 104) {
-                        this.statusBar.text = '$(clock) WakaTime Error';
-                        let error_msg = 'Invalid API Key (104); Make sure your API Key is correct!';
-                        this.statusBar.tooltip = error_msg;
-                        logger.error(error_msg);
-                    } else {
-                        this.statusBar.text = '$(clock) WakaTime Error';
-                        let error_msg = 'Unknown Error (' + code + '); Check your ~/.wakatime.log file for more details.';
-                        this.statusBar.tooltip = error_msg;
-                        logger.error(error_msg);
-                    }
-                }.bind(this));
-
+            } else {
+                this.promptForApiKey();
             }
-
         }.bind(this));
     }
 
