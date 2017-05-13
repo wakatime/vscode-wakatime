@@ -41,6 +41,10 @@ export function activate(ctx: vscode.ExtensionContext) {
             wakatime.promptForDebug();
         }));
 
+        ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.status_bar_icon', function (args) {
+            wakatime.promptStatusBarIcon();
+        }));
+
         // add to a list of disposables which are disposed when this extension
         // is deactivated again.
         ctx.subscriptions.push(wakatime);
@@ -69,7 +73,12 @@ export class WakaTime {
         this.dependencies = new Dependencies(this.options);
         this.dependencies.checkAndInstall(function() {
             this.statusBar.text = '$(clock) WakaTime Initialized';
-            this.statusBar.show();
+            this.options.getSetting('settings', 'status_bar_icon', function(err, val) {
+                if (val && val.trim() !== 'false')
+                    this.statusBar.hide();
+                else
+                    this.statusBar.show();
+            }.bind(this));
         }.bind(this));
 
         this._setupEventListeners();
@@ -150,6 +159,31 @@ export class WakaTime {
                     logger.debug('Debug enabled');
                 } else {
                     logger.setLevel('info');
+                }
+            }.bind(this));
+        }.bind(this));
+    }
+
+    public promptStatusBarIcon(): void {
+        this.options.getSetting('settings', 'status_bar_icon', function(err, defaultVal) {
+            if (!defaultVal || defaultVal.trim() !== 'false')
+                defaultVal = 'true';
+            let items:string[] = ['true', 'false'];
+            let promptOptions = {
+                placeHolder: 'true or false (Currently ' + defaultVal + ')',
+                value: defaultVal,
+                ignoreFocusOut: true,
+            };
+            vscode.window.showQuickPick(items, promptOptions).then(function(newVal) {
+                if (newVal == null)
+                    return;
+                this.options.setSetting('settings', 'status_bar_icon', newVal);
+                if (newVal === 'true') {
+                    this.statusBar.show();
+                    logger.debug('Status bar icon enabled');
+                } else {
+                    this.statusBar.hide();
+                    logger.debug('Status bar icon disabled');
                 }
             }.bind(this));
         }.bind(this));
