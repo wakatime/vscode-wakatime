@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.1.5 (2017-05-13)
+
+- Ability to hide status bar icon by pressing CMD+SHIFT+p then editing the
+  WakaTime Status Bar Icon setting. #17
+
+
 ## 1.1.4 (2017-02-23)
 
 - When API Key not entered correctly, re-prompt for api key instead of showing
