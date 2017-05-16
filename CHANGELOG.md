@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.1.6 (2017-05-16)
+
+- Open Dashboard by pressing CMD+SHIFT+p then selecting WakaTime Dashboard
+  command.
+
+
 ## 1.1.5 (2017-05-13)
 
 - Ability to hide status bar icon by pressing CMD+SHIFT+p then editing the
