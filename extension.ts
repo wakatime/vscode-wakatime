@@ -45,6 +45,10 @@ export function activate(ctx: vscode.ExtensionContext) {
             wakatime.promptStatusBarIcon();
         }));
 
+        ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.dashboard', function (args) {
+            wakatime.openDashboardWebsite();
+        }));
+
         // add to a list of disposables which are disposed when this extension
         // is deactivated again.
         ctx.subscriptions.push(wakatime);
@@ -186,6 +190,25 @@ export class WakaTime {
                     logger.debug('Status bar icon disabled');
                 }
             }.bind(this));
+        }.bind(this));
+    }
+
+    public openDashboardWebsite(): void {
+        var open = 'xdg-open';
+        if (os.type() == 'Windows_NT') {
+            open = 'start';
+        } else if (os.type() == 'Darwin') {
+            open = 'open';
+        }
+        let args = ['https://wakatime.com/'];
+        let process = child_process.execFile(open, args, function(error, stdout, stderr) {
+            if (error != null) {
+                if (stderr && stderr.toString() != '')
+                    logger.error(stderr);
+                if (stdout && stdout.toString() != '')
+                    logger.error(stdout);
+                logger.error(error);
+            }
         }.bind(this));
     }
 

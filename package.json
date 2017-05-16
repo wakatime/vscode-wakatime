@@ -53,6 +53,10 @@
             {
                 "command": "wakatime.status_bar_icon",
                 "title": "WakaTime Status Bar Icon"
+            },
+            {
+                "command": "wakatime.dashboard",
+                "title": "WakaTime Dashboard"
             }
         ]
     },
