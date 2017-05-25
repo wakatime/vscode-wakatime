@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.7 (2017-05-24)
+
+- Add newline to package.json to allow installing plugin without crash.
+
+
 ## 1.1.6 (2017-05-16)
 
 - Open Dashboard by pressing CMD+SHIFT+p then selecting WakaTime Dashboard
