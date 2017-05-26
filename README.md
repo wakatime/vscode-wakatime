@@ -55,9 +55,12 @@ Next, open your Developer Console to view logs and errors:
 
 `Help → Toggle Developer Tools`
 
-Errors outside the scope of vscode-wakatime go to `~/.wakatime.log` from [wakatime-cli][cli].
+Errors outside the scope of vscode-wakatime go to `~/.wakatime.log` from [wakatime-cli][wakatime-cli-help].
 
-For more general troubleshooting information, see [wakatime/wakatime#troubleshooting][cli].
+The [How to Debug Plugins][how to debug] guide shows how to check when coding activity was last received from your editor using the [User Agents API][user agents api].
+For more general troubleshooting info, see the [wakatime-cli Troubleshooting Section][wakatime-cli-help].
 
 
-[cli]: https://github.com/wakatime/wakatime#troubleshooting
+[wakatime-cli-help]: https://github.com/wakatime/wakatime#troubleshooting
+[how to debug]: https://wakatime.com/faq#debug-plugins
+[user agents api]: https://wakatime.com/developers#user_agents
