@@ -195,7 +195,7 @@ export class WakaTime {
 
     public openDashboardWebsite(): void {
         var open = 'xdg-open';
-        if (os.type() == 'Windows_NT') {
+        if (Dependencies.isWindows()) {
             open = 'start';
         } else if (os.type() == 'Darwin') {
             open = 'open';
@@ -275,6 +275,9 @@ export class WakaTime {
                             args.push('--alternate-project', project);
                         if (isWrite)
                             args.push('--write');
+                        if (Dependencies.isWindows())
+                            args.push('--config', this.options.getConfigFile());
+
                         logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
 
                         let process = child_process.execFile(pythonBinary, args, function(error, stdout, stderr) {
@@ -472,6 +475,10 @@ class Dependencies {
         return fs.existsSync(this.getCoreLocation());
     }
 
+    public static isWindows() {
+        return os.type() === 'Windows_NT';
+    }
+
     private isCoreLatest(callback) {
         this.getPythonLocation(function(pythonBinary) {
             if (pythonBinary) {
@@ -611,7 +618,7 @@ class Dependencies {
     }
 
     private installPython(callback) {
-        if (os.type() === 'Windows_NT') {
+        if (Dependencies.isWindows()) {
             let ver = '3.5.1';
             let arch = 'win32';
             if (os.arch().indexOf('x64') > -1) arch = 'amd64';
@@ -644,7 +651,7 @@ class Options {
         String.prototype.startsWith = function(s) { return this.slice(0, s.length) === s; };
         String.prototype.endsWith = function(s) { return (s === '') || (this.slice(-s.length) === s); };
 
-        fs.readFile(this._configFile, 'utf-8', function(err, content) {
+        fs.readFile(this.getConfigFile(), 'utf-8', function(err, content) {
             if (err) {
                 if (callback) callback(new Error('could not read ~/.wakatime.cfg'), null);
             } else {
@@ -673,7 +680,7 @@ class Options {
         String.prototype.startsWith = function(s) { return this.slice(0, s.length) === s; };
         String.prototype.endsWith = function(s) { return (s === '') || (this.slice(-s.length) === s); };
 
-        fs.readFile(this._configFile, 'utf-8', function(err, content) {
+        fs.readFile(this.getConfigFile(), 'utf-8', function(err, content) {
 
             // ignore errors because config file might not exist yet
             if (err)
@@ -716,7 +723,7 @@ class Options {
                 contents.push(key + ' = ' + val);
             }
 
-            fs.writeFile(this._configFile, contents.join('\n'), function(err2) {
+            fs.writeFile(this.getConfigFile(), contents.join('\n'), function(err2) {
                 if (err) {
                     if (callback) callback(new Error('could not write to ~/.wakatime.cfg'));
                 } else {
@@ -726,8 +733,12 @@ class Options {
         }.bind(this));
     }
 
+    public getConfigFile() {
+        return this._configFile;
+    }
+
     public getUserHomeDir() {
-        return process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || '';
+        return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || '';
     }
 }
 
