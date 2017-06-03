@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.8 (2017-06-02)
+
+- Force Python to use same config file as Vscode on Windows. #18
+
+
 ## 1.1.7 (2017-05-24)
 
 - Add newline to package.json to allow installing plugin without crash.
