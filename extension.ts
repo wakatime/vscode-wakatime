@@ -276,7 +276,7 @@ export class WakaTime {
                         if (isWrite)
                             args.push('--write');
                         if (Dependencies.isWindows())
-                            args.push('--config', this.options.getConfigFile());
+                            args.push('--config', this.options.getConfigFile(), '--logfile', this.options.getLogFile());
 
                         logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
 
@@ -646,6 +646,7 @@ class Dependencies {
 class Options {
 
     private _configFile = path.join(this.getUserHomeDir(), '.wakatime.cfg');
+    private _logFile = path.join(this.getUserHomeDir(), '.wakatime.log');
 
     public getSetting(section:string, key:string, callback?) {
         String.prototype.startsWith = function(s) { return this.slice(0, s.length) === s; };
@@ -734,6 +735,10 @@ class Options {
     }
 
     public getConfigFile() {
+        return this._configFile;
+    }
+
+    public getLogFile() {
         return this._configFile;
     }
 
