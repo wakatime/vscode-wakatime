@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.9 (2017-06-11)
+
+- Fix bug which inverted status bar icon setting. #19
+
+
 ## 1.1.8 (2017-06-02)
 
 - Force Python to use same config file as Vscode on Windows. #18
