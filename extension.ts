@@ -78,7 +78,7 @@ export class WakaTime {
         this.dependencies.checkAndInstall(() => {
             this.statusBar.text = '$(clock) WakaTime Initialized';
             this.options.getSetting('settings', 'status_bar_icon', (err, val) => {
-                if (val && val.trim() !== 'false')
+                if (val && val.trim() == 'false')
                     this.statusBar.hide();
                 else
                     this.statusBar.show();
