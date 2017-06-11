@@ -75,21 +75,21 @@ export class WakaTime {
         this._checkApiKey();
 
         this.dependencies = new Dependencies(this.options);
-        this.dependencies.checkAndInstall(function() {
+        this.dependencies.checkAndInstall(() => {
             this.statusBar.text = '$(clock) WakaTime Initialized';
-            this.options.getSetting('settings', 'status_bar_icon', function(err, val) {
+            this.options.getSetting('settings', 'status_bar_icon', (err, val) => {
                 if (val && val.trim() !== 'false')
                     this.statusBar.hide();
                 else
                     this.statusBar.show();
-            }.bind(this));
-        }.bind(this));
+            });
+        });
 
         this._setupEventListeners();
     }
 
     public promptForApiKey(): void {
-        this.options.getSetting('settings', 'api_key', function(err, defaultVal) {
+        this.options.getSetting('settings', 'api_key', (err, defaultVal) => {
             if (this.validateKey(defaultVal) != null)
                 defaultVal = '';
             let promptOptions = {
@@ -99,11 +99,11 @@ export class WakaTime {
                 ignoreFocusOut: true,
                 validateInput: this.validateKey.bind(this),
             };
-            vscode.window.showInputBox(promptOptions).then(function(val) {
+            vscode.window.showInputBox(promptOptions).then((val) => {
                 if (this.validateKey(val) == null)
                     this.options.setSetting('settings', 'api_key', val);
-            }.bind(this));
-        }.bind(this));
+            });
+        });
     }
 
     private validateKey(key:string): string {
@@ -116,7 +116,7 @@ export class WakaTime {
     }
 
     public promptForProxy(): void {
-        this.options.getSetting('settings', 'proxy', function(err, defaultVal) {
+        this.options.getSetting('settings', 'proxy', (err, defaultVal) => {
             if (!defaultVal)
                 defaultVal = '';
             let promptOptions = {
@@ -126,11 +126,11 @@ export class WakaTime {
                 ignoreFocusOut: true,
                 validateInput: this.validateProxy.bind(this),
             };
-            vscode.window.showInputBox(promptOptions).then(function(val) {
+            vscode.window.showInputBox(promptOptions).then((val) => {
                 if (val || val === '')
                     this.options.setSetting('settings', 'proxy', val);
-            }.bind(this));
-        }.bind(this));
+            });
+        });
     }
 
     private validateProxy(proxy:string): string {
@@ -145,7 +145,7 @@ export class WakaTime {
     }
 
     public promptForDebug(): void {
-        this.options.getSetting('settings', 'debug', function(err, defaultVal) {
+        this.options.getSetting('settings', 'debug', (err, defaultVal) => {
             if (!defaultVal || defaultVal.trim() !== 'true')
                 defaultVal = 'false';
             let items:string[] = ['true', 'false'];
@@ -154,7 +154,7 @@ export class WakaTime {
                 value: defaultVal,
                 ignoreFocusOut: true,
             };
-            vscode.window.showQuickPick(items, promptOptions).then(function(newVal) {
+            vscode.window.showQuickPick(items, promptOptions).then((newVal) => {
                 if (newVal == null)
                     return;
                 this.options.setSetting('settings', 'debug', newVal);
@@ -164,12 +164,12 @@ export class WakaTime {
                 } else {
                     logger.setLevel('info');
                 }
-            }.bind(this));
-        }.bind(this));
+            });
+        });
     }
 
     public promptStatusBarIcon(): void {
-        this.options.getSetting('settings', 'status_bar_icon', function(err, defaultVal) {
+        this.options.getSetting('settings', 'status_bar_icon', (err, defaultVal) => {
             if (!defaultVal || defaultVal.trim() !== 'false')
                 defaultVal = 'true';
             let items:string[] = ['true', 'false'];
@@ -178,7 +178,7 @@ export class WakaTime {
                 value: defaultVal,
                 ignoreFocusOut: true,
             };
-            vscode.window.showQuickPick(items, promptOptions).then(function(newVal) {
+            vscode.window.showQuickPick(items, promptOptions).then((newVal) => {
                 if (newVal == null)
                     return;
                 this.options.setSetting('settings', 'status_bar_icon', newVal);
@@ -189,8 +189,8 @@ export class WakaTime {
                     this.statusBar.hide();
                     logger.debug('Status bar icon disabled');
                 }
-            }.bind(this));
-        }.bind(this));
+            });
+        });
     }
 
     public openDashboardWebsite(): void {
@@ -201,27 +201,27 @@ export class WakaTime {
             open = 'open';
         }
         let args = ['https://wakatime.com/'];
-        let process = child_process.execFile(open, args, function(error, stdout, stderr) {
+        let process = child_process.execFile(open, args, (error, stdout, stderr) => {
             if (error != null) {
                 if (stderr && stderr.toString() != '')
-                    logger.error(stderr);
+                    logger.error(stderr.toString());
                 if (stdout && stdout.toString() != '')
-                    logger.error(stdout);
-                logger.error(error);
+                    logger.error(stdout.toString());
+                logger.error(error.toString());
             }
-        }.bind(this));
+        });
     }
 
     private _checkApiKey() {
-        this.hasApiKey(function(hasApiKey) {
+        this.hasApiKey((hasApiKey) => {
             if (!hasApiKey) this.promptForApiKey();
-        }.bind(this));
+        });
     }
 
     private hasApiKey(callback) {
-        this.options.getSetting('settings', 'api_key', function(error, apiKey) {
+        this.options.getSetting('settings', 'api_key', (error, apiKey) => {
             callback(this.validateKey(apiKey) == null);
-        }.bind(this));
+        });
     }
 
     private _setupEventListeners(): void {
@@ -262,9 +262,9 @@ export class WakaTime {
     }
 
     private _sendHeartbeat(file, isWrite) {
-        this.hasApiKey(function(hasApiKey) {
+        this.hasApiKey((hasApiKey) => {
             if (hasApiKey) {
-                this.dependencies.getPythonLocation(function(pythonBinary) {
+                this.dependencies.getPythonLocation((pythonBinary) => {
                     if (pythonBinary) {
 
                         let core = this.dependencies.getCoreLocation();
@@ -280,16 +280,16 @@ export class WakaTime {
 
                         logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
 
-                        let process = child_process.execFile(pythonBinary, args, function(error, stdout, stderr) {
+                        let process = child_process.execFile(pythonBinary, args, (error, stdout, stderr) => {
                             if (error != null) {
                                 if (stderr && stderr.toString() != '')
-                                    logger.error(stderr);
+                                    logger.error(stderr.toString());
                                 if (stdout && stdout.toString() != '')
-                                    logger.error(stdout);
-                                logger.error(error);
+                                    logger.error(stdout.toString());
+                                logger.error(error.toString());
                             }
-                        }.bind(this));
-                        process.on('close', function(code, signal) {
+                        });
+                        process.on('close', (code, signal) => {
                             if (code == 0) {
                                 this.statusBar.text = '$(clock) WakaTime Active';
                                 let today = new Date();
@@ -313,14 +313,14 @@ export class WakaTime {
                                 this.statusBar.tooltip = error_msg;
                                 logger.error(error_msg);
                             }
-                        }.bind(this));
+                        });
 
                     }
-                }.bind(this));
+                });
             } else {
                 this.promptForApiKey();
             }
-        }.bind(this));
+        });
     }
 
     private formatDate(date) {
@@ -406,34 +406,35 @@ class Dependencies {
 
     private _cachedPythonLocation: string;
     private options: Options;
+    private _dirname = __dirname;
 
     constructor(options:Options) {
         this.options = options;
     }
 
     public checkAndInstall(callback) {
-        this.isPythonInstalled(function(isInstalled) {
+        this.isPythonInstalled((isInstalled) => {
             if (!isInstalled) {
-                this.installPython(function() {
+                this.installPython(() => {
                     this.checkAndInstallCore(callback);
-                }.bind(this));
+                });
             } else {
                 this.checkAndInstallCore(callback);
             }
-        }.bind(this));
+        });
     }
 
     public checkAndInstallCore(callback) {
         if (!this.isCoreInstalled()) {
             this.installCore(callback);
         } else {
-            this.isCoreLatest(function(isLatest) {
+            this.isCoreLatest((isLatest) => {
                 if (!isLatest) {
                     this.installCore(callback);
                 } else {
                     callback();
                 }
-            }.bind(this));
+            });
         }
     }
 
@@ -442,7 +443,7 @@ class Dependencies {
             return callback(this._cachedPythonLocation);
 
         let locations = [
-            __dirname + path.sep + 'python' + path.sep + 'pythonw',
+            this._dirname + path.sep + 'python' + path.sep + 'pythonw',
             "pythonw",
             "python",
             "/usr/local/bin/python",
@@ -463,11 +464,10 @@ class Dependencies {
         }
 
         callback(null);
-
     }
 
     public getCoreLocation() {
-        let dir = __dirname + path.sep + 'wakatime-master' + path.sep + 'wakatime' + path.sep + 'cli.py';
+        let dir = this._dirname + path.sep + 'wakatime-master' + path.sep + 'wakatime' + path.sep + 'cli.py';
         return dir;
     }
 
@@ -480,11 +480,11 @@ class Dependencies {
     }
 
     private isCoreLatest(callback) {
-        this.getPythonLocation(function(pythonBinary) {
+        this.getPythonLocation((pythonBinary) => {
             if (pythonBinary) {
 
                 let args = [this.getCoreLocation(), '--version'];
-                child_process.execFile(pythonBinary, args, function(error, stdout, stderr) {
+                child_process.execFile(pythonBinary, args, (error, stdout, stderr) => {
                     if (!(error != null)) {
                         let currentVersion = stderr.toString().trim();
                         logger.debug('Current wakatime-core version is ' + currentVersion);
@@ -509,12 +509,12 @@ class Dependencies {
                         if (callback)
                             callback(false);
                     }
-                }.bind(this));
+                });
             } else {
                 if (callback)
                     callback(false);
             }
-        }.bind(this));
+        });
     }
 
     private getLatestCoreVersion(callback) {
@@ -545,25 +545,25 @@ class Dependencies {
     private installCore = function(callback) {
         logger.debug('Downloading wakatime-core...');
         let url = 'https://github.com/wakatime/wakatime/archive/master.zip';
-        let zipFile = __dirname + path.sep + 'wakatime-master.zip';
+        let zipFile = this._dirname + path.sep + 'wakatime-master.zip';
 
-        this.downloadFile(url, zipFile, function() {
+        this.downloadFile(url, zipFile, () => {
             this.extractCore(zipFile, callback);
-        }.bind(this));
+        });
     }
 
     private extractCore(zipFile, callback) {
-        logger.debug('Extracting wakatime-core into "' + __dirname + '"...');
+        logger.debug('Extracting wakatime-core into "' + this._dirname + '"...');
         this.removeCore(() => {
-            this.unzip(zipFile, __dirname, callback);
+            this.unzip(zipFile, this._dirname, callback);
             logger.debug('Finished extracting wakatime-core.');
         });
     }
 
     private removeCore(callback) {
-        if (fs.existsSync(__dirname + path.sep + 'wakatime-master')) {
+        if (fs.existsSync(this._dirname + path.sep + 'wakatime-master')) {
             try {
-                rimraf(__dirname + path.sep + 'wakatime-master', function() {
+                rimraf(this._dirname + path.sep + 'wakatime-master', () => {
                     if (callback != null) {
                         return callback();
                     }
@@ -595,7 +595,7 @@ class Dependencies {
         });
     }
 
-    private unzip(file, outputDir, callback) {
+    private unzip(file, outputDir, callback=null) {
         if (fs.existsSync(file)) {
             try {
                 let zip = new AdmZip(file);
@@ -612,9 +612,9 @@ class Dependencies {
     }
 
     private isPythonInstalled(callback) {
-        this.getPythonLocation(function(pythonBinary) {
+        this.getPythonLocation((pythonBinary) => {
             callback(!!pythonBinary);
-        }.bind(this));
+        });
     }
 
     private installPython(callback) {
@@ -625,16 +625,16 @@ class Dependencies {
             let url = 'https://www.python.org/ftp/python/' + ver + '/python-' + ver + '-embed-' + arch + '.zip';
 
             logger.debug('Downloading python...');
-            let zipFile = __dirname + path.sep + 'python.zip';
-            this.downloadFile(url, zipFile, function() {
+            let zipFile = this._dirname + path.sep + 'python.zip';
+            this.downloadFile(url, zipFile, () => {
 
                 logger.debug('Extracting python...');
-                this.unzip(zipFile, __dirname + path.sep + 'python');
+                this.unzip(zipFile, this._dirname + path.sep + 'python');
                 logger.debug('Finished installing python.');
 
                 callback();
 
-            }.bind(this));
+            });
         } else {
             logger.error('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
             // window.alert('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
@@ -681,7 +681,7 @@ class Options {
         String.prototype.startsWith = function(s) { return this.slice(0, s.length) === s; };
         String.prototype.endsWith = function(s) { return (s === '') || (this.slice(-s.length) === s); };
 
-        fs.readFile(this.getConfigFile(), 'utf-8', function(err, content) {
+        fs.readFile(this.getConfigFile(), 'utf-8', (err, content) => {
 
             // ignore errors because config file might not exist yet
             if (err)
@@ -731,7 +731,7 @@ class Options {
                     if (callback) callback(null);
                 }
             });
-        }.bind(this));
+        });
     }
 
     public getConfigFile() {
