@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.10 (2017-06-12)
+
+- Prevent corrupting config file with log messages. #20
+
+
 ## 1.1.9 (2017-06-11)
 
 - Fix bug which inverted status bar icon setting. #19
