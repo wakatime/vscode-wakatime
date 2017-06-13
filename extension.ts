@@ -739,7 +739,7 @@ class Options {
     }
 
     public getLogFile() {
-        return this._configFile;
+        return this._logFile;
     }
 
     public getUserHomeDir() {
