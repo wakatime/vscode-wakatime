@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.12 (2017-06-17)
+
+- Fix Open WakaTime Dashboard command on Windows.
+
+
 ## 1.1.11 (2017-06-16)
 
 - Setup custom commands before initializing plugin, so they still work even
