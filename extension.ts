@@ -198,13 +198,14 @@ export class WakaTime {
     }
 
     public openDashboardWebsite(): void {
-        var open = 'xdg-open';
+        let open = 'xdg-open';
+        let args = ['https://wakatime.com/'];
         if (Dependencies.isWindows()) {
-            open = 'start';
+            open = 'cmd';
+            args.unshift('/c', 'start', '""');
         } else if (os.type() == 'Darwin') {
             open = 'open';
         }
-        let args = ['https://wakatime.com/'];
         let process = child_process.execFile(open, args, (error, stdout, stderr) => {
             if (error != null) {
                 if (stderr && stderr.toString() != '')
