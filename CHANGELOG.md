@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.1.11 (2017-06-16)
+
+- Setup custom commands before initializing plugin, so they still work even
+  if initializing fails.
+
+
 ## 1.1.10 (2017-06-12)
 
 - Prevent corrupting config file with log messages. #20
