@@ -22,37 +22,38 @@ var options:Options;
 export function activate(ctx: vscode.ExtensionContext) {
     options = new Options();
     logger = new Logger('info');
+
+    // initialize WakaTime
+    let wakatime = new WakaTime();
+
+    ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.apikey', function (args) {
+        wakatime.promptForApiKey();
+    }));
+
+    ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.proxy', function (args) {
+        wakatime.promptForProxy();
+    }));
+
+    ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.debug', function (args) {
+        wakatime.promptForDebug();
+    }));
+
+    ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.status_bar_icon', function (args) {
+        wakatime.promptStatusBarIcon();
+    }));
+
+    ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.dashboard', function (args) {
+        wakatime.openDashboardWebsite();
+    }));
+
+    // add to a list of disposables which are disposed when this extension
+    // is deactivated again.
+    ctx.subscriptions.push(wakatime);
+
     options.getSetting('settings', 'debug', function(error, debug) {
         if (debug && debug.trim() === 'true')
             logger.setLevel('debug');
-
-        // initialize WakaTime
-        let wakatime = new WakaTime();
-
-        ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.apikey', function (args) {
-            wakatime.promptForApiKey();
-        }));
-
-        ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.proxy', function (args) {
-            wakatime.promptForProxy();
-        }));
-
-        ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.debug', function (args) {
-            wakatime.promptForDebug();
-        }));
-
-        ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.status_bar_icon', function (args) {
-            wakatime.promptStatusBarIcon();
-        }));
-
-        ctx.subscriptions.push(vscode.commands.registerCommand('wakatime.dashboard', function (args) {
-            wakatime.openDashboardWebsite();
-        }));
-
-        // add to a list of disposables which are disposed when this extension
-        // is deactivated again.
-        ctx.subscriptions.push(wakatime);
-
+        wakatime.initialize();
     });
 }
 
@@ -68,6 +69,9 @@ export class WakaTime {
     private options:Options = new Options();
 
     constructor() {
+    }
+
+    public initialize(): void {
         logger.debug('Initializing WakaTime v' + this.extension.version);
         this.statusBar.text = '$(clock) WakaTime Initializing...';
         this.statusBar.show();
