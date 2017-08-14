@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.13 (2017-08-14)
+
+- Use proxy when downloading dependencies. #22 #13
+
+
 ## 1.1.12 (2017-06-17)
 
 - Fix Open WakaTime Dashboard command on Windows.
