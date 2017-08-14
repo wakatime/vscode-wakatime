@@ -526,7 +526,7 @@ class Dependencies {
         let url = 'https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py';
         this.options.getSetting('settings', 'proxy', function(err, proxy) {
             let options = {url: url};
-            if (proxy && proxy.trim()) options[proxy] = proxy.trim();
+            if (proxy && proxy.trim()) options['proxy'] = proxy.trim();
             request.get(options, function(error, response, body) {
                 let version = null;
                 if (!error && response.statusCode == 200) {
@@ -586,7 +586,7 @@ class Dependencies {
     private downloadFile(url, outputFile, callback) {
         this.options.getSetting('settings', 'proxy', function(err, proxy) {
             let options = {url: url};
-            if (proxy && proxy.trim()) options[proxy] = proxy.trim();
+            if (proxy && proxy.trim()) options['proxy'] = proxy.trim();
             let r = request.get(options);
             let out = fs.createWriteStream(outputFile);
             r.pipe(out);
