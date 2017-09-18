@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.15 (2017-09-18)
+
+- Fix install instructions for new marketplace markdown parser.
+
+
 ## 1.1.14 (2017-09-18)
 
 - SVG logos no longer supported, using PNG instead.
