@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.14 (2017-09-18)
+
+- SVG logos no longer supported, using PNG instead.
+
+
 ## 1.1.13 (2017-08-14)
 
 - Use proxy when downloading dependencies. #22 #13
