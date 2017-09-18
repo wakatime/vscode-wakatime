@@ -15,7 +15,7 @@
         "url": "https://github.com/wakatime/vscode-wakatime/issues"
     },
     "license": "BSD 3-Clause; See LICENSE.",
-    "icon": "images/wakatime-logo.svg",
+    "icon": "images/wakatime-logo.png",
     "galleryBanner": {
         "color": "#AEC3D8",
         "theme": "light"
