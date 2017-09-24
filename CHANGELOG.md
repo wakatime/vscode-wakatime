@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.16 (2017-09-24)
+
+- Prevent side-effects from adding methods to built-in String.prototype. #26
+
+
 ## 1.1.15 (2017-09-18)
 
 - Fix install instructions for new marketplace markdown parser.
