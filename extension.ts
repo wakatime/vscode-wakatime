@@ -654,10 +654,7 @@ class Options {
     private _logFile = path.join(this.getUserHomeDir(), '.wakatime.log');
 
     public getSetting(section:string, key:string, callback?) {
-        String.prototype.startsWith = function(s) { return this.slice(0, s.length) === s; };
-        String.prototype.endsWith = function(s) { return (s === '') || (this.slice(-s.length) === s); };
-
-        fs.readFile(this.getConfigFile(), 'utf-8', function(err, content) {
+        fs.readFile(this.getConfigFile(), 'utf-8', (err, content) => {
             if (err) {
                 if (callback) callback(new Error('could not read ~/.wakatime.cfg'), null);
             } else {
@@ -665,7 +662,7 @@ class Options {
                 let lines = content.split('\n');
                 for (var i = 0; i < lines.length; i++) {
                     let line = lines[i];
-                    if (line.trim().startsWith('[') && line.trim().endsWith(']')) {
+                    if (this.startsWith(line.trim(), '[') && this.endsWith(line.trim(), ']')) {
                         currentSection = line.trim().substring(1, line.trim().length - 1).toLowerCase();
                     } else if (currentSection === section) {
                       let parts = line.split('=');
@@ -683,9 +680,6 @@ class Options {
     }
 
     public setSetting(section:string, key:string, val:string, callback?) {
-        String.prototype.startsWith = function(s) { return this.slice(0, s.length) === s; };
-        String.prototype.endsWith = function(s) { return (s === '') || (this.slice(-s.length) === s); };
-
         fs.readFile(this.getConfigFile(), 'utf-8', (err, content) => {
 
             // ignore errors because config file might not exist yet
@@ -699,7 +693,7 @@ class Options {
             let lines = content.split('\n');
             for (var i = 0; i < lines.length; i++) {
                 let line = lines[i];
-                if (line.trim().startsWith('[') && line.trim().endsWith(']')) {
+                if (this.startsWith(line.trim(), '[') && this.endsWith(line.trim(), ']')) {
                     if ((currentSection === section) && !found) {
                         contents.push(key + ' = ' + val);
                         found = true;
@@ -749,6 +743,14 @@ class Options {
 
     public getUserHomeDir() {
         return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || '';
+    }
+
+    public startsWith(outer, inner) {
+        return outer.slice(0, inner.length) === inner;
+    }
+
+    public endsWith(outer, inner) {
+        return (inner === '') || (outer.slice(-inner.length) === inner);
     }
 }
 
