@@ -273,13 +273,14 @@ export class WakaTime {
             let project = this._getProjectName();
             if (project) args.push('--alternate-project', project);
             if (isWrite) args.push('--write');
-            if (Dependencies.isWindows())
+            if (Dependencies.isWindows()) {
               args.push(
                 '--config',
                 this.options.getConfigFile(),
                 '--logfile',
                 this.options.getLogFile(),
               );
+            }
 
             logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
 
@@ -390,7 +391,7 @@ export class WakaTime {
   }
 
   private wrapArg(arg: string): string {
-    if (arg.indexOf(' ') > -1) arg = '"' + arg + '"';
+    if (arg.indexOf(' ') > -1) return '"' + arg + '"';
     return arg;
   }
 
