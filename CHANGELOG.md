@@ -2,9 +2,16 @@
 # Changelog
 
 
+## 1.1.17 (2017-10-19)
+
+- Upgrade node dependencies to fix deprecation warning.
+  [#27](https://github.com/wakatime/vscode-wakatime/issues/27)
+
+
 ## 1.1.16 (2017-09-24)
 
-- Prevent side-effects from adding methods to built-in String.prototype. #26
+- Prevent side-effects from adding methods to built-in String.prototype.
+  [#26](https://github.com/wakatime/vscode-wakatime/issues/26)
 
 
 ## 1.1.15 (2017-09-18)
@@ -19,7 +26,9 @@
 
 ## 1.1.13 (2017-08-14)
 
-- Use proxy when downloading dependencies. #22 #13
+- Use proxy when downloading dependencies.
+  [#13](https://github.com/wakatime/vscode-wakatime/issues/13)
+  [#22](https://github.com/wakatime/vscode-wakatime/issues/22)
 
 
 ## 1.1.12 (2017-06-17)
@@ -35,17 +44,20 @@
 
 ## 1.1.10 (2017-06-12)
 
-- Prevent corrupting config file with log messages. #20
+- Prevent corrupting config file with log messages.
+  [#20](https://github.com/wakatime/vscode-wakatime/issues/20)
 
 
 ## 1.1.9 (2017-06-11)
 
-- Fix bug which inverted status bar icon setting. #19
+- Fix bug which inverted status bar icon setting.
+  [#19](https://github.com/wakatime/vscode-wakatime/issues/19)
 
 
 ## 1.1.8 (2017-06-02)
 
-- Force Python to use same config file as Vscode on Windows. #18
+- Force Python to use same config file as Vscode on Windows.
+  [#18](https://github.com/wakatime/vscode-wakatime/issues/18)
 
 
 ## 1.1.7 (2017-05-24)
@@ -105,7 +117,8 @@
 
 ## 1.0.8 (2017-02-13)
 
-- Use proxy from ~/.wakatime.cfg when downloading dependencies. #13
+- Use proxy from ~/.wakatime.cfg when downloading dependencies.
+  [#13](https://github.com/wakatime/vscode-wakatime/issues/13)
 
 
 ## 1.0.7 (2017-02-11)
