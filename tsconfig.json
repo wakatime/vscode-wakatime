@@ -1,12 +1,16 @@
 {
-	"compilerOptions": {
-		"module": "commonjs",
-		"target": "ES5",
-		"outDir": "out",
-		"noLib": true,
-		"sourceMap": true
-	},
-	"exclude": [
-		"node_modules"
-	]
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "rootDir": "src",
+    "outDir": "out",
+    "lib": ["es6"],
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules",
+    "out/wakatime-master",
+    "test",
+    ".vscode-test"
+  ]
 }
