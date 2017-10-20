@@ -63,11 +63,11 @@
     "dependencies": {
         "adm-zip": "0.4.7",
         "ini": "1.3.4",
-        "request": "2.72.0",
-        "rimraf": "2.5.2"
+        "request": "2.83.0",
+        "rimraf": "2.6.2"
     },
     "devDependencies": {
-        "vscode": "0.10.x",
+        "vscode": "1.1.x",
         "typescript": "latest"
     }
 }
