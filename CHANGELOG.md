@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.1.18 (2017-10-24)
+
+- Wrap args containing spaces with quotes to prevent child_process treating
+  one argument as two.
+
+
 ## 1.1.17 (2017-10-19)
 
 - Upgrade node dependencies to fix deprecation warning.
