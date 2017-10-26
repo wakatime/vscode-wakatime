@@ -467,9 +467,11 @@ class Dependencies {
     let args = ['--version'];
     for (var i = 0; i < locations.length; i++) {
       try {
-        let stdout = child_process.execFileSync(locations[i], args);
-        this._cachedPythonLocation = locations[i];
-        return callback(locations[i]);
+        const stdout = child_process.execFileSync(locations[i], args);
+        if (this._isSupportedPythonVersion(stdout)) {
+          this._cachedPythonLocation = locations[i];
+          return callback(locations[i]);
+        }
       } catch (e) {}
     }
 
@@ -534,7 +536,7 @@ class Dependencies {
           for (var i = 0; i < lines.length; i++) {
             let re = /^__version_info__ = \('([0-9]+)', '([0-9]+)', '([0-9]+)'\)/g;
             let match = re.exec(lines[i]);
-            if (match != null) {
+            if (match) {
               version = match[1] + '.' + match[2] + '.' + match[3];
               if (callback) return callback(version);
             }
@@ -643,6 +645,20 @@ class Dependencies {
       );
       // window.alert('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
     }
+  }
+
+  private _isSupportedPythonVersion(versionString) {
+    const anaconda = /continuum|anaconda/gi;
+    if (!anaconda.test(versionString)) return true;
+
+    const re = /python\w+([0-9]+)\.([0-9]+)\.([0-9]+)\w/gi;
+    const ver = re.exec(versionString);
+    if (!ver) return false;
+
+    // Older Ananconda python distributions not supported
+    if (parseInt(ver[1]) >= 3 && parseInt(ver[2]) >= 5) return true;
+
+    return false;
   }
 }
 
