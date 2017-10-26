@@ -2,6 +2,14 @@
 # Changelog
 
 
+## 1.1.19 (2017-10-25)
+
+- Prevent using old Anaconda python distributions because they parse arguments
+  containing spaces incorrectly.
+  [#28](https://github.com/wakatime/vscode-wakatime/issues/28)
+- Stop wrapping args containing spaces with quotes.
+
+
 ## 1.1.18 (2017-10-24)
 
 - Wrap args containing spaces with quotes to prevent child_process treating
