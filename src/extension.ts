@@ -269,16 +269,16 @@ export class WakaTime {
             let core = this.dependencies.getCoreLocation();
             let user_agent =
               'vscode/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-            let args = [core, '--file', this.wrapArg(file), '--plugin', this.wrapArg(user_agent)];
+            let args = [core, '--file', file, '--plugin', user_agent];
             let project = this._getProjectName();
-            if (project) args.push('--alternate-project', this.wrapArg(project));
+            if (project) args.push('--alternate-project', project);
             if (isWrite) args.push('--write');
             if (Dependencies.isWindows()) {
               args.push(
                 '--config',
-                this.wrapArg(this.options.getConfigFile()),
+                this.options.getConfigFile(),
                 '--logfile',
-                this.wrapArg(this.options.getLogFile()),
+                this.options.getLogFile(),
               );
             }
 
