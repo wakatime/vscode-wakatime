@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.20 (2017-10-25)
+
+- Remove tags files from published package.
+
+
 ## 1.1.19 (2017-10-25)
 
 - Prevent using old Anaconda python distributions because they parse arguments
