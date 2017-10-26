@@ -12,3 +12,6 @@ npm-debug.**
 node_modules/vsce/**
 node_modules/typescript/**
 .DS_Store
+tags
+tags.lock
+tags.temp

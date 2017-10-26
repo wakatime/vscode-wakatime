@@ -4,3 +4,4 @@ node_modules
 npm-debug.log*
 .DS_Store
 wakatime-master
+tags
