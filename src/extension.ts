@@ -449,10 +449,10 @@ class Dependencies {
     }
   }
 
-  public getPythonLocation(callback) {
+  public getPythonLocation(callback: (string) => void) {
     if (this._cachedPythonLocation) return callback(this._cachedPythonLocation);
 
-    let locations = [
+    let locations: string[] = [
       this._dirname + path.sep + 'python' + path.sep + 'pythonw',
       'pythonw',
       'python',
@@ -464,24 +464,39 @@ class Dependencies {
       locations.push('\\Python' + i + '\\pythonw');
     }
 
-    let args = ['--version'];
-    for (var i = 0; i < locations.length; i++) {
-      try {
-        const stdout = child_process.execFileSync(locations[i], args);
-        if (this._isSupportedPythonVersion(stdout)) {
-          this._cachedPythonLocation = locations[i];
-          return callback(locations[i]);
-        }
-      } catch (e) {}
-    }
-
-    callback(null);
+    this._findPython(locations, python => {
+      if (python) this._cachedPythonLocation = python;
+      callback(python);
+    });
   }
 
   public getCoreLocation() {
     let dir =
       this._dirname + path.sep + 'wakatime-master' + path.sep + 'wakatime' + path.sep + 'cli.py';
     return dir;
+  }
+
+  private _findPython(locations: string[], callback: (string) => void) {
+    const binary: string = locations.shift();
+    if (!binary) {
+      callback(null);
+      return;
+    }
+
+    logger.debug('Looking for python at: ' + binary);
+
+    const args = ['--version'];
+    child_process.execFile(binary, args, (error, stdout, stderr) => {
+      const output: string = stdout.toString() + stderr.toString();
+      if (!error && this._isSupportedPythonVersion(output)) {
+        this._cachedPythonLocation = binary;
+        logger.debug('Valid python version: ' + output);
+        callback(binary);
+      } else {
+        logger.debug('Invalid python version: ' + output);
+        this._findPython(locations, callback);
+      }
+    });
   }
 
   private isCoreInstalled() {
