@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.1.21 (2017-10-26)
+
+- Also check stderr for Python version when detecting supported versions.
+  [#29](https://github.com/wakatime/vscode-wakatime/issues/29)
+
+
 ## 1.1.20 (2017-10-25)
 
 - Remove tags files from published package.
