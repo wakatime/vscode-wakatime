@@ -299,11 +299,11 @@ export class WakaTime {
               } else if (code == 102) {
                 this.statusBar.text =
                   '$(clock) WakaTime Offline, coding activity will sync when online.';
-                logger.warn('API Error (102); Check your ~/.wakatime.log file for more details.');
+                logger.warn('API Error (102); Check your ' + options.getLogFile() + ' file for more details.');
               } else if (code == 103) {
                 this.statusBar.text = '$(clock) WakaTime Error';
                 let error_msg =
-                  'Config Parsing Error (103); Check your ~/.wakatime.log file for more details.';
+                  'Config Parsing Error (103); Check your ' + options.getLogFile() + ' file for more details.';
                 this.statusBar.tooltip = error_msg;
                 logger.error(error_msg);
               } else if (code == 104) {
@@ -314,7 +314,7 @@ export class WakaTime {
               } else {
                 this.statusBar.text = '$(clock) WakaTime Error';
                 let error_msg =
-                  'Unknown Error (' + code + '); Check your ~/.wakatime.log file for more details.';
+                  'Unknown Error (' + code + '); Check your ' + options.getLogFile() + ' file for more details.';
                 this.statusBar.tooltip = error_msg;
                 logger.error(error_msg);
               }
@@ -678,13 +678,22 @@ class Dependencies {
 }
 
 class Options {
-  private _configFile = path.join(this.getUserHomeDir(), '.wakatime.cfg');
-  private _logFile = path.join(this.getUserHomeDir(), '.wakatime.log');
+  private _configFile = path.join(this.getWakaHome(), '.wakatime.cfg');
+  private _logFile = path.join(this.getWakaHome(), '.wakatime.log');
+
+  private getWakaHome() {
+    let home = process.env.WAKATIME_HOME;
+    if (home) {
+      return home;
+    } else {
+      return this.getUserHomeDir();
+    }
+  }
 
   public getSetting(section: string, key: string, callback?) {
     fs.readFile(this.getConfigFile(), 'utf-8', (err, content) => {
       if (err) {
-        if (callback) callback(new Error('could not read ~/.wakatime.cfg'), null);
+        if (callback) callback(new Error('could not read ' + this.getConfigFile()), null);
       } else {
         let currentSection = '';
         let lines = content.split('\n');
@@ -757,7 +766,7 @@ class Options {
 
       fs.writeFile(this.getConfigFile(), contents.join('\n'), function(err2) {
         if (err) {
-          if (callback) callback(new Error('could not write to ~/.wakatime.cfg'));
+          if (callback) callback(new Error('could not write to ' + this.getConfigFile()));
         } else {
           if (callback) callback(null);
         }
