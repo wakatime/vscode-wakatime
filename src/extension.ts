@@ -270,7 +270,7 @@ export class WakaTime {
             let user_agent =
               'vscode/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
             let args = [core, '--file', file, '--plugin', user_agent];
-            let project = this._getProjectName();
+            let project = this._getProjectName(file);
             if (project) args.push('--alternate-project', project);
             if (isWrite) args.push('--write');
             if (Dependencies.isWindows()) {
@@ -372,11 +372,13 @@ export class WakaTime {
     return this.lastHeartbeat + 120000 < time;
   }
 
-  private _getProjectName() {
-    if (vscode.workspace && vscode.workspace.rootPath)
+  private _getProjectName(file) {
+    let uri = vscode.Uri.file(file);
+    let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+    if (vscode.workspace && workspaceFolder)
       try {
-        return vscode.workspace.rootPath.match(/([^\/^\\]*)[\/\\]*$/)[1];
-      } catch (e) {}
+        return workspaceFolder.name;
+      } catch (e) { }
     return null;
   }
 
