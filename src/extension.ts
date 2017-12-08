@@ -212,13 +212,18 @@ export class WakaTime {
     });
   }
 
-  private _checkApiKey() {
-    this.hasApiKey(hasApiKey => {
+  public dispose() {
+    this.statusBar.dispose();
+    this.disposable.dispose();
+  }
+
+  private _checkApiKey(): void {
+    this._hasApiKey(hasApiKey => {
       if (!hasApiKey) this.promptForApiKey();
     });
   }
 
-  private hasApiKey(callback) {
+  private _hasApiKey(callback: (boolean) => void): void {
     this.options.getSetting('settings', 'api_key', (error, apiKey) => {
       callback(this.validateKey(apiKey) == null);
     });
@@ -235,22 +240,22 @@ export class WakaTime {
     this.disposable = vscode.Disposable.from(...subscriptions);
   }
 
-  private _onChange() {
+  private _onChange(): void {
     this._onEvent(false);
   }
 
-  private _onSave() {
+  private _onSave(): void {
     this._onEvent(true);
   }
 
-  private _onEvent(isWrite) {
+  private _onEvent(isWrite: boolean): void {
     let editor = vscode.window.activeTextEditor;
     if (editor) {
       let doc = editor.document;
       if (doc) {
-        let file = doc.fileName;
+        let file: string = doc.fileName;
         if (file) {
-          let time = Date.now();
+          let time: number = Date.now();
           if (isWrite || this._enoughTimePassed(time) || this.lastFile !== file) {
             this._sendHeartbeat(file, isWrite);
             this.lastFile = file;
@@ -261,8 +266,8 @@ export class WakaTime {
     }
   }
 
-  private _sendHeartbeat(file, isWrite) {
-    this.hasApiKey(hasApiKey => {
+  private _sendHeartbeat(file: string, isWrite): void {
+    this._hasApiKey(hasApiKey => {
       if (hasApiKey) {
         this.dependencies.getPythonLocation(pythonBinary => {
           if (pythonBinary) {
@@ -282,7 +287,7 @@ export class WakaTime {
               );
             }
 
-            logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
+            logger.debug('Sending heartbeat: ' + this._formatArguments(pythonBinary, args));
 
             let process = child_process.execFile(pythonBinary, args, (error, stdout, stderr) => {
               if (error != null) {
@@ -295,15 +300,19 @@ export class WakaTime {
               if (code == 0) {
                 this.statusBar.text = '$(clock) WakaTime Active';
                 let today = new Date();
-                this.statusBar.tooltip = 'Last heartbeat sent at ' + this.formatDate(today);
+                this.statusBar.tooltip = 'Last heartbeat sent at ' + this._formatDate(today);
               } else if (code == 102) {
                 this.statusBar.text =
                   '$(clock) WakaTime Offline, coding activity will sync when online.';
-                logger.warn('API Error (102); Check your ' + options.getLogFile() + ' file for more details.');
+                logger.warn(
+                  'API Error (102); Check your ' + options.getLogFile() + ' file for more details.',
+                );
               } else if (code == 103) {
                 this.statusBar.text = '$(clock) WakaTime Error';
                 let error_msg =
-                  'Config Parsing Error (103); Check your ' + options.getLogFile() + ' file for more details.';
+                  'Config Parsing Error (103); Check your ' +
+                  options.getLogFile() +
+                  ' file for more details.';
                 this.statusBar.tooltip = error_msg;
                 logger.error(error_msg);
               } else if (code == 104) {
@@ -314,7 +323,11 @@ export class WakaTime {
               } else {
                 this.statusBar.text = '$(clock) WakaTime Error';
                 let error_msg =
-                  'Unknown Error (' + code + '); Check your ' + options.getLogFile() + ' file for more details.';
+                  'Unknown Error (' +
+                  code +
+                  '); Check your ' +
+                  options.getLogFile() +
+                  ' file for more details.';
                 this.statusBar.tooltip = error_msg;
                 logger.error(error_msg);
               }
@@ -327,7 +340,7 @@ export class WakaTime {
     });
   }
 
-  private formatDate(date) {
+  private _formatDate(date: Date): String {
     let months = [
       'Jan',
       'Feb',
@@ -352,7 +365,6 @@ export class WakaTime {
       hour = 12;
     }
     let minute = date.getMinutes();
-    if (minute < 10) minute = '0' + minute;
     return (
       months[date.getMonth()] +
       ' ' +
@@ -362,27 +374,28 @@ export class WakaTime {
       ' ' +
       hour +
       ':' +
-      minute +
+      (minute < 10 ? '0' + minute : minute) +
       ' ' +
       ampm
     );
   }
 
-  private _enoughTimePassed(time) {
+  private _enoughTimePassed(time: number): boolean {
     return this.lastHeartbeat + 120000 < time;
   }
 
-  private _getProjectName(file) {
+  private _getProjectName(file: string): string {
     let uri = vscode.Uri.file(file);
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-    if (vscode.workspace && workspaceFolder)
+    if (vscode.workspace && workspaceFolder) {
       try {
         return workspaceFolder.name;
-      } catch (e) { }
+      } catch (e) {}
+    }
     return null;
   }
 
-  private obfuscateKey(key: string): string {
+  private _obfuscateKey(key: string): string {
     let newKey = '';
     if (key) {
       newKey = key;
@@ -392,27 +405,22 @@ export class WakaTime {
     return newKey;
   }
 
-  private wrapArg(arg: string): string {
+  private _wrapArg(arg: string): string {
     if (arg.indexOf(' ') > -1) return '"' + arg.replace(/"/g, '\\"') + '"';
     return arg;
   }
 
-  private formatArguments(python: string, args: string[]): string {
+  private _formatArguments(python: string, args: string[]): string {
     let clone = args.slice(0);
-    clone.unshift(this.wrapArg(python));
+    clone.unshift(this._wrapArg(python));
     let newCmds = [];
     let lastCmd = '';
     for (let i = 0; i < clone.length; i++) {
-      if (lastCmd == '--key') newCmds.push(this.wrapArg(this.obfuscateKey(clone[i])));
-      else newCmds.push(this.wrapArg(clone[i]));
+      if (lastCmd == '--key') newCmds.push(this._wrapArg(this._obfuscateKey(clone[i])));
+      else newCmds.push(this._wrapArg(clone[i]));
       lastCmd = clone[i];
     }
     return newCmds.join(' ');
-  }
-
-  public dispose() {
-    this.statusBar.dispose();
-    this.disposable.dispose();
   }
 }
 
@@ -425,7 +433,7 @@ class Dependencies {
     this.options = options;
   }
 
-  public checkAndInstall(callback) {
+  public checkAndInstall(callback: () => void): void {
     this.isPythonInstalled(isInstalled => {
       if (!isInstalled) {
         this.installPython(() => {
@@ -437,7 +445,7 @@ class Dependencies {
     });
   }
 
-  public checkAndInstallCore(callback) {
+  public checkAndInstallCore(callback: () => void): void {
     if (!this.isCoreInstalled()) {
       this.installCore(callback);
     } else {
@@ -451,7 +459,7 @@ class Dependencies {
     }
   }
 
-  public getPythonLocation(callback: (string) => void) {
+  public getPythonLocation(callback: (string) => void): void {
     if (this._cachedPythonLocation) return callback(this._cachedPythonLocation);
 
     let locations: string[] = [
@@ -472,13 +480,13 @@ class Dependencies {
     });
   }
 
-  public getCoreLocation() {
+  public getCoreLocation(): string {
     let dir =
       this._dirname + path.sep + 'wakatime-master' + path.sep + 'wakatime' + path.sep + 'cli.py';
     return dir;
   }
 
-  private _findPython(locations: string[], callback: (string) => void) {
+  private _findPython(locations: string[], callback: (string) => void): void {
     const binary: string = locations.shift();
     if (!binary) {
       callback(null);
@@ -501,15 +509,15 @@ class Dependencies {
     });
   }
 
-  private isCoreInstalled() {
+  private isCoreInstalled(): boolean {
     return fs.existsSync(this.getCoreLocation());
   }
 
-  public static isWindows() {
+  public static isWindows(): boolean {
     return os.type() === 'Windows_NT';
   }
 
-  private isCoreLatest(callback) {
+  private isCoreLatest(callback: (boolean) => void): void {
     this.getPythonLocation(pythonBinary => {
       if (pythonBinary) {
         let args = [this.getCoreLocation(), '--version'];
@@ -519,7 +527,7 @@ class Dependencies {
             logger.debug('Current wakatime-core version is ' + currentVersion);
 
             logger.debug('Checking for updates to wakatime-core...');
-            this.getLatestCoreVersion(function(latestVersion) {
+            this.getLatestCoreVersion(latestVersion => {
               if (currentVersion === latestVersion) {
                 logger.debug('wakatime-core is up to date.');
                 if (callback) callback(true);
@@ -541,7 +549,7 @@ class Dependencies {
     });
   }
 
-  private getLatestCoreVersion(callback) {
+  private getLatestCoreVersion(callback: (string) => void): void {
     let url = 'https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py';
     this.options.getSetting('settings', 'proxy', function(err, proxy) {
       let options = { url: url };
@@ -564,7 +572,7 @@ class Dependencies {
     });
   }
 
-  private installCore = function(callback) {
+  private installCore(callback: () => void): void {
     logger.debug('Downloading wakatime-core...');
     let url = 'https://github.com/wakatime/wakatime/archive/master.zip';
     let zipFile = this._dirname + path.sep + 'wakatime-master.zip';
@@ -572,9 +580,9 @@ class Dependencies {
     this.downloadFile(url, zipFile, () => {
       this.extractCore(zipFile, callback);
     });
-  };
+  }
 
-  private extractCore(zipFile, callback) {
+  private extractCore(zipFile: string, callback: () => void): void {
     logger.debug('Extracting wakatime-core into "' + this._dirname + '"...');
     this.removeCore(() => {
       this.unzip(zipFile, this._dirname, callback);
@@ -582,7 +590,7 @@ class Dependencies {
     });
   }
 
-  private removeCore(callback) {
+  private removeCore(callback: () => void): void {
     if (fs.existsSync(this._dirname + path.sep + 'wakatime-master')) {
       try {
         rimraf(this._dirname + path.sep + 'wakatime-master', () => {
@@ -600,7 +608,7 @@ class Dependencies {
     }
   }
 
-  private downloadFile(url, outputFile, callback) {
+  private downloadFile(url: string, outputFile: string, callback: () => void): void {
     this.options.getSetting('settings', 'proxy', function(err, proxy) {
       let options = { url: url };
       if (proxy && proxy.trim()) options['proxy'] = proxy.trim();
@@ -617,7 +625,7 @@ class Dependencies {
     });
   }
 
-  private unzip(file, outputDir, callback = null) {
+  private unzip(file: string, outputDir: string, callback: () => void = null) {
     if (fs.existsSync(file)) {
       try {
         let zip = new AdmZip(file);
@@ -633,13 +641,13 @@ class Dependencies {
     }
   }
 
-  private isPythonInstalled(callback) {
+  private isPythonInstalled(callback: (boolean) => void): void {
     this.getPythonLocation(pythonBinary => {
       callback(!!pythonBinary);
     });
   }
 
-  private installPython(callback) {
+  private installPython(callback: () => void): void {
     if (Dependencies.isWindows()) {
       let ver = '3.5.1';
       let arch = 'win32';
@@ -664,7 +672,7 @@ class Dependencies {
     }
   }
 
-  private _isSupportedPythonVersion(versionString) {
+  private _isSupportedPythonVersion(versionString: string): boolean {
     const anaconda = /continuum|anaconda/gi;
     if (!anaconda.test(versionString)) return true;
 
@@ -683,7 +691,7 @@ class Options {
   private _configFile = path.join(this.getWakaHome(), '.wakatime.cfg');
   private _logFile = path.join(this.getWakaHome(), '.wakatime.log');
 
-  private getWakaHome() {
+  private getWakaHome(): string {
     let home = process.env.WAKATIME_HOME;
     if (home) {
       return home;
@@ -692,8 +700,8 @@ class Options {
     }
   }
 
-  public getSetting(section: string, key: string, callback?) {
-    fs.readFile(this.getConfigFile(), 'utf-8', (err, content) => {
+  public getSetting(section: string, key: string, callback: (string, any) => void): void {
+    fs.readFile(this.getConfigFile(), 'utf-8', (err: NodeJS.ErrnoException, content: string) => {
       if (err) {
         if (callback) callback(new Error('could not read ' + this.getConfigFile()), null);
       } else {
@@ -721,8 +729,8 @@ class Options {
     });
   }
 
-  public setSetting(section: string, key: string, val: string, callback?) {
-    fs.readFile(this.getConfigFile(), 'utf-8', (err, content) => {
+  public setSetting(section: string, key: string, val: string, callback?: (Error) => void): void {
+    fs.readFile(this.getConfigFile(), 'utf-8', (err: NodeJS.ErrnoException, content: string) => {
       // ignore errors because config file might not exist yet
       if (err) content = '';
 
@@ -776,23 +784,23 @@ class Options {
     });
   }
 
-  public getConfigFile() {
+  public getConfigFile(): string {
     return this._configFile;
   }
 
-  public getLogFile() {
+  public getLogFile(): string {
     return this._logFile;
   }
 
-  public getUserHomeDir() {
+  public getUserHomeDir(): string {
     return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || '';
   }
 
-  public startsWith(outer, inner) {
+  public startsWith(outer: string, inner: string): boolean {
     return outer.slice(0, inner.length) === inner;
   }
 
-  public endsWith(outer, inner) {
+  public endsWith(outer: string, inner: string): boolean {
     return inner === '' || outer.slice(-inner.length) === inner;
   }
 }
@@ -810,7 +818,7 @@ class Logger {
     this.setLevel(level);
   }
 
-  public setLevel(level: string) {
+  public setLevel(level: string): void {
     if (level in this.levels) {
       this._level = level;
     } else {
@@ -818,7 +826,7 @@ class Logger {
     }
   }
 
-  public log(level: string, msg: string) {
+  public log(level: string, msg: string): void {
     if (!(level in this.levels)) throw new TypeError('Invalid level: ' + level);
 
     const current: number = this.levels[level];
@@ -833,19 +841,19 @@ class Logger {
     }
   }
 
-  public debug(msg: string) {
+  public debug(msg: string): void {
     this.log('debug', msg);
   }
 
-  public info(msg: string) {
+  public info(msg: string): void {
     this.log('info', msg);
   }
 
-  public warn(msg: string) {
+  public warn(msg: string): void {
     this.log('warn', msg);
   }
 
-  public error(msg: string) {
+  public error(msg: string): void {
     this.log('error', msg);
   }
 }
