@@ -2,6 +2,14 @@
 # Changelog
 
 
+## 1.1.22 (2017-12-08)
+
+- Support for `WAKATIME_HOME` ENV variable to configure log and cfg folder.
+  [#36](https://github.com/wakatime/vscode-wakatime/pull/36)
+- Support vscode multi-root workspaces
+  [#37](https://github.com/wakatime/vscode-wakatime/pull/37)
+
+
 ## 1.1.21 (2017-10-26)
 
 - Also check stderr for Python version when detecting supported versions.
