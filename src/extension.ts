@@ -82,7 +82,7 @@ export class WakaTime {
     this.statusBar.text = '$(clock) WakaTime Initializing...';
     this.statusBar.show();
 
-    this._checkApiKey();
+    this.checkApiKey();
 
     this.dependencies = new Dependencies(this.options);
     this.dependencies.checkAndInstall(() => {
@@ -93,7 +93,7 @@ export class WakaTime {
       });
     });
 
-    this._setupEventListeners();
+    this.setupEventListeners();
   }
 
   public promptForApiKey(): void {
@@ -112,17 +112,6 @@ export class WakaTime {
     });
   }
 
-  private validateKey(key: string): string {
-    const err = 'Invalid api key... check https://wakatime.com/settings for your key.';
-    if (!key) return err;
-    const re = new RegExp(
-      '^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$',
-      'i',
-    );
-    if (!re.test(key)) return err;
-    return null;
-  }
-
   public promptForProxy(): void {
     this.options.getSetting('settings', 'proxy', (err, defaultVal) => {
       if (!defaultVal) defaultVal = '';
@@ -137,16 +126,6 @@ export class WakaTime {
         if (val || val === '') this.options.setSetting('settings', 'proxy', val);
       });
     });
-  }
-
-  private validateProxy(proxy: string): string {
-    const err =
-      'Invalid proxy. Valid formats are https://user:pass@host:port or socks5://user:pass@host:port or domain\\user:pass.';
-    if (!proxy) return err;
-    let re = new RegExp('^((https?|socks5)://)?([^:@]+(:([^:@])+)?@)?[\\w\\.-]+(:\\d+)?$', 'i');
-    if (proxy.indexOf('\\') > -1) re = new RegExp('^.*\\\\.+$', 'i');
-    if (!re.test(proxy)) return err;
-    return null;
   }
 
   public promptForDebug(): void {
@@ -217,38 +196,59 @@ export class WakaTime {
     this.disposable.dispose();
   }
 
-  private _checkApiKey(): void {
-    this._hasApiKey(hasApiKey => {
+  private validateKey(key: string): string {
+    const err = 'Invalid api key... check https://wakatime.com/settings for your key.';
+    if (!key) return err;
+    const re = new RegExp(
+      '^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$',
+      'i',
+    );
+    if (!re.test(key)) return err;
+    return null;
+  }
+
+  private validateProxy(proxy: string): string {
+    const err =
+      'Invalid proxy. Valid formats are https://user:pass@host:port or socks5://user:pass@host:port or domain\\user:pass.';
+    if (!proxy) return err;
+    let re = new RegExp('^((https?|socks5)://)?([^:@]+(:([^:@])+)?@)?[\\w\\.-]+(:\\d+)?$', 'i');
+    if (proxy.indexOf('\\') > -1) re = new RegExp('^.*\\\\.+$', 'i');
+    if (!re.test(proxy)) return err;
+    return null;
+  }
+
+  private checkApiKey(): void {
+    this.hasApiKey(hasApiKey => {
       if (!hasApiKey) this.promptForApiKey();
     });
   }
 
-  private _hasApiKey(callback: (boolean) => void): void {
+  private hasApiKey(callback: (boolean) => void): void {
     this.options.getSetting('settings', 'api_key', (error, apiKey) => {
       callback(this.validateKey(apiKey) == null);
     });
   }
 
-  private _setupEventListeners(): void {
+  private setupEventListeners(): void {
     // subscribe to selection change and editor activation events
     let subscriptions: vscode.Disposable[] = [];
-    vscode.window.onDidChangeTextEditorSelection(this._onChange, this, subscriptions);
-    vscode.window.onDidChangeActiveTextEditor(this._onChange, this, subscriptions);
-    vscode.workspace.onDidSaveTextDocument(this._onSave, this, subscriptions);
+    vscode.window.onDidChangeTextEditorSelection(this.onChange, this, subscriptions);
+    vscode.window.onDidChangeActiveTextEditor(this.onChange, this, subscriptions);
+    vscode.workspace.onDidSaveTextDocument(this.onSave, this, subscriptions);
 
     // create a combined disposable from both event subscriptions
     this.disposable = vscode.Disposable.from(...subscriptions);
   }
 
-  private _onChange(): void {
-    this._onEvent(false);
+  private onChange(): void {
+    this.onEvent(false);
   }
 
-  private _onSave(): void {
-    this._onEvent(true);
+  private onSave(): void {
+    this.onEvent(true);
   }
 
-  private _onEvent(isWrite: boolean): void {
+  private onEvent(isWrite: boolean): void {
     let editor = vscode.window.activeTextEditor;
     if (editor) {
       let doc = editor.document;
@@ -256,8 +256,8 @@ export class WakaTime {
         let file: string = doc.fileName;
         if (file) {
           let time: number = Date.now();
-          if (isWrite || this._enoughTimePassed(time) || this.lastFile !== file) {
-            this._sendHeartbeat(file, isWrite);
+          if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
+            this.sendHeartbeat(file, isWrite);
             this.lastFile = file;
             this.lastHeartbeat = time;
           }
@@ -266,8 +266,8 @@ export class WakaTime {
     }
   }
 
-  private _sendHeartbeat(file: string, isWrite): void {
-    this._hasApiKey(hasApiKey => {
+  private sendHeartbeat(file: string, isWrite): void {
+    this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
         this.dependencies.getPythonLocation(pythonBinary => {
           if (pythonBinary) {
@@ -275,7 +275,7 @@ export class WakaTime {
             let user_agent =
               'vscode/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
             let args = [core, '--file', file, '--plugin', user_agent];
-            let project = this._getProjectName(file);
+            let project = this.getProjectName(file);
             if (project) args.push('--alternate-project', project);
             if (isWrite) args.push('--write');
             if (Dependencies.isWindows()) {
@@ -287,7 +287,7 @@ export class WakaTime {
               );
             }
 
-            logger.debug('Sending heartbeat: ' + this._formatArguments(pythonBinary, args));
+            logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
 
             let process = child_process.execFile(pythonBinary, args, (error, stdout, stderr) => {
               if (error != null) {
@@ -300,7 +300,7 @@ export class WakaTime {
               if (code == 0) {
                 this.statusBar.text = '$(clock) WakaTime Active';
                 let today = new Date();
-                this.statusBar.tooltip = 'Last heartbeat sent at ' + this._formatDate(today);
+                this.statusBar.tooltip = 'Last heartbeat sent at ' + this.formatDate(today);
               } else if (code == 102) {
                 this.statusBar.text =
                   '$(clock) WakaTime Offline, coding activity will sync when online.';
@@ -340,7 +340,7 @@ export class WakaTime {
     });
   }
 
-  private _formatDate(date: Date): String {
+  private formatDate(date: Date): String {
     let months = [
       'Jan',
       'Feb',
@@ -380,11 +380,11 @@ export class WakaTime {
     );
   }
 
-  private _enoughTimePassed(time: number): boolean {
+  private enoughTimePassed(time: number): boolean {
     return this.lastHeartbeat + 120000 < time;
   }
 
-  private _getProjectName(file: string): string {
+  private getProjectName(file: string): string {
     let uri = vscode.Uri.file(file);
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
     if (vscode.workspace && workspaceFolder) {
@@ -395,7 +395,7 @@ export class WakaTime {
     return null;
   }
 
-  private _obfuscateKey(key: string): string {
+  private obfuscateKey(key: string): string {
     let newKey = '';
     if (key) {
       newKey = key;
@@ -405,19 +405,19 @@ export class WakaTime {
     return newKey;
   }
 
-  private _wrapArg(arg: string): string {
+  private wrapArg(arg: string): string {
     if (arg.indexOf(' ') > -1) return '"' + arg.replace(/"/g, '\\"') + '"';
     return arg;
   }
 
-  private _formatArguments(python: string, args: string[]): string {
+  private formatArguments(python: string, args: string[]): string {
     let clone = args.slice(0);
-    clone.unshift(this._wrapArg(python));
+    clone.unshift(this.wrapArg(python));
     let newCmds = [];
     let lastCmd = '';
     for (let i = 0; i < clone.length; i++) {
-      if (lastCmd == '--key') newCmds.push(this._wrapArg(this._obfuscateKey(clone[i])));
-      else newCmds.push(this._wrapArg(clone[i]));
+      if (lastCmd == '--key') newCmds.push(this.wrapArg(this.obfuscateKey(clone[i])));
+      else newCmds.push(this.wrapArg(clone[i]));
       lastCmd = clone[i];
     }
     return newCmds.join(' ');
@@ -425,9 +425,9 @@ export class WakaTime {
 }
 
 class Dependencies {
-  private _cachedPythonLocation: string;
+  private cachedPythonLocation: string;
   private options: Options;
-  private _dirname = __dirname;
+  private dirname = __dirname;
 
   constructor(options: Options) {
     this.options = options;
@@ -460,10 +460,10 @@ class Dependencies {
   }
 
   public getPythonLocation(callback: (string) => void): void {
-    if (this._cachedPythonLocation) return callback(this._cachedPythonLocation);
+    if (this.cachedPythonLocation) return callback(this.cachedPythonLocation);
 
     let locations: string[] = [
-      this._dirname + path.sep + 'python' + path.sep + 'pythonw',
+      this.dirname + path.sep + 'python' + path.sep + 'pythonw',
       'pythonw',
       'python',
       '/usr/local/bin/python',
@@ -474,19 +474,23 @@ class Dependencies {
       locations.push('\\Python' + i + '\\pythonw');
     }
 
-    this._findPython(locations, python => {
-      if (python) this._cachedPythonLocation = python;
+    this.findPython(locations, python => {
+      if (python) this.cachedPythonLocation = python;
       callback(python);
     });
   }
 
   public getCoreLocation(): string {
     let dir =
-      this._dirname + path.sep + 'wakatime-master' + path.sep + 'wakatime' + path.sep + 'cli.py';
+      this.dirname + path.sep + 'wakatime-master' + path.sep + 'wakatime' + path.sep + 'cli.py';
     return dir;
   }
 
-  private _findPython(locations: string[], callback: (string) => void): void {
+  public static isWindows(): boolean {
+    return os.type() === 'Windows_NT';
+  }
+
+  private findPython(locations: string[], callback: (string) => void): void {
     const binary: string = locations.shift();
     if (!binary) {
       callback(null);
@@ -498,23 +502,19 @@ class Dependencies {
     const args = ['--version'];
     child_process.execFile(binary, args, (error, stdout, stderr) => {
       const output: string = stdout.toString() + stderr.toString();
-      if (!error && this._isSupportedPythonVersion(output)) {
-        this._cachedPythonLocation = binary;
+      if (!error && this.isSupportedPythonVersion(output)) {
+        this.cachedPythonLocation = binary;
         logger.debug('Valid python version: ' + output);
         callback(binary);
       } else {
         logger.debug('Invalid python version: ' + output);
-        this._findPython(locations, callback);
+        this.findPython(locations, callback);
       }
     });
   }
 
   private isCoreInstalled(): boolean {
     return fs.existsSync(this.getCoreLocation());
-  }
-
-  public static isWindows(): boolean {
-    return os.type() === 'Windows_NT';
   }
 
   private isCoreLatest(callback: (boolean) => void): void {
@@ -575,7 +575,7 @@ class Dependencies {
   private installCore(callback: () => void): void {
     logger.debug('Downloading wakatime-core...');
     let url = 'https://github.com/wakatime/wakatime/archive/master.zip';
-    let zipFile = this._dirname + path.sep + 'wakatime-master.zip';
+    let zipFile = this.dirname + path.sep + 'wakatime-master.zip';
 
     this.downloadFile(url, zipFile, () => {
       this.extractCore(zipFile, callback);
@@ -583,17 +583,17 @@ class Dependencies {
   }
 
   private extractCore(zipFile: string, callback: () => void): void {
-    logger.debug('Extracting wakatime-core into "' + this._dirname + '"...');
+    logger.debug('Extracting wakatime-core into "' + this.dirname + '"...');
     this.removeCore(() => {
-      this.unzip(zipFile, this._dirname, callback);
+      this.unzip(zipFile, this.dirname, callback);
       logger.debug('Finished extracting wakatime-core.');
     });
   }
 
   private removeCore(callback: () => void): void {
-    if (fs.existsSync(this._dirname + path.sep + 'wakatime-master')) {
+    if (fs.existsSync(this.dirname + path.sep + 'wakatime-master')) {
       try {
-        rimraf(this._dirname + path.sep + 'wakatime-master', () => {
+        rimraf(this.dirname + path.sep + 'wakatime-master', () => {
           if (callback != null) {
             return callback();
           }
@@ -656,10 +656,10 @@ class Dependencies {
         'https://www.python.org/ftp/python/' + ver + '/python-' + ver + '-embed-' + arch + '.zip';
 
       logger.debug('Downloading python...');
-      let zipFile = this._dirname + path.sep + 'python.zip';
+      let zipFile = this.dirname + path.sep + 'python.zip';
       this.downloadFile(url, zipFile, () => {
         logger.debug('Extracting python...');
-        this.unzip(zipFile, this._dirname + path.sep + 'python');
+        this.unzip(zipFile, this.dirname + path.sep + 'python');
         logger.debug('Finished installing python.');
 
         callback();
@@ -672,7 +672,7 @@ class Dependencies {
     }
   }
 
-  private _isSupportedPythonVersion(versionString: string): boolean {
+  private isSupportedPythonVersion(versionString: string): boolean {
     const anaconda = /continuum|anaconda/gi;
     if (!anaconda.test(versionString)) return true;
 
@@ -688,8 +688,8 @@ class Dependencies {
 }
 
 class Options {
-  private _configFile = path.join(this.getWakaHome(), '.wakatime.cfg');
-  private _logFile = path.join(this.getWakaHome(), '.wakatime.log');
+  private configFile = path.join(this.getWakaHome(), '.wakatime.cfg');
+  private logFile = path.join(this.getWakaHome(), '.wakatime.log');
 
   private getWakaHome(): string {
     let home = process.env.WAKATIME_HOME;
@@ -785,11 +785,11 @@ class Options {
   }
 
   public getConfigFile(): string {
-    return this._configFile;
+    return this.configFile;
   }
 
   public getLogFile(): string {
-    return this._logFile;
+    return this.logFile;
   }
 
   public getUserHomeDir(): string {
@@ -806,7 +806,7 @@ class Options {
 }
 
 class Logger {
-  private _level: string;
+  private level: string;
   private levels = {
     debug: 0,
     info: 1,
@@ -820,7 +820,7 @@ class Logger {
 
   public setLevel(level: string): void {
     if (level in this.levels) {
-      this._level = level;
+      this.level = level;
     } else {
       throw new TypeError('Invalid level: ' + level);
     }
@@ -830,7 +830,7 @@ class Logger {
     if (!(level in this.levels)) throw new TypeError('Invalid level: ' + level);
 
     const current: number = this.levels[level];
-    const cutoff: number = this.levels[this._level];
+    const cutoff: number = this.levels[this.level];
 
     if (current >= cutoff) {
       msg = '[WakaTime] [' + level.toUpperCase() + '] ' + msg;
