@@ -19,7 +19,7 @@ Installation
 
   4. Enter your [api key](https://wakatime.com/settings?apikey=true), then press `enter`.
 
-    (If you already have a WakaTime plugin installed, you won't be prompted for your api key.)
+    (If you’re not prompted, press `F1` or `CMD + Shift + P` then type `WakaTime API Key`.)
 
   5. Use VSCode and your coding activity will be displayed on your [WakaTime dashboard](https://wakatime.com).
 
