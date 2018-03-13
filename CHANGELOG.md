@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.1.23 (2018-03-12)
+
+- Shorten status bar text.
+  [#47](https://github.com/wakatime/vscode-wakatime/issues/47)
+
+
 ## 1.1.22 (2017-12-08)
 
 - Support for `WAKATIME_HOME` ENV variable to configure log and cfg folder.
