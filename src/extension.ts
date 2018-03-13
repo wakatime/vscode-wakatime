@@ -87,6 +87,7 @@ export class WakaTime {
     this.dependencies = new Dependencies(this.options);
     this.dependencies.checkAndInstall(() => {
       this.statusBar.text = '$(clock)';
+      this.statusBar.tooltip = 'WakaTime: Initialized';
       this.options.getSetting('settings', 'status_bar_icon', (err, val) => {
         if (val && val.trim() == 'false') this.statusBar.hide();
         else this.statusBar.show();
@@ -303,7 +304,8 @@ export class WakaTime {
                 this.statusBar.tooltip = 'WakaTime: Last heartbeat sent ' + this.formatDate(today);
               } else if (code == 102) {
                 this.statusBar.text = '$(clock)';
-                this.statusBar.tooltip = 'WakaTime: Working offline... coding activity will sync next time we are online.';
+                this.statusBar.tooltip =
+                  'WakaTime: Working offline... coding activity will sync next time we are online.';
                 logger.warn(
                   'API Error (102); Check your ' + options.getLogFile() + ' file for more details.',
                 );
