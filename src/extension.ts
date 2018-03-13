@@ -86,7 +86,7 @@ export class WakaTime {
 
     this.dependencies = new Dependencies(this.options);
     this.dependencies.checkAndInstall(() => {
-      this.statusBar.text = '$(clock) WakaTime Initialized';
+      this.statusBar.text = '$(clock)';
       this.options.getSetting('settings', 'status_bar_icon', (err, val) => {
         if (val && val.trim() == 'false') this.statusBar.hide();
         else this.statusBar.show();
@@ -298,12 +298,12 @@ export class WakaTime {
             });
             process.on('close', (code, signal) => {
               if (code == 0) {
-                this.statusBar.text = '$(clock) WakaTime Active';
+                this.statusBar.text = '$(clock)';
                 let today = new Date();
-                this.statusBar.tooltip = 'Last heartbeat sent at ' + this.formatDate(today);
+                this.statusBar.tooltip = 'WakaTime: Last heartbeat sent ' + this.formatDate(today);
               } else if (code == 102) {
-                this.statusBar.text =
-                  '$(clock) WakaTime Offline, coding activity will sync when online.';
+                this.statusBar.text = '$(clock)';
+                this.statusBar.tooltip = 'WakaTime: Working offline... coding activity will sync next time we are online.';
                 logger.warn(
                   'API Error (102); Check your ' + options.getLogFile() + ' file for more details.',
                 );
@@ -313,12 +313,12 @@ export class WakaTime {
                   'Config Parsing Error (103); Check your ' +
                   options.getLogFile() +
                   ' file for more details.';
-                this.statusBar.tooltip = error_msg;
+                this.statusBar.tooltip = 'WakaTime: ' + error_msg;
                 logger.error(error_msg);
               } else if (code == 104) {
                 this.statusBar.text = '$(clock) WakaTime Error';
                 let error_msg = 'Invalid API Key (104); Make sure your API Key is correct!';
-                this.statusBar.tooltip = error_msg;
+                this.statusBar.tooltip = 'WakaTime: ' + error_msg;
                 logger.error(error_msg);
               } else {
                 this.statusBar.text = '$(clock) WakaTime Error';
@@ -328,7 +328,7 @@ export class WakaTime {
                   '); Check your ' +
                   options.getLogFile() +
                   ' file for more details.';
-                this.statusBar.tooltip = error_msg;
+                this.statusBar.tooltip = 'WakaTime: ' + error_msg;
                 logger.error(error_msg);
               }
             });
