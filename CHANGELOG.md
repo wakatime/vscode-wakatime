@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.1.25 (2018-03-20)
+
+- Upgrade node dependencies to latest versions.
+
+
 ## 1.1.24 (2018-03-13)
 
 - Status bar tooltip hover text now shows when finished initializing.
