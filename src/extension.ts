@@ -635,10 +635,11 @@ class Dependencies {
       } catch (e) {
         return logger.error(e);
       } finally {
-        fs.unlink(file);
-        if (callback != null) {
-          return callback();
-        }
+        fs.unlink(file, unlinkError => {
+          if (callback) {
+            return callback();
+          }
+        });
       }
     }
   }
