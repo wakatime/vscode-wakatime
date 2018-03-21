@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.1.26 (2018-03-21)
+
+- Use fs.unlink instead of fs.unlinkSync to prevent problems on Windows OS.
+  [#49](https://github.com/wakatime/vscode-wakatime/issues/49)
+
+
 ## 1.1.25 (2018-03-20)
 
 - Upgrade node dependencies to latest versions.
