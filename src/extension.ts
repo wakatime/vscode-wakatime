@@ -635,7 +635,7 @@ class Dependencies {
       } catch (e) {
         return logger.error(e);
       } finally {
-        fs.unlinkSync(file);
+        fs.unlink(file);
         if (callback != null) {
           return callback();
         }
