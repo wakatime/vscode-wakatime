@@ -467,11 +467,14 @@ class Dependencies {
     let locations: string[] = [
       this.dirname + path.sep + 'python' + path.sep + 'pythonw',
       'pythonw',
+      'python3',
       'python',
+      '/usr/local/bin/python3',
       '/usr/local/bin/python',
+      '/usr/bin/python3',
       '/usr/bin/python',
     ];
-    for (var i = 40; i >= 26; i--) {
+    for (var i = 39; i >= 26; i--) {
       locations.push('\\python' + i + '\\pythonw');
       locations.push('\\Python' + i + '\\pythonw');
     }
