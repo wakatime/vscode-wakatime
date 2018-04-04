@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.2.0 (2018-04-04)
+
+- Prefer Python3 over Python2 when running wakatime-cli core.
+- Improve detection of Python3 on Ubuntu 17.10 platforms.
+
+
 ## 1.1.26 (2018-03-21)
 
 - Use fs.unlink instead of fs.unlinkSync to prevent problems on Windows OS.
