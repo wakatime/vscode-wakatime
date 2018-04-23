@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.2.1 (2018-04-23)
+
+- Prevent using unsupported Python 3 versions.
+
+
 ## 1.2.0 (2018-04-04)
 
 - Prefer Python3 over Python2 when running wakatime-cli core.
