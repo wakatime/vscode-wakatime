@@ -475,6 +475,7 @@ class Dependencies {
       '/usr/bin/python',
     ];
     for (var i = 39; i >= 26; i--) {
+      if (i >= 30 && i <= 32) continue;
       locations.push('\\python' + i + '\\pythonw');
       locations.push('\\Python' + i + '\\pythonw');
     }
