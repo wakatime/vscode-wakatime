@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.2.2 (2018-05-12)
+
+- Improve extension startup time by lazy importing dependencies.
+  [#53](https://github.com/wakatime/vscode-wakatime/issues/53)
+
+
 ## 1.2.1 (2018-04-23)
 
 - Prevent using unsupported Python 3 versions.
