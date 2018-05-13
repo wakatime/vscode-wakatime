@@ -2,15 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-import fs = require('fs');
-import os = require('os');
-import path = require('path');
-import child_process = require('child_process');
-
-var AdmZip = require('adm-zip');
-var ini = require('ini');
-var request = require('request');
-var rimraf = require('rimraf');
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import * as child_process from 'child_process';
 
 var logger: Logger;
 var options: Options;
@@ -21,7 +16,6 @@ export function activate(ctx: vscode.ExtensionContext) {
   options = new Options();
   logger = new Logger('info');
 
-  // initialize WakaTime
   let wakatime = new WakaTime();
 
   ctx.subscriptions.push(
@@ -54,8 +48,7 @@ export function activate(ctx: vscode.ExtensionContext) {
     }),
   );
 
-  // add to a list of disposables which are disposed when this extension
-  // is deactivated again.
+  // dispose WakaTime instance when this extension is deactivated
   ctx.subscriptions.push(wakatime);
 
   options.getSetting('settings', 'debug', function(error, debug) {
@@ -555,8 +548,9 @@ class Dependencies {
     });
   }
 
-  private getLatestCoreVersion(callback: (string) => void): void {
+  private async getLatestCoreVersion(callback: (string) => void): Promise<void> {
     let url = 'https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py';
+    const request = await import('request');
     this.options.getSetting('settings', 'proxy', function(err, proxy) {
       let options = { url: url };
       if (proxy && proxy.trim()) options['proxy'] = proxy.trim();
@@ -596,9 +590,10 @@ class Dependencies {
     });
   }
 
-  private removeCore(callback: () => void): void {
+  private async removeCore(callback: () => void): Promise<void> {
     if (fs.existsSync(this.dirname + path.sep + 'wakatime-master')) {
       try {
+        const rimraf = await import('rimraf');
         rimraf(this.dirname + path.sep + 'wakatime-master', () => {
           if (callback != null) {
             return callback();
@@ -614,7 +609,8 @@ class Dependencies {
     }
   }
 
-  private downloadFile(url: string, outputFile: string, callback: () => void): void {
+  private async downloadFile(url: string, outputFile: string, callback: () => void): Promise<void> {
+    const request = await import('request');
     this.options.getSetting('settings', 'proxy', function(err, proxy) {
       let options = { url: url };
       if (proxy && proxy.trim()) options['proxy'] = proxy.trim();
@@ -631,9 +627,10 @@ class Dependencies {
     });
   }
 
-  private unzip(file: string, outputDir: string, callback: () => void = null) {
+  private async unzip(file: string, outputDir: string, callback: () => void = null): Promise<void> {
     if (fs.existsSync(file)) {
       try {
+        const AdmZip = await import('adm-zip');
         let zip = new AdmZip(file);
         zip.extractAllTo(outputDir, true);
       } catch (e) {
