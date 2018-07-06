@@ -459,8 +459,8 @@ class Dependencies {
 
     let locations: string[] = [
       this.dirname + path.sep + 'python' + path.sep + 'pythonw',
-      'pythonw',
       'python3',
+      'pythonw',
       'python',
       '/usr/local/bin/python3',
       '/usr/local/bin/python',
