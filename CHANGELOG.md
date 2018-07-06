@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 1.2.3 (2018-07-06)
+
+- Prefer Python 3 if available.
+  [#58](https://github.com/wakatime/vscode-wakatime/pull/58)
+
 
 ## 1.2.2 (2018-05-12)
 
