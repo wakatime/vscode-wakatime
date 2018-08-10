@@ -58,6 +58,11 @@ export function activate(ctx: vscode.ExtensionContext) {
 }
 
 export class WakaTime {
+  private appNames = {
+    'SQL Operations Studio': 'sqlops',
+    'Visual Studio Code': 'vscode',
+  };
+  private agentName: string;
   private extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime').packageJSON;
   private statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
@@ -72,6 +77,7 @@ export class WakaTime {
 
   public initialize(): void {
     logger.debug('Initializing WakaTime v' + this.extension.version);
+    this.agentName = this.appNames[vscode.env.appName] || 'vscode';
     this.statusBar.text = '$(clock) WakaTime Initializing...';
     this.statusBar.show();
 
@@ -267,7 +273,7 @@ export class WakaTime {
           if (pythonBinary) {
             let core = this.dependencies.getCoreLocation();
             let user_agent =
-              'vscode/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
+              this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
             let args = [core, '--file', file, '--plugin', user_agent];
             let project = this.getProjectName(file);
             if (project) args.push('--alternate-project', project);
