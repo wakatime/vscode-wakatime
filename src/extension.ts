@@ -473,7 +473,7 @@ class Dependencies {
       '/usr/bin/python3',
       '/usr/bin/python',
     ];
-    for (var i = 39; i >= 26; i--) {
+    for (var i = 39; i >= 27; i--) {
       if (i >= 30 && i <= 32) continue;
       locations.push('\\python' + i + '\\pythonw');
       locations.push('\\Python' + i + '\\pythonw');
@@ -507,7 +507,7 @@ class Dependencies {
     const args = ['--version'];
     child_process.execFile(binary, args, (error, stdout, stderr) => {
       const output: string = stdout.toString() + stderr.toString();
-      if (!error && this.isSupportedPythonVersion(output)) {
+      if (!error && this.isSupportedPythonVersion(binary, output)) {
         this.cachedPythonLocation = binary;
         logger.debug('Valid python version: ' + output);
         callback(binary);
@@ -682,16 +682,23 @@ class Dependencies {
     }
   }
 
-  private isSupportedPythonVersion(versionString: string): boolean {
-    const anaconda = /continuum|anaconda/gi;
-    if (!anaconda.test(versionString)) return true;
+  private isSupportedPythonVersion(binary: string, versionString: string): boolean {
+    // Only support Python 2.7+ because 2.6 has SSL problems
+    if (binary.toLowerCase().includes('python26')) return false;
 
-    const re = /python\w+([0-9]+)\.([0-9]+)\.([0-9]+)\w/gi;
+    const anaconda = /continuum|anaconda/gi;
+    const isAnaconda: boolean = !!anaconda.test(versionString);
+    const re = /python\s+(\d+)\.(\d+)\.(\d+)\s/gi;
     const ver = re.exec(versionString);
-    if (!ver) return false;
+    if (!ver) return !isAnaconda;
 
     // Older Ananconda python distributions not supported
-    if (parseInt(ver[1]) >= 3 && parseInt(ver[2]) >= 5) return true;
+    if (isAnaconda) {
+      if (parseInt(ver[1]) >= 3 && parseInt(ver[2]) >= 5) return true;
+    } else {
+      // Only support Python 2.7+ because 2.6 has SSL problems
+      if (parseInt(ver[1]) >= 2 || parseInt(ver[2]) >= 7) return true;
+    }
 
     return false;
   }
