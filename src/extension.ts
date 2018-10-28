@@ -85,12 +85,12 @@ export class WakaTime {
 
     this.dependencies = new Dependencies(this.options);
     this.dependencies.checkAndInstall(() => {
-      this.statusBar.text = '$(clock)';
-      this.statusBar.tooltip = 'WakaTime: Initialized';
-      this.options.getSetting('settings', 'status_bar_icon', (err, val) => {
-        if (val && val.trim() == 'false') this.statusBar.hide();
-        else this.statusBar.show();
-      });
+      this.statusBar.text = '$(clock) Fetching stats...';
+      this.getStats();
+      // this.options.getSetting('settings', 'status_bar_icon', (err, val) => {
+      //   if (val && val.trim() == 'false') this.statusBar.hide();
+      //   else this.statusBar.show();
+      // });
     });
 
     this.setupEventListeners();
@@ -194,6 +194,7 @@ export class WakaTime {
   public dispose() {
     this.statusBar.dispose();
     this.disposable.dispose();
+    clearTimeout(this.getStatsTimeout);
   }
 
   private validateKey(key: string): string {
@@ -298,11 +299,9 @@ export class WakaTime {
             });
             process.on('close', (code, signal) => {
               if (code == 0) {
-                this.statusBar.text = '$(clock)';
                 let today = new Date();
                 this.statusBar.tooltip = 'WakaTime: Last heartbeat sent ' + this.formatDate(today);
               } else if (code == 102) {
-                this.statusBar.text = '$(clock)';
                 this.statusBar.tooltip =
                   'WakaTime: Working offline... coding activity will sync next time we are online.';
                 logger.warn(
@@ -339,6 +338,46 @@ export class WakaTime {
         this.promptForApiKey();
       }
     });
+  }
+
+  private getStatsTimeout: NodeJS.Timer;
+  private getStats = async () => {
+    this.getStatsTimeout = setTimeout(this.getStats, 120*1000);
+    const apiKey = await this.options.getSettingAsync('settings', 'api_key');
+    if (this.validateKey(apiKey)) return;
+    const request = await import('request');
+    const proxy = await this.options.getSettingAsync('settings', 'proxy')
+      .then(proxy => (proxy && proxy.trim()) || undefined);
+    const date = new Date();
+    const dateStr = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
+    let options = {
+      url: `https://wakatime.com/api/v1/users/current/summaries?start=${dateStr}&end=${dateStr}`,
+      headers: {
+        Authorization: `Basic ${Buffer.from(apiKey).toString('base64')}`,
+      },
+      proxy,
+    };
+    try {
+      const body = await new Promise<string>((resolve, reject) => {
+        request.get(options, (error, response, body) => error ? reject(error) : resolve(body));
+      });
+      type StatsResult = any;
+      const data = JSON.parse(body).data[0] as StatsResult;
+      let text = `$(clock) Today coded: ${data.grand_total.text}`;
+      if (this.lastFile) {
+        const projectName = this.getProjectName(this.lastFile);
+        const project = data.projects.find(p => p.name === projectName);
+        if (project) {
+          let percent = project.percent.toFixed(1);
+          if (percent.endsWith('.0')) percent = percent.substring(0, percent.length - 2);
+          text += ` (${project.name}: ${project.text} ${percent}%)`;
+        }
+      }
+      this.statusBar.text = text;
+    } catch (e) {
+      this.statusBar.text = '$(clock) Failed to get stats.'
+      throw e;
+    }
   }
 
   private formatDate(date: Date): String {
@@ -717,7 +756,7 @@ class Options {
     }
   }
 
-  public getSetting(section: string, key: string, callback: (string, any) => void): void {
+  public getSetting(section: string, key: string, callback: (Error, any) => void): void {
     fs.readFile(this.getConfigFile(), 'utf-8', (err: NodeJS.ErrnoException, content: string) => {
       if (err) {
         if (callback) callback(new Error('could not read ' + this.getConfigFile()), null);
@@ -743,6 +782,14 @@ class Options {
 
         if (callback) callback(null, null);
       }
+    });
+  }
+
+  public async getSettingAsync<T=any>(section: string, key: string): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      this.getSetting(section, key, (err, result) => {
+        err ? reject(err) : resolve(result);
+      });
     });
   }
 
