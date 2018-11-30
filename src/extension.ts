@@ -272,9 +272,9 @@ export class WakaTime {
         this.dependencies.getPythonLocation(pythonBinary => {
           if (pythonBinary) {
             let core = this.dependencies.getCoreLocation();
-            let user_agent =
+            let user_agent = 
               this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-            let args = [core, '--file', file, '--plugin', user_agent];
+            let args = [core, '--file', file, '--plugin', '"' + user_agent + '"'];
             let project = this.getProjectName(file);
             if (project) args.push('--alternate-project', project);
             if (isWrite) args.push('--write');
