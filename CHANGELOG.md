@@ -1,6 +1,13 @@
 
 # Changelog
 
+
+## 1.2.4 (2018-11-30)
+
+- Fix bug on Windows platform caused by spaces in wakatime-cli command args.
+  [#69](https://github.com/wakatime/vscode-wakatime/pull/69)
+
+
 ## 1.2.3 (2018-07-06)
 
 - Prefer Python 3 if available.
