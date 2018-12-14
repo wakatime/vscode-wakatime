@@ -2,7 +2,7 @@
 # Changelog
 
 
-## 1.2.5 (2018-12-13)
+## 1.2.5 (2018-12-14)
 
 - Only quote args passed to wakatime-cli.
   [#73](https://github.com/wakatime/vscode-wakatime/pull/73)
