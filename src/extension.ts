@@ -274,7 +274,7 @@ export class WakaTime {
             let core = this.dependencies.getCoreLocation();
             let user_agent =
               this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-            let args = [quote(core), '--file', quote(file), '--plugin', quote(user_agent)];
+            let args = [core, '--file', quote(file), '--plugin', quote(user_agent)];
             let project = this.getProjectName(file);
             if (project) args.push('--alternate-project', quote(project));
             if (isWrite) args.push('--write');
@@ -289,17 +289,13 @@ export class WakaTime {
 
             logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
 
-            let process = child_process.execFile(
-              quote(pythonBinary),
-              args,
-              (error, stdout, stderr) => {
-                if (error != null) {
-                  if (stderr && stderr.toString() != '') logger.error(stderr.toString());
-                  if (stdout && stdout.toString() != '') logger.error(stdout.toString());
-                  logger.error(error.toString());
-                }
-              },
-            );
+            let process = child_process.execFile(pythonBinary, args, (error, stdout, stderr) => {
+              if (error != null) {
+                if (stderr && stderr.toString() != '') logger.error(stderr.toString());
+                if (stdout && stdout.toString() != '') logger.error(stdout.toString());
+                logger.error(error.toString());
+              }
+            });
             process.on('close', (code, signal) => {
               if (code == 0) {
                 this.statusBar.text = '$(clock)';
@@ -509,7 +505,7 @@ class Dependencies {
     logger.debug('Looking for python at: ' + binary);
 
     const args = ['--version'];
-    child_process.execFile(quote(binary), args, (error, stdout, stderr) => {
+    child_process.execFile(binary, args, (error, stdout, stderr) => {
       const output: string = stdout.toString() + stderr.toString();
       if (!error && this.isSupportedPythonVersion(binary, output)) {
         this.cachedPythonLocation = binary;
@@ -529,8 +525,8 @@ class Dependencies {
   private isCoreLatest(callback: (boolean) => void): void {
     this.getPythonLocation(pythonBinary => {
       if (pythonBinary) {
-        let args = [quote(this.getCoreLocation()), '--version'];
-        child_process.execFile(quote(pythonBinary), args, (error, stdout, stderr) => {
+        let args = [this.getCoreLocation(), '--version'];
+        child_process.execFile(pythonBinary, args, (error, stdout, stderr) => {
           if (!(error != null)) {
             let currentVersion = stderr.toString().trim();
             logger.debug('Current wakatime-core version is ' + currentVersion);
