@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.2.5 (2018-12-13)
+
+- Only quote args passed to wakatime-cli.
+  [#73](https://github.com/wakatime/vscode-wakatime/pull/73)
+
+
 ## 1.2.4 (2018-11-30)
 
 - Fix bug on Windows platform caused by spaces in wakatime-cli command args.
