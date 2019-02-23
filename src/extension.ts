@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
 import * as fs from 'fs';
@@ -10,8 +8,6 @@ import * as child_process from 'child_process';
 var logger: Logger;
 var options: Options;
 
-// this method is called when your extension is activated. activation is
-// controlled by the activation events defined in package.json
 export function activate(ctx: vscode.ExtensionContext) {
   options = new Options();
   logger = new Logger('info');
