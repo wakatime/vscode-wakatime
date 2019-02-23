@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.2.7 (2019-02-23)
+
+- Fix dependencies path.
+
+
 ## 1.2.6 (2019-02-23)
 
 - Use webpack to bundle imports and speed up plugin load time.
