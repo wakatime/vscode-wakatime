@@ -66,7 +66,7 @@
     "devDependencies": {
         "@types/node": "^10.5.5",
         "adm-zip": "0.4.11",
-        "original-fs": "^1.0.0", // required to fix broken adm-zip import
+        "original-fs": "^1.0.0",
         "request": "2.87.0",
         "rimraf": "2.6.2",
         "ts-loader": "^4.4.2",
