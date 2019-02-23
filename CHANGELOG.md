@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.2.6 (2019-02-23)
+
+- Use webpack to bundle imports and speed up plugin load time.
+
+
 ## 1.2.5 (2018-12-14)
 
 - Only quote args passed to wakatime-cli.
