@@ -31,12 +31,12 @@
         "vscode": "^1.17.0",
         "sqlops": "*"
     },
-    "main": "./out/extension",
+    "main": "./dist/extension",
     "scripts": {
-        "setup": "mkdir -p ./out/test",
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
+        "setup": "mkdir -p ./dist/test",
+        "vscode:prepublish": "webpack --mode production",
+        "webpack": "webpack --mode development",
+        "webpack-dev": "webpack --mode development --watch",
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "contributes": {
@@ -63,16 +63,16 @@
             }
         ]
     },
-    "dependencies": {
-        "adm-zip": "0.4.11",
-        "request": "2.87.0",
-        "rimraf": "2.6.2"
-    },
     "devDependencies": {
         "@types/node": "^10.5.5",
+        "adm-zip": "0.4.11",
+        "original-fs": "^1.0.0", // required to fix broken adm-zip import
         "request": "2.87.0",
         "rimraf": "2.6.2",
-        "typescript": "^3.0.1",
-        "vscode": "^1.1.14"
+        "ts-loader": "^4.4.2",
+        "typescript": "^3.0.3",
+        "vscode": "^1.1.22",
+        "webpack": "^4.19.1",
+        "webpack-cli": "^3.1.0"
     }
 }
