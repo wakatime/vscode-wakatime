@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.2.12 (2019-03-06)
+
+- Re-enable minifying webpack output.
+
+
 ## 1.2.11 (2019-03-06)
 
 - Use extensionPath from extension context because storagePath not available on
