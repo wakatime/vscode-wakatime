@@ -34,10 +34,10 @@
     "main": "./dist/extension",
     "scripts": {
         "setup": "mkdir -p ./dist/test",
-        "vscode:prepublish": "webpack --mode production",
+        "postinstall": "node ./node_modules/vscode/bin/install",
         "webpack": "webpack --mode development",
         "webpack-dev": "webpack --mode development --watch",
-        "postinstall": "node ./node_modules/vscode/bin/install"
+        "vscode:prepublish": "webpack --mode production"
     },
     "contributes": {
         "commands": [

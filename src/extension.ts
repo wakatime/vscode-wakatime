@@ -12,7 +12,7 @@ export function activate(ctx: vscode.ExtensionContext) {
   options = new Options();
   logger = new Logger('info');
 
-  let wakatime = new WakaTime();
+  let wakatime = new WakaTime(ctx);
 
   ctx.subscriptions.push(
     vscode.commands.registerCommand('wakatime.apikey', function(args) {
@@ -59,7 +59,8 @@ export class WakaTime {
     'Visual Studio Code': 'vscode',
   };
   private agentName: string;
-  private extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime').packageJSON;
+  private ctx: vscode.ExtensionContext;
+  private extension;
   private statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
   );
@@ -69,9 +70,12 @@ export class WakaTime {
   private dependencies: Dependencies;
   private options: Options = new Options();
 
-  constructor() {}
+  constructor(ctx: vscode.ExtensionContext) {
+    this.ctx = ctx;
+  }
 
   public initialize(): void {
+    this.extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime').packageJSON || {};
     logger.debug('Initializing WakaTime v' + this.extension.version);
     this.agentName = this.appNames[vscode.env.appName] || 'vscode';
     this.statusBar.text = '$(clock) WakaTime Initializing...';
@@ -79,7 +83,7 @@ export class WakaTime {
 
     this.checkApiKey();
 
-    this.dependencies = new Dependencies(this.options);
+    this.dependencies = new Dependencies(this.options, this.ctx);
     this.dependencies.checkAndInstall(() => {
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
@@ -424,12 +428,12 @@ export class WakaTime {
 class Dependencies {
   private cachedPythonLocation: string;
   private options: Options;
-  private dependenciesFolder: string;
+  private ctx: vscode.ExtensionContext;
 
-  constructor(options: Options) {
+  constructor(options: Options, ctx: vscode.ExtensionContext) {
     this.options = options;
-    const extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime').packageJSON;
-    this.dependenciesFolder = extension.extensionLocation.fsPath + path.sep + 'dist';
+    this.ctx = ctx;
+    if (!fs.existsSync(ctx.storagePath)) fs.mkdirSync(ctx.storagePath);
   }
 
   public checkAndInstall(callback: () => void): void {
@@ -462,7 +466,7 @@ class Dependencies {
     if (this.cachedPythonLocation) return callback(this.cachedPythonLocation);
 
     let locations: string[] = [
-      this.dependenciesFolder + path.sep + 'python' + path.sep + 'pythonw',
+      this.ctx.storagePath + path.sep + 'python' + path.sep + 'pythonw',
       'python3',
       'pythonw',
       'python',
@@ -485,7 +489,7 @@ class Dependencies {
 
   public getCoreLocation(): string {
     let dir =
-      this.dependenciesFolder +
+      this.ctx.storagePath +
       path.sep +
       'wakatime-master' +
       path.sep +
@@ -585,7 +589,7 @@ class Dependencies {
   private installCore(callback: () => void): void {
     logger.debug('Downloading wakatime-core...');
     let url = 'https://github.com/wakatime/wakatime/archive/master.zip';
-    let zipFile = this.dependenciesFolder + path.sep + 'wakatime-master.zip';
+    let zipFile = this.ctx.storagePath + path.sep + 'wakatime-master.zip';
 
     this.downloadFile(url, zipFile, () => {
       this.extractCore(zipFile, callback);
@@ -593,18 +597,18 @@ class Dependencies {
   }
 
   private extractCore(zipFile: string, callback: () => void): void {
-    logger.debug('Extracting wakatime-core into "' + this.dependenciesFolder + '"...');
+    logger.debug('Extracting wakatime-core into "' + this.ctx.storagePath + '"...');
     this.removeCore(() => {
-      this.unzip(zipFile, this.dependenciesFolder, callback);
+      this.unzip(zipFile, this.ctx.storagePath, callback);
       logger.debug('Finished extracting wakatime-core.');
     });
   }
 
   private async removeCore(callback: () => void): Promise<void> {
-    if (fs.existsSync(this.dependenciesFolder + path.sep + 'wakatime-master')) {
+    if (fs.existsSync(this.ctx.storagePath + path.sep + 'wakatime-master')) {
       try {
         const rimraf = await import('rimraf');
-        rimraf(this.dependenciesFolder + path.sep + 'wakatime-master', () => {
+        rimraf(this.ctx.storagePath + path.sep + 'wakatime-master', () => {
           if (callback != null) {
             return callback();
           }
@@ -670,10 +674,10 @@ class Dependencies {
         'https://www.python.org/ftp/python/' + ver + '/python-' + ver + '-embed-' + arch + '.zip';
 
       logger.debug('Downloading python...');
-      let zipFile = this.dependenciesFolder + path.sep + 'python.zip';
+      let zipFile = this.ctx.storagePath + path.sep + 'python.zip';
       this.downloadFile(url, zipFile, () => {
         logger.debug('Extracting python...');
-        this.unzip(zipFile, this.dependenciesFolder + path.sep + 'python');
+        this.unzip(zipFile, this.ctx.storagePath + path.sep + 'python');
         logger.debug('Finished installing python.');
 
         callback();
