@@ -79,7 +79,7 @@ export class WakaTime {
 
     this.checkApiKey();
 
-    this.dependencies = new Dependencies(this.extension, this.options);
+    this.dependencies = new Dependencies(this.options);
     this.dependencies.checkAndInstall(() => {
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
@@ -424,12 +424,11 @@ export class WakaTime {
 class Dependencies {
   private cachedPythonLocation: string;
   private options: Options;
-  private extension;
   private dependenciesFolder: string;
 
-  constructor(extension, options: Options) {
+  constructor(options: Options) {
     this.options = options;
-    this.extension = extension;
+    const extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime').packageJSON;
     this.dependenciesFolder = extension.extensionLocation.fsPath + path.sep + 'dist';
   }
 
