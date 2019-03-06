@@ -12,7 +12,7 @@ export function activate(ctx: vscode.ExtensionContext) {
   options = new Options();
   logger = new Logger('info');
 
-  let wakatime = new WakaTime(ctx.storagePath);
+  let wakatime = new WakaTime(ctx.extensionPath);
 
   ctx.subscriptions.push(
     vscode.commands.registerCommand('wakatime.apikey', function(args) {
@@ -66,12 +66,12 @@ export class WakaTime {
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
-  private storagePath: string;
+  private extensionPath: string;
   private dependencies: Dependencies;
   private options: Options = new Options();
 
-  constructor(storagePath: string) {
-    this.storagePath = storagePath;
+  constructor(extensionPath: string) {
+    this.extensionPath = extensionPath;
   }
 
   public initialize(): void {
@@ -83,7 +83,7 @@ export class WakaTime {
 
     this.checkApiKey();
 
-    this.dependencies = new Dependencies(this.options, this.storagePath);
+    this.dependencies = new Dependencies(this.options, this.extensionPath);
     this.dependencies.checkAndInstall(() => {
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
@@ -428,12 +428,11 @@ export class WakaTime {
 class Dependencies {
   private cachedPythonLocation: string;
   private options: Options;
-  private storagePath: string;
+  private extensionPath: string;
 
-  constructor(options: Options, storagePath: string) {
+  constructor(options: Options, extensionPath: string) {
     this.options = options;
-    this.storagePath = storagePath;
-    if (!fs.existsSync(storagePath)) fs.mkdirSync(storagePath);
+    this.extensionPath = extensionPath;
   }
 
   public checkAndInstall(callback: () => void): void {
@@ -466,7 +465,7 @@ class Dependencies {
     if (this.cachedPythonLocation) return callback(this.cachedPythonLocation);
 
     let locations: string[] = [
-      this.storagePath + path.sep + 'python' + path.sep + 'pythonw',
+      this.extensionPath + path.sep + 'python' + path.sep + 'pythonw',
       'python3',
       'pythonw',
       'python',
@@ -489,7 +488,13 @@ class Dependencies {
 
   public getCoreLocation(): string {
     let dir =
-      this.storagePath + path.sep + 'wakatime-master' + path.sep + 'wakatime' + path.sep + 'cli.py';
+      this.extensionPath +
+      path.sep +
+      'wakatime-master' +
+      path.sep +
+      'wakatime' +
+      path.sep +
+      'cli.py';
     return dir;
   }
 
@@ -583,7 +588,7 @@ class Dependencies {
   private installCore(callback: () => void): void {
     logger.debug('Downloading wakatime-core...');
     let url = 'https://github.com/wakatime/wakatime/archive/master.zip';
-    let zipFile = this.storagePath + path.sep + 'wakatime-master.zip';
+    let zipFile = this.extensionPath + path.sep + 'wakatime-master.zip';
 
     this.downloadFile(url, zipFile, () => {
       this.extractCore(zipFile, callback);
@@ -591,18 +596,18 @@ class Dependencies {
   }
 
   private extractCore(zipFile: string, callback: () => void): void {
-    logger.debug('Extracting wakatime-core into "' + this.storagePath + '"...');
+    logger.debug('Extracting wakatime-core into "' + this.extensionPath + '"...');
     this.removeCore(() => {
-      this.unzip(zipFile, this.storagePath, callback);
+      this.unzip(zipFile, this.extensionPath, callback);
       logger.debug('Finished extracting wakatime-core.');
     });
   }
 
   private async removeCore(callback: () => void): Promise<void> {
-    if (fs.existsSync(this.storagePath + path.sep + 'wakatime-master')) {
+    if (fs.existsSync(this.extensionPath + path.sep + 'wakatime-master')) {
       try {
         const rimraf = await import('rimraf');
-        rimraf(this.storagePath + path.sep + 'wakatime-master', () => {
+        rimraf(this.extensionPath + path.sep + 'wakatime-master', () => {
           if (callback != null) {
             return callback();
           }
@@ -668,10 +673,10 @@ class Dependencies {
         'https://www.python.org/ftp/python/' + ver + '/python-' + ver + '-embed-' + arch + '.zip';
 
       logger.debug('Downloading python...');
-      let zipFile = this.storagePath + path.sep + 'python.zip';
+      let zipFile = this.extensionPath + path.sep + 'python.zip';
       this.downloadFile(url, zipFile, () => {
         logger.debug('Extracting python...');
-        this.unzip(zipFile, this.storagePath + path.sep + 'python');
+        this.unzip(zipFile, this.extensionPath + path.sep + 'python');
         logger.debug('Finished installing python.');
 
         callback();
