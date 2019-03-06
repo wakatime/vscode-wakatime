@@ -2,6 +2,13 @@
 # Changelog
 
 
+## 1.2.11 (2019-03-06)
+
+- Use extensionPath from extension context because storagePath not available on
+  Windows and Linux platforms.
+  [#84](https://github.com/wakatime/vscode-wakatime/issues/84)
+
+
 ## 1.2.10 (2019-03-06)
 
 - Stop minifying webpack output to improve debugging.
