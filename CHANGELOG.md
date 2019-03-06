@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 1.2.9 (2019-03-06)
+
+- Use extension context storage path for wakatime cli dependencies location.
+  [#84](https://github.com/wakatime/vscode-wakatime/issues/84)
+
+
 ## 1.2.8 (2019-03-06)
 
 - Retrieve extension json directy from vscode library instead of passing as
