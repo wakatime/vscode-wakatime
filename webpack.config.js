@@ -13,6 +13,9 @@ const config = {
     devtoolModuleFilenameTemplate: '../[resource-path]',
   },
   devtool: 'source-map',
+  optimization: {
+    minimize: false,
+  },
   externals: {
     vscode: 'commonjs vscode',
   },
