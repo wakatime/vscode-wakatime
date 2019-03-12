@@ -10,6 +10,13 @@
     "categories": [
         "Other"
     ],
+    "keywords": [
+        "productivity",
+        "time tracking",
+        "project",
+        "git",
+        "timer"
+    ],
     "homepage": "https://wakatime.com/",
     "bugs": {
         "url": "https://github.com/wakatime/vscode-wakatime/issues"
