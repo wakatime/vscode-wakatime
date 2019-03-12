@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.2.13 (2019-03-13)
+
+- Add keywords to package for improved discoverability.
+
+
 ## 1.2.12 (2019-03-06)
 
 - Re-enable minifying webpack output.
