@@ -512,17 +512,22 @@ class Dependencies {
     logger.debug('Looking for python at: ' + binary);
 
     const args = ['--version'];
-    child_process.execFile(binary, args, (error, stdout, stderr) => {
-      const output: string = stdout.toString() + stderr.toString();
-      if (!error && this.isSupportedPythonVersion(binary, output)) {
-        this.cachedPythonLocation = binary;
-        logger.debug('Valid python version: ' + output);
-        callback(binary);
-      } else {
-        logger.debug('Invalid python version: ' + output);
-        this.findPython(locations, callback);
-      }
-    });
+    try {
+      child_process.execFile(binary, args, (error, stdout, stderr) => {
+        const output: string = stdout.toString() + stderr.toString();
+        if (!error && this.isSupportedPythonVersion(binary, output)) {
+          this.cachedPythonLocation = binary;
+          logger.debug('Valid python version: ' + output);
+          callback(binary);
+        } else {
+          logger.debug('Invalid python version: ' + output);
+          this.findPython(locations, callback);
+        }
+      });
+    } catch (e) {
+      logger.debug(e);
+      this.findPython(locations, callback);
+    }
   }
 
   private isCoreInstalled(): boolean {
