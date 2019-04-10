@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 1.2.14 (2019-04-09)
+
+- Handle exceptions when calling execFile.
+
+
 ## 1.2.13 (2019-03-13)
 
 - Add keywords to package for improved discoverability.
