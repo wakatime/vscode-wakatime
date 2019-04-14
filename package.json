@@ -36,7 +36,7 @@
         "url": "https://github.com/wakatime/vscode-wakatime.git"
     },
     "engines": {
-        "vscode": "^1.33.0",
+        "vscode": "^1.17.0",
         "sqlops": "*"
     },
     "main": "./dist/extension",
