@@ -52,23 +52,31 @@
         "commands": [
             {
                 "command": "wakatime.apikey",
-                "title": "WakaTime API Key"
+                "title": "WakaTime: Api Key"
             },
             {
                 "command": "wakatime.proxy",
-                "title": "WakaTime Proxy"
+                "title": "WakaTime: Set Proxy"
             },
             {
                 "command": "wakatime.debug",
-                "title": "WakaTime Debug"
+                "title": "WakaTime: Set Debug"
             },
             {
                 "command": "wakatime.status_bar_icon",
-                "title": "WakaTime Status Bar Icon"
+                "title": "WakaTime: Status Bar Icon"
             },
             {
                 "command": "wakatime.dashboard",
-                "title": "WakaTime Dashboard"
+                "title": "WakaTime: Open Dashboard"
+            },
+            {
+                "command": "wakatime.config_file",
+                "title": "WakaTime: Open Config File..."
+            },
+            {
+                "command": "wakatime.log_file",
+                "title": "WakaTime: Open Log File..."
             }
         ]
     },

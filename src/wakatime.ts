@@ -71,7 +71,6 @@ export class WakaTime {
                     if (validation === '') this.options.setSetting('settings', 'api_key', val)
                     else vscode.window.setStatusBarMessage(validation);
                 } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
-                
             });
         });
     }
@@ -153,6 +152,26 @@ export class WakaTime {
                 this.logger.error(error.toString());
             }
         });
+    }
+
+    public getConfigFilePath(): void {
+        let path = this.options.getConfigFile();
+        if (path) {
+            let uri = vscode.Uri.file(path);            
+            vscode.window.showTextDocument(uri).then(doc => {
+                doc.viewColumn = vscode.ViewColumn.Beside;
+            });
+        }
+    }
+
+    public getLogFilePath(): void {
+        let path = this.options.getLogFile();
+        if (path) {
+            let uri = vscode.Uri.file(path);            
+            vscode.window.showTextDocument(uri).then(doc => {
+                doc.viewColumn = vscode.ViewColumn.Beside;
+            });
+        }
     }
 
     public dispose() {
