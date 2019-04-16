@@ -105,6 +105,9 @@ export class Options {
     }
 
     public getUserHomeDir(): string {
+        if (process.env['VSCODE_PORTABLE'])
+            return process.env['VSCODE_PORTABLE'] as string;
+
         return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || '';
     }
 
