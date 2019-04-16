@@ -2,11 +2,26 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es6",
-    "rootDir": "src",
     "outDir": "out",
-    "lib": ["es6"],
-    "sourceMap": true
+    "moduleResolution": "node",
+    "lib": [        
+      "es2018"
+    ],
+    "sourceMap": true,
+    "rootDir": ".",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strict": true,
+    "importHelpers": true,
+    "removeComments": true,
+    "noImplicitAny": false,
+    "strictPropertyInitialization": false,
   },
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
     "node_modules",
     "out/wakatime-master",

@@ -1,7 +1,10 @@
 dist
+out/**
 node_modules
+.vscode-test/**
 *.vsix
 npm-debug.log*
 .DS_Store
 wakatime-master
 tags
+*.zip
