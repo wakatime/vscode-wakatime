@@ -4,8 +4,14 @@ import * as fs from 'fs';
 import { Dependencies } from './dependencies';
 
 export class Options {
-    private configFile = path.join(this.getWakaHome(), '.wakatime.cfg');
-    private logFile = path.join(this.getWakaHome(), '.wakatime.log');
+    configFile: string;
+    logFile: string;
+
+    constructor() {
+        let wakaHome = this.getWakaHome();
+        this.configFile = path.join(wakaHome, '.wakatime.cfg');
+        this.logFile = path.join(wakaHome, '.wakatime.log');
+    }
 
     private getWakaHome(): string {
         let home = process.env.WAKATIME_HOME;
@@ -19,7 +25,7 @@ export class Options {
     public getSetting(section: string, key: string, callback: (string, any) => void): void {
         fs.readFile(this.getConfigFile(), 'utf-8', (err: NodeJS.ErrnoException, content: string) => {
             if (err) {
-                if (callback) callback(new Error('could not read ' + this.getConfigFile()), null);
+                if (callback) callback(new Error(`could not read ${this.getConfigFile()}`), null);
             } else {
                 let currentSection = '';
                 let lines = content.split('\n');

@@ -34,7 +34,7 @@ export class WakaTime {
     public initialize(): void {
         let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
         this.extension = extension != undefined && extension.packageJSON || { version: '0.0.0' };
-        this.logger.debug('Initializing WakaTime v' + this.extension.version);
+        this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
         this.agentName = this.appNames[vscode.env.appName] || 'vscode';
         this.statusBar.text = '$(clock) WakaTime Initializing...';
         this.statusBar.show();
@@ -59,8 +59,8 @@ export class WakaTime {
         this.options.getSetting('settings', 'api_key', (_err, defaultVal) => {
             if (this.validateKey(defaultVal) != '') defaultVal = '';
             let promptOptions = {
-                prompt: 'WakaTime API Key',
-                placeHolder: 'Enter your api key from wakatime.com/settings',
+                prompt: 'WakaTime Api Key',
+                placeHolder: 'Enter your api key from https://wakatime.com/settings',
                 value: defaultVal,
                 ignoreFocusOut: true,
                 validateInput: this.validateKey.bind(this),
@@ -96,7 +96,7 @@ export class WakaTime {
             if (!defaultVal || defaultVal.trim() !== 'true') defaultVal = 'false';
             let items: string[] = ['true', 'false'];
             let promptOptions = {
-                placeHolder: 'true or false (Currently ' + defaultVal + ')',
+                placeHolder: `true or false (current value ' + ${defaultVal} + ')`,
                 value: defaultVal,
                 ignoreFocusOut: true,
             };
@@ -118,7 +118,7 @@ export class WakaTime {
             if (!defaultVal || defaultVal.trim() !== 'false') defaultVal = 'true';
             let items: string[] = ['true', 'false'];
             let promptOptions = {
-                placeHolder: 'true or false (Currently ' + defaultVal + ')',
+                placeHolder: `true or false (current value ' + ${defaultVal} + ')`,
                 value: defaultVal,
                 ignoreFocusOut: true,
             };
@@ -180,7 +180,7 @@ export class WakaTime {
     }
 
     private validateKey(key: string): string {
-        const err = 'Invalid api key... check https://wakatime.com/settings for your key.';
+        const err = 'Invalid api key... check https://wakatime.com/settings for your key';
         if (!key) return err;
         const re = new RegExp(
             '^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$',
@@ -192,7 +192,7 @@ export class WakaTime {
 
     private validateProxy(proxy: string): string {
         const err =
-            'Invalid proxy. Valid formats are https://user:pass@host:port or socks5://user:pass@host:port or domain\\user:pass.';
+            'Invalid proxy. Valid formats are https://user:pass@host:port or socks5://user:pass@host:port or domain\\user:pass';
         if (!proxy) return err;
         let re = new RegExp('^((https?|socks5)://)?([^:@]+(:([^:@])+)?@)?[\\w\\.-]+(:\\d+)?$', 'i');
         if (proxy.indexOf('\\') > -1) re = new RegExp('^.*\\\\.+$', 'i');
@@ -270,7 +270,7 @@ export class WakaTime {
                             );
                         }
 
-                        this.logger.debug('Sending heartbeat: ' + this.formatArguments(pythonBinary, args));
+                        this.logger.debug(`Sending heartbeat: ${this.formatArguments(pythonBinary, args)}`);
 
                         let process = child_process.execFile(pythonBinary, args, (error, stdout, stderr) => {
                             if (error != null) {
@@ -283,36 +283,30 @@ export class WakaTime {
                             if (code == 0) {
                                 this.statusBar.text = '$(clock)';
                                 let today = new Date();
-                                this.statusBar.tooltip = 'WakaTime: Last heartbeat sent ' + this.formatDate(today);
+                                this.statusBar.tooltip = `WakaTime: last heartbeat sent ${this.formatDate(today)}`;
                             } else if (code == 102) {
                                 this.statusBar.text = '$(clock)';
-                                this.statusBar.tooltip =
-                                    'WakaTime: Working offline... coding activity will sync next time we are online.';
+                                this.statusBar.tooltip = 
+                                    'WakaTime: working offline... coding activity will sync next time we are online';
                                 this.logger.warn(
-                                    'API Error (102); Check your ' + this.options.getLogFile() + ' file for more details.',
+                                    `Api eror (102); Check your ${this.options.getLogFile()} file for more details`
                                 );
                             } else if (code == 103) {
                                 this.statusBar.text = '$(clock) WakaTime Error';
-                                let error_msg =
-                                    'Config Parsing Error (103); Check your ' +
-                                    this.options.getLogFile() +
-                                    ' file for more details.';
-                                this.statusBar.tooltip = 'WakaTime: ' + error_msg;
+                                let error_msg = 
+                                    `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
+                                this.statusBar.tooltip = `WakaTime: ${error_msg}`;
                                 this.logger.error(error_msg);
                             } else if (code == 104) {
                                 this.statusBar.text = '$(clock) WakaTime Error';
-                                let error_msg = 'Invalid API Key (104); Make sure your API Key is correct!';
-                                this.statusBar.tooltip = 'WakaTime: ' + error_msg;
+                                let error_msg = 'Invalid Api Key (104); Make sure your Api Key is correct!';
+                                this.statusBar.tooltip = `WakaTime: ${error_msg}`;
                                 this.logger.error(error_msg);
                             } else {
                                 this.statusBar.text = '$(clock) WakaTime Error';
                                 let error_msg =
-                                    'Unknown Error (' +
-                                    code +
-                                    '); Check your ' +
-                                    this.options.getLogFile() +
-                                    ' file for more details.';
-                                this.statusBar.tooltip = 'WakaTime: ' + error_msg;
+                                    `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
+                                this.statusBar.tooltip = `WakaTime: ${error_msg}`;
                                 this.logger.error(error_msg);
                             }
                         });
@@ -349,19 +343,7 @@ export class WakaTime {
             hour = 12;
         }
         let minute = date.getMinutes();
-        return (
-            months[date.getMonth()] +
-            ' ' +
-            date.getDate() +
-            ', ' +
-            date.getFullYear() +
-            ' ' +
-            hour +
-            ':' +
-            (minute < 10 ? '0' + minute : minute) +
-            ' ' +
-            ampm
-        );
+        return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} ${hour}:${(minute < 10 ? `0${minute}` : minute)} ${ampm}`;
     }
 
     private enoughTimePassed(time: number): boolean {

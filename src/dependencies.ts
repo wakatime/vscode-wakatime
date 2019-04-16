@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
@@ -49,7 +50,7 @@ export class Dependencies {
         if (this.cachedPythonLocation) return callback(this.cachedPythonLocation);
 
         let locations: string[] = [
-            this.extensionPath + path.sep + 'python' + path.sep + 'pythonw',
+            path.join(this.extensionPath, 'python', 'pythonw'),
             'python3',
             'pythonw',
             'python',
@@ -60,8 +61,8 @@ export class Dependencies {
         ];
         for (var i = 39; i >= 27; i--) {
             if (i >= 30 && i <= 32) continue;
-            locations.push('\\python' + i + '\\pythonw');
-            locations.push('\\Python' + i + '\\pythonw');
+            locations.push(`\\python${i}\\pythonw`);
+            locations.push(`\\Python${i}\\pythonw`);
         }
 
         this.findPython(locations, python => {
@@ -71,14 +72,7 @@ export class Dependencies {
     }
 
     public getCoreLocation(): string {
-        let dir =
-            this.extensionPath +
-            path.sep +
-            'wakatime-master' +
-            path.sep +
-            'wakatime' +
-            path.sep +
-            'cli.py';
+        let dir = path.join(this.extensionPath, 'wakatime-master', 'wakatime', 'cli.py');
         return dir;
     }
 
@@ -89,21 +83,21 @@ export class Dependencies {
     private findPython(locations: string[], callback: (arg0: string) => void): void {
         const binary = locations.shift();
         if (!binary) {
-            callback("");
+            callback('');
             return;
         }
 
-        this.logger.debug('Looking for python at: ' + binary);
+        this.logger.debug(`Looking for python at: ${binary}`);
 
         const args = ['--version'];
         child_process.execFile(binary, args, (error, stdout, stderr) => {
             const output: string = stdout.toString() + stderr.toString();
             if (!error && this.isSupportedPythonVersion(binary, output)) {
                 this.cachedPythonLocation = binary;
-                this.logger.debug('Valid python version: ' + output);
+                this.logger.debug(`Valid python version: ${output}`);
                 callback(binary);
             } else {
-                this.logger.debug('Invalid python version: ' + output);
+                this.logger.debug(`Invalid python version: ${output}`);
                 this.findPython(locations, callback);
             }
         });
@@ -120,7 +114,7 @@ export class Dependencies {
                 child_process.execFile(pythonBinary, args, (error, _stdout, stderr) => {
                     if (!(error != null)) {
                         let currentVersion = stderr.toString().trim();
-                        this.logger.debug('Current wakatime-core version is ' + currentVersion);
+                        this.logger.debug(`Current wakatime-core version is ${currentVersion}`);
 
                         this.logger.debug('Checking for updates to wakatime-core...');
                         this.getLatestCoreVersion(latestVersion => {
@@ -128,7 +122,7 @@ export class Dependencies {
                                 this.logger.debug('wakatime-core is up to date');
                                 if (callback) callback(true);
                             } else if (latestVersion) {
-                                this.logger.debug('Found an updated wakatime-core v' + latestVersion);
+                                this.logger.debug(`Found an updated wakatime-core v${latestVersion}`);
                                 if (callback) callback(false);
                             } else {
                                 this.logger.debug('Unable to find latest wakatime-core version from GitHub');
@@ -172,7 +166,7 @@ export class Dependencies {
     private installCore(callback: () => void): void {
         this.logger.debug('Downloading wakatime-core...');
         let url = 'https://github.com/wakatime/wakatime/archive/master.zip';
-        let zipFile = this.extensionPath + path.sep + 'wakatime-master.zip';
+        let zipFile = path.join(this.extensionPath, 'wakatime-master.zip');
 
         this.downloadFile(url, zipFile, () => {
             this.extractCore(zipFile, callback);
@@ -180,7 +174,7 @@ export class Dependencies {
     }
 
     private extractCore(zipFile: string, callback: () => void): void {
-        this.logger.debug('Extracting wakatime-core into "' + this.extensionPath + '"...');
+        this.logger.debug(`Extracting wakatime-core into "${this.extensionPath}"...`);
         this.removeCore(() => {
             this.unzip(zipFile, this.extensionPath, callback);
             this.logger.debug('Finished extracting wakatime-core.');
@@ -188,10 +182,10 @@ export class Dependencies {
     }
 
     private async removeCore(callback: () => void): Promise<void> {
-        if (fs.existsSync(this.extensionPath + path.sep + 'wakatime-master')) {
+        if (fs.existsSync(path.join(this.extensionPath, 'wakatime-master'))) {
             try {
                 const rimraf = await import('rimraf');
-                rimraf(this.extensionPath + path.sep + 'wakatime-master', () => {
+                rimraf(path.join(this.extensionPath, 'wakatime-master'), () => {
                     if (callback != null) {
                         return callback();
                     }
@@ -255,19 +249,17 @@ export class Dependencies {
             let url = 'https://www.python.org/ftp/python/' + ver + '/python-' + ver + '-embed-' + arch + '.zip';
 
             this.logger.debug('Downloading python...');
-            let zipFile = this.extensionPath + path.sep + 'python.zip';
+            let zipFile = path.join(this.extensionPath, 'python.zip');
             this.downloadFile(url, zipFile, () => {
                 this.logger.debug('Extracting python...');
-                this.unzip(zipFile, this.extensionPath + path.sep + 'python', callback);
+                this.unzip(zipFile, path.join(this.extensionPath, 'python'), callback);
                 this.logger.debug('Finished installing python.');
-
                 callback();
             });
         } else {
-            this.logger.error(
-                'WakaTime depends on Python. Install it from https://python.org/downloads then restart VS Code',
-            );
-            // window.alert('WakaTime depends on Python. Install it from https://python.org/downloads then restart VSCode.');
+            let error_msg = 'WakaTime depends on Python. Install it from https://python.org/downloads then restart VS Code';
+            this.logger.warn(error_msg);
+            vscode.window.showWarningMessage(error_msg);
         }
     }
 

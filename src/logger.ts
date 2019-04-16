@@ -15,18 +15,18 @@ export class Logger {
         if (level in this.levels) {
             this.level = level;
         } else {
-            throw new TypeError('Invalid level: ' + level);
+            throw new TypeError(`Invalid level: ${level}`);
         }
     }
 
     public log(level: string, msg: string): void {
-        if (!(level in this.levels)) throw new TypeError('Invalid level: ' + level);
+        if (!(level in this.levels)) throw new TypeError(`Invalid level: ${level}`);
 
         const current: number = this.levels[level];
         const cutoff: number = this.levels[this.level];
 
         if (current >= cutoff) {
-            msg = '[WakaTime] [' + level.toUpperCase() + '] ' + msg;
+            msg = `[WakaTime][${level.toUpperCase()}] ${msg}`;
             if (level == 'debug') console.log(msg);
             if (level == 'info') console.info(msg);
             if (level == 'warn') console.warn(msg);
