@@ -2,6 +2,14 @@
 # Changelog
 
 
+## 1.3.0 (2019-04-17)
+
+- Support for Portable Mode with config files in code-portable-data folder.
+  [#91](https://github.com/wakatime/vscode-wakatime/pull/91)
+- New commands wakatime.config_file and wakatime.log_file.
+  [#91](https://github.com/wakatime/vscode-wakatime/pull/91)
+
+
 ## 1.2.14 (2019-04-09)
 
 - Handle exceptions when calling execFile.
