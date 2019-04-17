@@ -41,6 +41,18 @@ export function activate(ctx: vscode.ExtensionContext) {
       wakatime.openDashboardWebsite();
     }),
   );
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand('wakatime.config_file', function() {
+      wakatime.openConfigFile();
+    }),
+  );
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand('wakatime.log_file', function() {
+      wakatime.openLogFile();
+    }),
+  );
   
   ctx.subscriptions.push(wakatime);
 

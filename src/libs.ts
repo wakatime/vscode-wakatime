@@ -1,6 +1,6 @@
 export class Libs {
-    public static quote(str): string {
-        if (str.includes(' ')) return '"' + str.replace('"', '\\"') + '"';
+    public static quote(str: string): string {
+        if (str.includes(' ')) return `"${str.replace('"', '\\"')}"`;
         return str;
     }
 }

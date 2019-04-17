@@ -44,7 +44,7 @@
         "vscode:prepublish": "webpack --mode production",
         "compile": "webpack --mode none",
         "compile-dev": "tsc -p ./",
-        "watch": "webpack --mode none --watch",        
+        "watch": "webpack --mode none --watch",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile-dev && node ./node_modules/vscode/bin/test"
     },
@@ -52,23 +52,31 @@
         "commands": [
             {
                 "command": "wakatime.apikey",
-                "title": "WakaTime API Key"
+                "title": "WakaTime: Api Key"
             },
             {
                 "command": "wakatime.proxy",
-                "title": "WakaTime Proxy"
+                "title": "WakaTime: Set Proxy"
             },
             {
                 "command": "wakatime.debug",
-                "title": "WakaTime Debug"
+                "title": "WakaTime: Set Debug"
             },
             {
                 "command": "wakatime.status_bar_icon",
-                "title": "WakaTime Status Bar Icon"
+                "title": "WakaTime: Status Bar Icon"
             },
             {
                 "command": "wakatime.dashboard",
-                "title": "WakaTime Dashboard"
+                "title": "WakaTime: Open Dashboard"
+            },
+            {
+                "command": "wakatime.config_file",
+                "title": "WakaTime: Open Config File..."
+            },
+            {
+                "command": "wakatime.log_file",
+                "title": "WakaTime: Open Log File..."
             }
         ]
     },
@@ -77,6 +85,7 @@
         "@types/mocha": "^5.2.6",
         "@types/node": "^11.13.4",
         "@types/request": "^2.48.1",
+        "@types/rimraf": "^2.0.2",
         "@types/webpack": "^4.4.27",
         "adm-zip": "0.4.13",
         "del-cli": "^1.1.0",
