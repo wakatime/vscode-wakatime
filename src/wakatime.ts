@@ -154,7 +154,7 @@ export class WakaTime {
         });
     }
 
-    public getConfigFilePath(): void {
+    public openConfigFile(): void {
         let path = this.options.getConfigFile();
         if (path) {
             let uri = vscode.Uri.file(path);            
@@ -164,7 +164,7 @@ export class WakaTime {
         }
     }
 
-    public getLogFilePath(): void {
+    public openLogFile(): void {
         let path = this.options.getLogFile();
         if (path) {
             let uri = vscode.Uri.file(path);            

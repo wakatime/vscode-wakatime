@@ -44,13 +44,13 @@ export function activate(ctx: vscode.ExtensionContext) {
 
   ctx.subscriptions.push(
     vscode.commands.registerCommand('wakatime.config_file', function() {
-      wakatime.getConfigFilePath();
+      wakatime.openConfigFile();
     }),
   );
 
   ctx.subscriptions.push(
     vscode.commands.registerCommand('wakatime.log_file', function() {
-      wakatime.getLogFilePath();
+      wakatime.openLogFile();
     }),
   );
   
