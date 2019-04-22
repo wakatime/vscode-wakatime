@@ -1,8 +1,5 @@
 import * as vscode from 'vscode';
 
-import { Logger } from './logger';
-import { Options } from './options';
-import { WakaTime } from './wakatime';
 import {
   COMMAND_API_KEY,
   COMMAND_PROXY,
@@ -13,6 +10,9 @@ import {
   COMMAND_CONFIG_FILE,
   COMMAND_LOG_FILE,
 } from './constants';
+import { Logger } from './logger';
+import { Options } from './options';
+import { WakaTime } from './wakatime';
 
 var logger = new Logger('info');
 var wakatime: WakaTime;

@@ -3,6 +3,7 @@ import * as os from 'os';
 import * as child_process from 'child_process';
 
 import { Dependencies } from './dependencies';
+import { COMMAND_DASHBOARD } from './constants';
 import { Options } from './options';
 import { Logger } from './logger';
 import { Libs } from './libs';
@@ -41,6 +42,7 @@ export class WakaTime {
 
   public initialize(): void {
     this.dependencies = new Dependencies(this.options, this.extensionPath, this.logger);
+    this.statusBar.command = COMMAND_DASHBOARD;
 
     let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
     this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
