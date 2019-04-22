@@ -16,7 +16,7 @@ export class WakaTime {
     private agentName: string;
     private extension;
     private statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Left,
+        vscode.StatusBarAlignment.Left
     );
     private disposable: vscode.Disposable;
     private lastFile: string;
@@ -94,7 +94,7 @@ export class WakaTime {
             if (!defaultVal) defaultVal = '';
             let promptOptions = {
                 prompt: 'WakaTime Proxy',
-                placeHolder: 'Proxy format is https://user:pass@host:port',
+                placeHolder: `Proxy format is https://user:pass@host:port (current value \"${defaultVal}\")`,
                 value: defaultVal,
                 ignoreFocusOut: true,
                 validateInput: Libs.validateProxy.bind(this),
@@ -110,7 +110,7 @@ export class WakaTime {
             if (!defaultVal || defaultVal.trim() !== 'true') defaultVal = 'false';
             let items: string[] = ['true', 'false'];
             let promptOptions = {
-                placeHolder: `true or false (current value ' + ${defaultVal} + ')`,
+                placeHolder: `true or false (current value \"${defaultVal}\")`,
                 value: defaultVal,
                 ignoreFocusOut: true,
             };
@@ -132,7 +132,7 @@ export class WakaTime {
             if (!defaultVal || defaultVal.trim() !== 'false') defaultVal = 'true';
             let items: string[] = ['true', 'false'];
             let promptOptions = {
-                placeHolder: `true or false (current value ' + ${defaultVal} + ')`,
+                placeHolder: `true or false (current value \"${defaultVal}\")`,
                 value: defaultVal,
                 ignoreFocusOut: true,
             };
