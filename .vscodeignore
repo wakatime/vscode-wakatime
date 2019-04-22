@@ -2,7 +2,9 @@
 out/**
 AUTHORS
 *.md
-images/**
+images/Screen-Shot-2016-03-21.png
+images/type-install.png
+images/type-wakatime.png
 wakatime-master/**
 dist/wakatime-master/**
 test/**
