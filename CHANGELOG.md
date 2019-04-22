@@ -2,6 +2,13 @@
 # Changelog
 
 
+## 2.0.0 (2019-04-22)
+
+- Status bar item shows coding activity for Today.
+  [#92](https://github.com/wakatime/vscode-wakatime/pull/92)
+- Clicking status bar icon opens WakaTime dashboard website.
+
+
 ## 1.3.0 (2019-04-17)
 
 - Support for Portable Mode with config files in code-portable-data folder.
