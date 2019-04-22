@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 2.0.1 (2019-04-22)
+
+- Fix extension entry point.
+  [#93](https://github.com/wakatime/vscode-wakatime/issues/93)
+
+
 ## 2.0.0 (2019-04-22)
 
 - Status bar item shows coding activity for Today.
