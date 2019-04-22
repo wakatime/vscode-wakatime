@@ -241,9 +241,12 @@ export class WakaTime {
     }
 
     private hasApiKey(callback: (arg0: boolean) => void): void {
-        this.options.getSetting('settings', 'api_key', (_error, apiKey) => {
-            callback(Libs.validateKey(apiKey) === '');
-        });
+        this.options.getApiKeyAsync()
+            .then(apiKey => callback(Libs.validateKey(apiKey) === ''))
+            .catch(err => {
+                this.logger.error(`Error reading api key: ${err}`);
+                callback(false)
+            });
     }
 
     private setupEventListeners(): void {

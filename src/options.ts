@@ -2,12 +2,16 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { Dependencies } from './dependencies';
+import { ExpirationStrategy } from './cache/expiration-strategy';
+import { MemoryStorage } from './cache/memory-storage';
 
 export class Options {
-    configFile: string;
-    logFile: string;
+    private configFile: string;
+    private logFile: string;
+    private readonly cache: ExpirationStrategy;
 
     constructor() {
+        this.cache = new ExpirationStrategy(new MemoryStorage());
         let wakaHome = this.getWakaHome();
         this.configFile = path.join(wakaHome, '.wakatime.cfg');
         this.logFile = path.join(wakaHome, '.wakatime.log');
@@ -20,6 +24,12 @@ export class Options {
         } else {
             return this.getUserHomeDir();
         }
+    }
+
+    public async getSettingAsync<T = any>(section: string, key: string): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
+            this.getSetting(section, key, (err, result) => { err ? reject(err) : resolve(result); });
+        });
     }
 
     public getSetting(section: string, key: string, callback: (string, any) => void): void {
@@ -108,6 +118,20 @@ export class Options {
 
     public getLogFile(): string {
         return this.logFile;
+    }
+
+    public async getApiKeyAsync(): Promise<string> {
+        return new Promise<string>(async (resolve, reject) => {
+            const cachedApiKey = await this.cache.getItem<string>("api_key");
+            if (cachedApiKey) resolve(cachedApiKey);
+
+            await this.getSettingAsync<string>('settings', 'api_key')
+                .then(apiKey => {                    
+                    this.cache.setItem("api_key", apiKey, { ttl: 300 });
+                    resolve(apiKey);
+                })
+                .catch(err => reject(err));
+        });
     }
 
     public getUserHomeDir(): string {
