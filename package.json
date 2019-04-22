@@ -94,6 +94,7 @@
         "adm-zip": "0.4.13",
         "del-cli": "^1.1.0",
         "original-fs": "^1.0.0",
+        "prettier": "1.17.0",
         "request": "2.88.0",
         "rimraf": "^2.6.3",
         "ts-loader": "^5.3.3",
