@@ -37,6 +37,12 @@ export function activate(ctx: vscode.ExtensionContext) {
   );
 
   ctx.subscriptions.push(
+    vscode.commands.registerCommand('wakatime.status_bar_coding_activity', function() {
+      wakatime.promptStatusBarCodingActivity();
+    }),
+  );
+
+  ctx.subscriptions.push(
     vscode.commands.registerCommand('wakatime.dashboard', function() {
       wakatime.openDashboardWebsite();
     }),

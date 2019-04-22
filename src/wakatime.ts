@@ -6,6 +6,7 @@ import { Dependencies } from './dependencies';
 import { Options } from './options';
 import { Logger } from './logger';
 import { Libs } from './libs'
+import { Stats } from './stats';
 
 export class WakaTime {
     private appNames = {
@@ -24,6 +25,11 @@ export class WakaTime {
     private dependencies: Dependencies;
     private options: Options;
     private logger: Logger;
+    private stats: Stats;
+    private getCodingActivityTimeout: NodeJS.Timer;
+    private intervalTimeGetCodingActivity: number = 60000;
+    private lastExecutionGetCodingActivity = new Date(new Date().getTime() - this.intervalTimeGetCodingActivity);
+    private showCodingActivity: boolean;
 
     constructor(extensionPath: string, logger: Logger, options: Options) {
         this.extensionPath = extensionPath;
@@ -32,16 +38,17 @@ export class WakaTime {
     }
 
     public initialize(): void {
+        this.dependencies = new Dependencies(this.options, this.extensionPath, this.logger);
+
         let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
         this.extension = extension != undefined && extension.packageJSON || { version: '0.0.0' };
         this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
         this.agentName = this.appNames[vscode.env.appName] || 'vscode';
         this.statusBar.text = '$(clock) WakaTime Initializing...';
         this.statusBar.show();
-
         this.checkApiKey();
-
-        this.dependencies = new Dependencies(this.options, this.extensionPath, this.logger);
+        this.stats = new Stats(this.options, this.logger);
+        
         this.dependencies.checkAndInstall(() => {
             this.logger.debug('WakaTime: Initialized');
             this.statusBar.text = '$(clock)';
@@ -50,6 +57,13 @@ export class WakaTime {
                 if (val && val.trim() == 'false') this.statusBar.hide();
                 else this.statusBar.show();
             });
+            this.options.getSetting('settings', 'status_bar_coding_activity', (_err, val) => {
+                if (val && val.trim() == 'false') this.showCodingActivity = false;
+                else {
+                    this.showCodingActivity = true;
+                    this.getCodingActivity();
+                }
+            });
         });
 
         this.setupEventListeners();
@@ -57,17 +71,17 @@ export class WakaTime {
 
     public promptForApiKey(): void {
         this.options.getSetting('settings', 'api_key', (_err, defaultVal) => {
-            if (this.validateKey(defaultVal) != '') defaultVal = '';
+            if (Libs.validateKey(defaultVal) != '') defaultVal = '';
             let promptOptions = {
                 prompt: 'WakaTime Api Key',
                 placeHolder: 'Enter your api key from https://wakatime.com/settings',
                 value: defaultVal,
                 ignoreFocusOut: true,
-                validateInput: this.validateKey.bind(this),
+                validateInput: Libs.validateKey.bind(this),
             };
             vscode.window.showInputBox(promptOptions).then(val => {                
                 if (val != undefined) {
-                    let validation = this.validateKey(val);
+                    let validation = Libs.validateKey(val);
                     if (validation === '') this.options.setSetting('settings', 'api_key', val)
                     else vscode.window.setStatusBarMessage(validation);
                 } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
@@ -83,7 +97,7 @@ export class WakaTime {
                 placeHolder: 'Proxy format is https://user:pass@host:port',
                 value: defaultVal,
                 ignoreFocusOut: true,
-                validateInput: this.validateProxy.bind(this),
+                validateInput: Libs.validateProxy.bind(this),
             };
             vscode.window.showInputBox(promptOptions).then(val => {
                 if (val || val === '') this.options.setSetting('settings', 'proxy', val);
@@ -136,6 +150,31 @@ export class WakaTime {
         });
     }
 
+    public promptStatusBarCodingActivity(): void {
+        this.options.getSetting('settings', 'status_bar_coding_activity', (_err, defaultVal) => {
+            if (!defaultVal || defaultVal.trim() !== 'false') defaultVal = 'true';
+            let items: string[] = ['true', 'false'];
+            let promptOptions = {
+                placeHolder: `true or false (current value \"${defaultVal}\")`,
+                value: defaultVal,
+                ignoreFocusOut: true,
+            };
+            vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+                if (newVal == null) return;
+                this.options.setSetting('settings', 'status_bar_coding_activity', newVal);
+                if (newVal === 'true') {
+                    this.logger.debug('Coding activity in status bar has been enabled');
+                    this.showCodingActivity = true;
+                    this.getCodingActivity(true);
+                } else {
+                    this.logger.debug('Coding activity in status bar has been disabled');
+                    this.showCodingActivity = false;
+                    this.statusBar.text = '$(clock)';
+                }
+            });
+        });
+    }
+
     public openDashboardWebsite(): void {
         let open = 'xdg-open';
         let args = ['https://wakatime.com/'];
@@ -174,30 +213,25 @@ export class WakaTime {
         }
     }
 
+    private async getCodingActivity(force: boolean = false) {
+        if (
+            this.showCodingActivity &&
+            (((this.lastExecutionGetCodingActivity.getTime() + this.intervalTimeGetCodingActivity) <= (new Date().getTime())) ||
+            (force))) {
+            this.lastExecutionGetCodingActivity = new Date();
+            this.getCodingActivityTimeout = setTimeout(this.getCodingActivity, this.intervalTimeGetCodingActivity);
+            this.stats.getCodingActivity().then((val: any) => {
+                this.statusBar.text = `$(clock) ${val}`;
+            }).catch(err => {
+                this.statusBar.text = `$(clock) ${err}`;
+            });
+        }
+    }
+
     public dispose() {
         this.statusBar.dispose();
         this.disposable.dispose();
-    }
-
-    private validateKey(key: string): string {
-        const err = 'Invalid api key... check https://wakatime.com/settings for your key';
-        if (!key) return err;
-        const re = new RegExp(
-            '^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$',
-            'i',
-        );
-        if (!re.test(key)) return err;
-        return '';
-    }
-
-    private validateProxy(proxy: string): string {
-        const err =
-            'Invalid proxy. Valid formats are https://user:pass@host:port or socks5://user:pass@host:port or domain\\user:pass';
-        if (!proxy) return err;
-        let re = new RegExp('^((https?|socks5)://)?([^:@]+(:([^:@])+)?@)?[\\w\\.-]+(:\\d+)?$', 'i');
-        if (proxy.indexOf('\\') > -1) re = new RegExp('^.*\\\\.+$', 'i');
-        if (!re.test(proxy)) return err;
-        return '';
+        clearTimeout(this.getCodingActivityTimeout);
     }
 
     private checkApiKey(): void {
@@ -208,7 +242,7 @@ export class WakaTime {
 
     private hasApiKey(callback: (arg0: boolean) => void): void {
         this.options.getSetting('settings', 'api_key', (_error, apiKey) => {
-            callback(this.validateKey(apiKey) === '');
+            callback(Libs.validateKey(apiKey) === '');
         });
     }
 
@@ -284,6 +318,8 @@ export class WakaTime {
                                 this.statusBar.text = '$(clock)';
                                 let today = new Date();
                                 this.statusBar.tooltip = `WakaTime: last heartbeat sent ${this.formatDate(today)}`;
+                                this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
+                                this.getCodingActivity(true);
                             } else if (code == 102) {
                                 this.statusBar.text = '$(clock)';
                                 this.statusBar.tooltip = 
@@ -320,18 +356,7 @@ export class WakaTime {
 
     private formatDate(date: Date): String {
         let months = [
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'May',
-            'Jun',
-            'Jul',
-            'Aug',
-            'Sep',
-            'Oct',
-            'Nov',
-            'Dec',
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
         ];
         let ampm = 'AM';
         let hour = date.getHours();
