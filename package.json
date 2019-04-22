@@ -39,7 +39,7 @@
         "vscode": "^1.25.0",
         "sqlops": "*"
     },
-    "main": "./out/src/extension",
+    "main": "./dist/extension",
     "scripts": {
         "vscode:prepublish": "webpack --mode production",
         "compile": "webpack --mode none",
