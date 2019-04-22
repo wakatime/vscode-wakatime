@@ -9,7 +9,7 @@ var wakatime: WakaTime;
 
 export function activate(ctx: vscode.ExtensionContext) {
   var options = new Options();
-  
+
   wakatime = new WakaTime(ctx.extensionPath, logger, options);
 
   ctx.subscriptions.push(
@@ -59,12 +59,11 @@ export function activate(ctx: vscode.ExtensionContext) {
       wakatime.openLogFile();
     }),
   );
-  
+
   ctx.subscriptions.push(wakatime);
 
   options.getSetting('settings', 'debug', function(_error, debug) {
-    if (debug && debug.trim() === 'true') 
-    {
+    if (debug && debug.trim() === 'true') {
       logger.setLevel('debug');
       logger.debug('::WakaTime debug mode::');
     }
