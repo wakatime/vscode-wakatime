@@ -1,0 +1,14 @@
+language: node_js
+
+node_js:
+  - 10.15.3
+
+cache:
+  directories:
+  - node_modules
+
+# before_script:
+#   - npm run test
+
+script:
+  - npm run compile:dev

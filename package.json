@@ -36,17 +36,17 @@
         "url": "https://github.com/wakatime/vscode-wakatime.git"
     },
     "engines": {
-        "vscode": "^1.17.0",
+        "vscode": "^1.25.0",
         "sqlops": "*"
     },
-    "main": "./dist/extension",
+    "main": "./out/src/extension",
     "scripts": {
         "vscode:prepublish": "webpack --mode production",
         "compile": "webpack --mode none",
-        "compile-dev": "tsc -p ./",
+        "compile:dev": "tsc -p ./",
         "watch": "webpack --mode none --watch",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile-dev && node ./node_modules/vscode/bin/test"
+        "test": "npm run compile:dev && node ./node_modules/vscode/bin/test"
     },
     "contributes": {
         "commands": [
@@ -56,15 +56,19 @@
             },
             {
                 "command": "wakatime.proxy",
-                "title": "WakaTime: Set Proxy"
+                "title": "WakaTime: Proxy"
             },
             {
                 "command": "wakatime.debug",
-                "title": "WakaTime: Set Debug"
+                "title": "WakaTime: Debug"
             },
             {
                 "command": "wakatime.status_bar_icon",
                 "title": "WakaTime: Status Bar Icon"
+            },
+            {
+                "command": "wakatime.status_bar_coding_activity",
+                "title": "WakaTime: Status Bar Coding Activity"
             },
             {
                 "command": "wakatime.dashboard",
