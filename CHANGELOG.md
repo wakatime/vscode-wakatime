@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 2.0.2 (2019-04-23)
+
+- Fix extension marketplace content from missing readme.
+
+
 ## 2.0.1 (2019-04-22)
 
 - Fix extension entry point.
