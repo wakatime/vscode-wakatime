@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 2.0.4 (2019-04-23)
+
+- Fix extension marketplace content by including images in package contents.
+
+
 ## 2.0.3 (2019-04-23)
 
 - Use api subdomain for fetching status bar time.
