@@ -335,7 +335,7 @@ export class WakaTime {
                 let today = new Date();
                 this.statusBar.tooltip = `WakaTime: last heartbeat sent ${this.formatDate(today)}`;
                 this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
-                this.getCodingActivity(true);
+                this.getCodingActivity();
               } else if (code == 102) {
                 this.statusBar.text = '$(clock)';
                 this.statusBar.tooltip =
