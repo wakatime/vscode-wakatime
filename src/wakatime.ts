@@ -218,26 +218,24 @@ export class WakaTime {
   }
 
   private async getCodingActivity(force: boolean = false) {
-    if (
-      this.showCodingActivity &&
-      (this.lastExecutionGetCodingActivity.getTime() + this.intervalTimeGetCodingActivity <=
-        new Date().getTime() ||
-        force)
-    ) {
-      this.lastExecutionGetCodingActivity = new Date();
-      this.getCodingActivityTimeout = setTimeout(
-        this.getCodingActivity,
-        this.intervalTimeGetCodingActivity,
-      );
-      this.stats
-        .getCodingActivity()
-        .then((val: any) => {
-          this.statusBar.text = `$(clock) ${val}`;
-        })
-        .catch(err => {
-          this.statusBar.text = `$(clock) ${err}`;
-        });
-    }
+    if (!this.showCodingActivity) return;
+    const lastFetch = this.lastExecutionGetCodingActivity.getTime();
+    const cutoff = new Date().getTime() - this.intervalTimeGetCodingActivity;
+    if (!force && lastFetch > cutoff) return;
+
+    this.lastExecutionGetCodingActivity = new Date();
+    this.getCodingActivityTimeout = setTimeout(
+      this.getCodingActivity,
+      this.intervalTimeGetCodingActivity,
+    );
+    this.stats
+      .getCodingActivity()
+      .then((val: any) => {
+        this.statusBar.text = `$(clock) ${val}`;
+      })
+      .catch(() => {
+        this.statusBar.text = `$(clock)`;
+      });
   }
 
   public dispose() {
@@ -331,13 +329,13 @@ export class WakaTime {
             });
             process.on('close', (code, _signal) => {
               if (code == 0) {
-                this.statusBar.text = '$(clock)';
+                if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
                 let today = new Date();
                 this.statusBar.tooltip = `WakaTime: last heartbeat sent ${this.formatDate(today)}`;
                 this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
                 this.getCodingActivity();
               } else if (code == 102) {
-                this.statusBar.text = '$(clock)';
+                if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
                 this.statusBar.tooltip =
                   'WakaTime: working offline... coding activity will sync next time we are online';
                 this.logger.warn(

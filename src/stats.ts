@@ -37,7 +37,7 @@ export class Stats {
         return resolve(`Today: ${data.grand_total.text}`);
       } catch (e) {
         this.logger.error(`Error retrieving coding activity: ${e}`);
-        return reject('Failed to get stats');
+        return reject();
       }
     });
   }
