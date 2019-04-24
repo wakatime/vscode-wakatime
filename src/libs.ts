@@ -24,8 +24,4 @@ export class Libs {
     if (!re.test(proxy)) return err;
     return '';
   }
-
-  public static getToday(): string {
-    return new Date().toISOString().slice(0, 10);
-  }
 }

@@ -24,8 +24,7 @@ export class Stats {
     return new Promise<string>(async (resolve, reject) => {
       if (Libs.validateKey(this.apiKey)) return reject('Invalid Api Key');
       const request = await import('request');
-      const today = Libs.getToday();
-      const url = `${URL_SUMMARIES}?api_key=${this.apiKey}&start=${today}&end=${today}`;
+      const url = `${URL_SUMMARIES}?start=today&end=today&api_key=${this.apiKey}`;
       let params = { url: url };
       if (this.proxy && this.proxy.trim()) params['proxy'] = this.proxy.trim();
 
