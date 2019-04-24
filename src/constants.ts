@@ -6,3 +6,4 @@ export const COMMAND_STATUS_BAR_CODING_ACTIVITY = 'wakatime.status_bar_coding_ac
 export const COMMAND_DASHBOARD = 'wakatime.dashboard';
 export const COMMAND_CONFIG_FILE = 'wakatime.config_file';
 export const COMMAND_LOG_FILE = 'wakatime.log_file';
+export const URL_SUMMARIES = 'https://api.wakatime.com/api/v1/users/current/summaries';

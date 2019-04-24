@@ -1,3 +1,4 @@
+import { URL_SUMMARIES } from './constants';
 import { Libs } from './libs';
 import { Options } from './options';
 import { Logger } from './logger';
@@ -24,9 +25,7 @@ export class Stats {
       if (Libs.validateKey(this.apiKey)) return reject('Invalid Api Key');
       const request = await import('request');
       const today = Libs.getToday();
-      const url = `https://wakatime.com/api/v1/users/current/summaries?api_key=${
-        this.apiKey
-      }&start=${today}&end=${today}`;
+      const url = `${URL_SUMMARIES}?api_key=${this.apiKey}&start=${today}&end=${today}`;
       let params = { url: url };
       if (this.proxy && this.proxy.trim()) params['proxy'] = this.proxy.trim();
 
