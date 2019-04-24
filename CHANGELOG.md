@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 2.0.5 (2019-04-23)
+
+- Throttle fetching status bar coding stats to once per minute.
+- Suppress error when unable to fetch coding stats while working offline.
+
+
 ## 2.0.4 (2019-04-23)
 
 - Fix extension marketplace content by including images in package contents.
