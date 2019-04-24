@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 2.0.6 (2019-04-23)
+
+- Show status bar time in localized timezone instead of UTC.
+
+
 ## 2.0.5 (2019-04-23)
 
 - Throttle fetching status bar coding stats to once per minute.
