@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 2.0.7 (2019-04-25)
+
+- Handle exceptions from execFile when searching for Python.
+  [#94](https://github.com/wakatime/vscode-wakatime/issues/94)
+
+
 ## 2.0.6 (2019-04-23)
 
 - Show status bar time in localized timezone instead of UTC.
