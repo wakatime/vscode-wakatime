@@ -90,17 +90,22 @@ export class Dependencies {
     this.logger.debug(`Looking for python at: ${binary}`);
 
     const args = ['--version'];
-    child_process.execFile(binary, args, (error, stdout, stderr) => {
-      const output: string = stdout.toString() + stderr.toString();
-      if (!error && this.isSupportedPythonVersion(binary, output)) {
-        this.cachedPythonLocation = binary;
-        this.logger.debug(`Valid python version: ${output}`);
-        callback(binary);
-      } else {
-        this.logger.debug(`Invalid python version: ${output}`);
-        this.findPython(locations, callback);
-      }
-    });
+    try {
+      child_process.execFile(binary, args, (error, stdout, stderr) => {
+        const output: string = stdout.toString() + stderr.toString();
+        if (!error && this.isSupportedPythonVersion(binary, output)) {
+          this.cachedPythonLocation = binary;
+          this.logger.debug(`Valid python version: ${output}`);
+          callback(binary);
+        } else {
+          this.logger.debug(`Invalid python version: ${output}`);
+          this.findPython(locations, callback);
+        }
+      });
+    } catch (e) {
+      this.logger.debug(e);
+      this.findPython(locations, callback);
+    }
   }
 
   private isCoreInstalled(): boolean {
