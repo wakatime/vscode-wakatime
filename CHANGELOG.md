@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 2.0.8 (2019-04-30)
+
+- Rename status_bar_enabled setting from status_bar_icon.
+
+
 ## 2.0.7 (2019-04-25)
 
 - Handle exceptions from execFile when searching for Python.
