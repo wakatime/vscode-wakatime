@@ -4,7 +4,7 @@ import {
   COMMAND_API_KEY,
   COMMAND_PROXY,
   COMMAND_DEBUG,
-  COMMAND_STATUS_BAR_ICON,
+  COMMAND_STATUS_BAR_ENABLED,
   COMMAND_STATUS_BAR_CODING_ACTIVITY,
   COMMAND_DASHBOARD,
   COMMAND_CONFIG_FILE,
@@ -41,7 +41,7 @@ export function activate(ctx: vscode.ExtensionContext) {
   );
 
   ctx.subscriptions.push(
-    vscode.commands.registerCommand(COMMAND_STATUS_BAR_ICON, function() {
+    vscode.commands.registerCommand(COMMAND_STATUS_BAR_ENABLED, function() {
       wakatime.promptStatusBarIcon();
     }),
   );

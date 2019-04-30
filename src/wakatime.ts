@@ -57,7 +57,7 @@ export class WakaTime {
       this.logger.debug('WakaTime: Initialized');
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
-      this.options.getSetting('settings', 'status_bar_icon', (_err, val) => {
+      this.options.getSetting('settings', 'status_bar_enabled', (_err, val) => {
         if (val && val.trim() == 'false') this.statusBar.hide();
         else this.statusBar.show();
       });
@@ -132,7 +132,7 @@ export class WakaTime {
   }
 
   public promptStatusBarIcon(): void {
-    this.options.getSetting('settings', 'status_bar_icon', (_err, defaultVal) => {
+    this.options.getSetting('settings', 'status_bar_enabled', (_err, defaultVal) => {
       if (!defaultVal || defaultVal.trim() !== 'false') defaultVal = 'true';
       let items: string[] = ['true', 'false'];
       let promptOptions = {
@@ -142,7 +142,7 @@ export class WakaTime {
       };
       vscode.window.showQuickPick(items, promptOptions).then(newVal => {
         if (newVal == null) return;
-        this.options.setSetting('settings', 'status_bar_icon', newVal);
+        this.options.setSetting('settings', 'status_bar_enabled', newVal);
         if (newVal === 'true') {
           this.statusBar.show();
           this.logger.debug('Status bar icon enabled');
