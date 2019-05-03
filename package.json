@@ -28,7 +28,6 @@
         "color": "#AEC3D8",
         "theme": "light"
     },
-    "extensionKind": "ui",
     "activationEvents": [
         "*"
     ],
