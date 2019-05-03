@@ -173,7 +173,9 @@ export class WakaTime {
         } else {
           this.logger.debug('Coding activity in status bar has been disabled');
           this.showCodingActivity = false;
-          this.statusBar.text = '$(clock)';
+          if (this.statusBar.text.indexOf('Error') == -1) {
+            this.statusBar.text = '$(clock)';
+          }
         }
       });
     });
