@@ -64,7 +64,7 @@
             },
             {
                 "command": "wakatime.status_bar_enabled",
-                "title": "WakaTime: Status Bar Icon"
+                "title": "WakaTime: Status Bar Enabled"
             },
             {
                 "command": "wakatime.status_bar_coding_activity",
