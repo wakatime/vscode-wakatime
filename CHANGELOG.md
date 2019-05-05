@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 2.0.9 (2019-05-05)
+
+- Fix status_bar_enabled option in package contributing commands.
+  [#97](https://github.com/wakatime/vscode-wakatime/issues/97)
+
+
 ## 2.0.8 (2019-04-30)
 
 - Rename status_bar_enabled setting from status_bar_icon.
