@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as os from 'os';
 import * as child_process from 'child_process';
 
 import { Dependencies } from './dependencies';
@@ -182,21 +181,8 @@ export class WakaTime {
   }
 
   public openDashboardWebsite(): void {
-    let open = 'xdg-open';
-    let args = ['https://wakatime.com/'];
-    if (Dependencies.isWindows()) {
-      open = 'cmd';
-      args.unshift('/c', 'start', '""');
-    } else if (os.type() == 'Darwin') {
-      open = 'open';
-    }
-    child_process.execFile(open, args, (error, stdout, stderr) => {
-      if (error != null) {
-        if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
-        if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
-        this.logger.error(error.toString());
-      }
-    });
+    let url = 'https://wakatime.com/';
+    vscode.env.openExternal(vscode.Uri.parse(url));
   }
 
   public openConfigFile(): void {

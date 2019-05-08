@@ -37,7 +37,7 @@
         "url": "https://github.com/wakatime/vscode-wakatime.git"
     },
     "engines": {
-        "vscode": "^1.25.0",
+        "vscode": "^1.31.0",
         "sqlops": "*"
     },
     "main": "./dist/extension",
@@ -101,7 +101,7 @@
         "ts-loader": "^5.3.3",
         "tslib": "^1.9.3",
         "typescript": "^3.4.3",
-        "vscode": "^1.1.33",
+        "vscode": "^1.1.34",
         "webpack": "^4.30.0",
         "webpack-cli": "^3.3.0"
     }
