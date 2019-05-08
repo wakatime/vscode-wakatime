@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 2.1.0 (2019-05-08)
+
+- Support for remote development.
+  [#95](https://github.com/wakatime/vscode-wakatime/issues/95)
+
+
 ## 2.0.9 (2019-05-05)
 
 - Fix status_bar_enabled option in package contributing commands.
