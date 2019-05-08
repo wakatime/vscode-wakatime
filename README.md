@@ -5,13 +5,14 @@
 
 Metrics, insights, and time tracking automatically generated from your programming activity.
 
+
 ## Installation
 
 1. Press `F1` or `CMD + Shift + P` and type `install`. Pick `Extensions: Install Extension`.
 
     ![type install](./images/type-install.png)
 2. Type `wakatime` and hit `enter`.
-  
+
     ![type wakatime](./images/type-wakatime.png)
 
 3. Restart Visual Studio Code.
@@ -22,28 +23,30 @@ Metrics, insights, and time tracking automatically generated from your programmi
 
 5. Use VSCode and your coding activity will be displayed on your [WakaTime dashboard](https://wakatime.com)
 
-## Usage
 
-------------
+## Usage
 
 Visit https://wakatime.com to see your coding activity.
 
 ![Project Overview](./images/Screen-Shot-2016-03-21.png)
 
+
 ## Configuring
 
-------------
-> `$WAKATIME_HOME` defaults to `$HOME`
+VS Code specific settings are available from CMD+SHIFT+P, then typing `wakatime`.
 
-Some settings are available from CMD+SHIFT+P, then typing `wakatime`.
+For example, to hide today's coding activity in your status bar:
 
-Settings are stored in the INI file at `$WAKATIME_HOME/.wakatime.cfg`.
+Press `CMD + SHIFT + P` then set `WakaTime: Status Bar Coding Activity` to `false`.
+
+Extension settings are stored in the INI file at `$WAKATIME_HOME/.wakatime.cfg`.
 
 More information can be found from [wakatime core](https://github.com/wakatime/wakatime#configuring).
 
-## Troubleshooting
+Note: `$WAKATIME_HOME` defaults to `$HOME`
 
-------------
+
+## Troubleshooting
 
 First, turn on debug mode:
 
