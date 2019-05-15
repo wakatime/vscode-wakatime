@@ -125,7 +125,7 @@ export class Options {
   public async getApiKeyAsync(): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const cachedApiKey = await this.cache.getItem<string>('api_key');
-      if (cachedApiKey) resolve(cachedApiKey);
+      if (cachedApiKey) return resolve(cachedApiKey);
 
       await this.getSettingAsync<string>('settings', 'api_key')
         .then(apiKey => {
