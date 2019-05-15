@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 2.1.1 (2019-05-14)
+
+- Bug fix: prevent reading api key from disc when cached in memory.
+  [#101](https://github.com/wakatime/vscode-wakatime/issues/101)
+
+
 ## 2.1.0 (2019-05-08)
 
 - Support for remote development.
