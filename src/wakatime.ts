@@ -27,10 +27,8 @@ export class WakaTime {
   private logger: Logger;
   private stats: Stats;
   private getCodingActivityTimeout: NodeJS.Timer;
-  private intervalTimeGetCodingActivity: number = 60000;
-  private lastExecutionGetCodingActivity = new Date(
-    new Date().getTime() - this.intervalTimeGetCodingActivity,
-  );
+  private fetchTodayInterval: number = 60000;
+  private lastFetchToday = new Date(new Date().getTime() - this.fetchTodayInterval);
   private showCodingActivity: boolean;
 
   constructor(extensionPath: string, logger: Logger, options: Options) {
@@ -207,15 +205,12 @@ export class WakaTime {
 
   private async getCodingActivity(force: boolean = false) {
     if (!this.showCodingActivity) return;
-    const lastFetch = this.lastExecutionGetCodingActivity.getTime();
-    const cutoff = new Date().getTime() - this.intervalTimeGetCodingActivity;
+    const lastFetch = this.lastFetchToday.getTime();
+    const cutoff = new Date().getTime() - this.fetchTodayInterval;
     if (!force && lastFetch > cutoff) return;
 
-    this.lastExecutionGetCodingActivity = new Date();
-    this.getCodingActivityTimeout = setTimeout(
-      this.getCodingActivity,
-      this.intervalTimeGetCodingActivity,
-    );
+    this.lastFetchToday = new Date();
+    this.getCodingActivityTimeout = setTimeout(this.getCodingActivity, this.fetchTodayInterval);
     this.stats
       .getCodingActivity()
       .then((val: any) => {
