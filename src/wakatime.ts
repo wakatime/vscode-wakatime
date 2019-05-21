@@ -28,7 +28,7 @@ export class WakaTime {
   private stats: Stats;
   private getCodingActivityTimeout: NodeJS.Timer;
   private fetchTodayInterval: number = 60000;
-  private lastFetchToday = new Date(new Date().getTime() - this.fetchTodayInterval);
+  private lastFetchToday: number = 0;
   private showCodingActivity: boolean;
 
   constructor(extensionPath: string, logger: Logger, options: Options) {
@@ -205,11 +205,10 @@ export class WakaTime {
 
   private async getCodingActivity(force: boolean = false) {
     if (!this.showCodingActivity) return;
-    const lastFetch = this.lastFetchToday.getTime();
-    const cutoff = new Date().getTime() - this.fetchTodayInterval;
-    if (!force && lastFetch > cutoff) return;
+    const cutoff = Date().now() - this.fetchTodayInterval;
+    if (!force && this.lastFetchToday > cutoff) return;
 
-    this.lastFetchToday = new Date();
+    this.lastFetchToday = Date.now();
     this.getCodingActivityTimeout = setTimeout(this.getCodingActivity, this.fetchTodayInterval);
     this.stats
       .getCodingActivity()
