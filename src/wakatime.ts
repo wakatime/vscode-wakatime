@@ -205,7 +205,7 @@ export class WakaTime {
 
   private async getCodingActivity(force: boolean = false) {
     if (!this.showCodingActivity) return;
-    const cutoff = Date().now() - this.fetchTodayInterval;
+    const cutoff = Date.now() - this.fetchTodayInterval;
     if (!force && this.lastFetchToday > cutoff) return;
 
     this.lastFetchToday = Date.now();
