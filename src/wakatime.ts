@@ -29,6 +29,7 @@ export class WakaTime {
   private getCodingActivityTimeout: NodeJS.Timer;
   private fetchTodayInterval: number = 60000;
   private lastFetchToday: number = 0;
+  private showStatusBar: boolean;
   private showCodingActivity: boolean;
 
   constructor(extensionPath: string, logger: Logger, options: Options) {
@@ -55,12 +56,18 @@ export class WakaTime {
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
       this.options.getSetting('settings', 'status_bar_enabled', (_err, val) => {
-        if (val && val.trim() == 'false') this.statusBar.hide();
-        else this.statusBar.show();
+        if (val && val.trim() == 'false') {
+          this.showStatusBar = false;
+          this.statusBar.hide();
+        } else {
+          this.showStatusBar = true;
+          this.statusBar.show();
+        }
       });
       this.options.getSetting('settings', 'status_bar_coding_activity', (_err, val) => {
-        if (val && val.trim() == 'false') this.showCodingActivity = false;
-        else {
+        if (val && val.trim() == 'false') {
+          this.showCodingActivity = false;
+        } else {
           this.showCodingActivity = true;
           this.getCodingActivity();
         }
@@ -141,9 +148,11 @@ export class WakaTime {
         if (newVal == null) return;
         this.options.setSetting('settings', 'status_bar_enabled', newVal);
         if (newVal === 'true') {
+          this.showStatusBar = true;
           this.statusBar.show();
           this.logger.debug('Status bar icon enabled');
         } else {
+          this.showStatusBar = false;
           this.statusBar.hide();
           this.logger.debug('Status bar icon disabled');
         }
@@ -204,7 +213,7 @@ export class WakaTime {
   }
 
   private async getCodingActivity(force: boolean = false) {
-    if (!this.showCodingActivity) return;
+    if (!this.showCodingActivity || !this.showStatusBar) return;
     const cutoff = Date.now() - this.fetchTodayInterval;
     if (!force && this.lastFetchToday > cutoff) return;
 
@@ -311,32 +320,44 @@ export class WakaTime {
             });
             process.on('close', (code, _signal) => {
               if (code == 0) {
-                if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
                 let today = new Date();
-                this.statusBar.tooltip = `WakaTime: last heartbeat sent ${this.formatDate(today)}`;
+                if (this.showStatusBar) {
+                  if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
+                  this.statusBar.tooltip = `WakaTime: last heartbeat sent ${this.formatDate(
+                    today,
+                  )}`;
+                  this.getCodingActivity();
+                }
                 this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
-                this.getCodingActivity();
               } else if (code == 102) {
-                if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
-                this.statusBar.tooltip =
-                  'WakaTime: working offline... coding activity will sync next time we are online';
+                if (this.showStatusBar) {
+                  if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
+                  this.statusBar.tooltip =
+                    'WakaTime: working offline... coding activity will sync next time we are online';
+                }
                 this.logger.warn(
                   `Api eror (102); Check your ${this.options.getLogFile()} file for more details`,
                 );
               } else if (code == 103) {
-                this.statusBar.text = '$(clock) WakaTime Error';
                 let error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
-                this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+                if (this.showStatusBar) {
+                  this.statusBar.text = '$(clock) WakaTime Error';
+                  this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+                }
                 this.logger.error(error_msg);
               } else if (code == 104) {
-                this.statusBar.text = '$(clock) WakaTime Error';
                 let error_msg = 'Invalid Api Key (104); Make sure your Api Key is correct!';
-                this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+                if (this.showStatusBar) {
+                  this.statusBar.text = '$(clock) WakaTime Error';
+                  this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+                }
                 this.logger.error(error_msg);
               } else {
-                this.statusBar.text = '$(clock) WakaTime Error';
                 let error_msg = `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
-                this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+                if (this.showStatusBar) {
+                  this.statusBar.text = '$(clock) WakaTime Error';
+                  this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+                }
                 this.logger.error(error_msg);
               }
             });

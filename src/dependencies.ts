@@ -191,7 +191,7 @@ export class Dependencies {
       try {
         const rimraf = await import('rimraf');
         rimraf(path.join(this.extensionPath, 'wakatime-master'), () => {
-          if (callback != null) {
+          if (callback) {
             return callback();
           }
         });
@@ -199,7 +199,7 @@ export class Dependencies {
         this.logger.warn(e);
       }
     } else {
-      if (callback != null) {
+      if (callback) {
         return callback();
       }
     }
@@ -229,7 +229,10 @@ export class Dependencies {
         let zip = await new adm_zip(file);
         zip.extractAllTo(outputDir, true);
       } catch (e) {
-        return this.logger.error(e);
+        this.logger.error(e);
+        if (callback) {
+          return callback();
+        }
       } finally {
         fs.unlink(file, () => {
           if (callback) {
