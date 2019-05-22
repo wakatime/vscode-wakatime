@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 2.1.2 (2019-05-22)
+
+- Improvements around status bar enabled setting.
+  [#102](https://github.com/wakatime/vscode-wakatime/issues/102)
+
+
 ## 2.1.1 (2019-05-14)
 
 - Bug fix: prevent reading api key from disc when cached in memory.
