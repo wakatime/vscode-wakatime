@@ -50,7 +50,7 @@ Note: `$WAKATIME_HOME` defaults to `$HOME`
 
 First, turn on debug mode:
 
-1. Press CMD+SHIFT+P or &#8984;+P (for Mac)
+1. Press CTRL+SHIFT+P or &#8984;+SHIFT+P
 2. Type `> WakaTime: Debug`, and press `Enter`.
 3. Select `true`, then press `Enter`.
 
