@@ -8,7 +8,7 @@ Metrics, insights, and time tracking automatically generated from your programmi
 
 ## Installation
 
-1. Press `F1` or `CMD + Shift + P` and type `install`. Pick `Extensions: Install Extension`.
+1. Press `F1` or `⌘ + Shift + P` and type `install`. Pick `Extensions: Install Extension`.
 
     ![type install](./images/type-install.png)
 2. Type `wakatime` and hit `enter`.
@@ -19,7 +19,7 @@ Metrics, insights, and time tracking automatically generated from your programmi
 
 4. Enter your [api key](https://wakatime.com/settings?apikey=true), then press `enter`.
 
-    > (If you’re not prompted, press `F1` or `CMD + Shift + P` then type `WakaTime API Key`.)
+    > (If you’re not prompted, press `F1` or `⌘ + Shift + P` then type `WakaTime API Key`.)
 
 5. Use VSCode and your coding activity will be displayed on your [WakaTime dashboard](https://wakatime.com)
 
@@ -33,11 +33,11 @@ Visit https://wakatime.com to see your coding activity.
 
 ## Configuring
 
-VS Code specific settings are available from CMD+SHIFT+P, then typing `wakatime`.
+VS Code specific settings are available from `⌘+SHIFT+P`, then typing `wakatime`.
 
 For example, to hide today's coding activity in your status bar:
 
-Press `CMD + SHIFT + P` then set `WakaTime: Status Bar Coding Activity` to `false`.
+Press `⌘ + SHIFT + P` then set `WakaTime: Status Bar Coding Activity` to `false`.
 
 Extension settings are stored in the INI file at `$WAKATIME_HOME/.wakatime.cfg`.
 
@@ -50,7 +50,7 @@ Note: `$WAKATIME_HOME` defaults to `$HOME`
 
 First, turn on debug mode:
 
-1. Press CTRL+SHIFT+P or &#8984;+SHIFT+P
+1. Press `CTRL + SHIFT + P` or `⌘ + SHIFT + P`
 2. Type `> WakaTime: Debug`, and press `Enter`.
 3. Select `true`, then press `Enter`.
 
@@ -63,7 +63,7 @@ Errors outside the scope of vscode-wakatime go to `$WAKATIME_HOME/.wakatime.log`
 The [How to Debug Plugins][how to debug] guide shows how to check when coding activity was last received from your editor using the [Plugins Status Page][plugins status page].
 
 **Microsoft Windows Only:** Using WakaTime behind a corporate proxy? Try enabling your Windows Root Certs inside VS Code with the [win-ca][winca] extension:
-Press `Ctrl+Shift+X`, search for `win-ca`, press `Install`.
+Press `CTRL + Shift + X`, search for `win-ca`, press `Install`.
 
 For more general troubleshooting info, see the [wakatime-cli Troubleshooting Section][wakatime-cli-help].
 
