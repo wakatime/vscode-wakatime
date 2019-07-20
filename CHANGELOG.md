@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 2.2.0 (2019-07-20)
+
+- Respect no_ssl_verify config for all network requests.
+  [#111](https://github.com/wakatime/vscode-wakatime/issues/111)
+
+
 ## 2.1.2 (2019-05-22)
 
 - Improvements around status bar enabled setting.
