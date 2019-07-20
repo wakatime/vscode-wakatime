@@ -4,6 +4,8 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as child_process from 'child_process';
 import * as adm_zip from 'adm-zip';
+import * as request from 'request';
+import * as rimraf from 'rimraf';
 
 import { Options } from './options';
 import { Logger } from './logger';
@@ -97,6 +99,7 @@ export class Dependencies {
           this.cachedPythonLocation = binary;
           this.logger.debug(`Valid python version: ${output}`);
           callback(binary);
+          return;
         } else {
           this.logger.debug(`Invalid python version: ${output}`);
           this.findPython(locations, callback);
@@ -125,28 +128,27 @@ export class Dependencies {
             this.getLatestCoreVersion(latestVersion => {
               if (currentVersion === latestVersion) {
                 this.logger.debug('wakatime-core is up to date');
-                if (callback) callback(true);
+                callback(true);
               } else if (latestVersion) {
                 this.logger.debug(`Found an updated wakatime-core v${latestVersion}`);
-                if (callback) callback(false);
+                callback(false);
               } else {
                 this.logger.debug('Unable to find latest wakatime-core version from GitHub');
-                if (callback) callback(false);
+                callback(false);
               }
             });
           } else {
-            if (callback) callback(false);
+            callback(false);
           }
         });
       } else {
-        if (callback) callback(false);
+        callback(false);
       }
     });
   }
 
-  private async getLatestCoreVersion(callback: (arg0: string) => void): Promise<void> {
+  private getLatestCoreVersion(callback: (arg0: string) => void): void {
     let url = 'https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py';
-    const request = await import('request');
     this.options.getSetting('settings', 'proxy', function(_err, proxy) {
       let options = { url: url };
       if (proxy && proxy.trim()) options['proxy'] = proxy.trim();
@@ -159,11 +161,12 @@ export class Dependencies {
             let match = re.exec(lines[i]);
             if (match) {
               version = match[1] + '.' + match[2] + '.' + match[3];
-              if (callback) return callback(version);
+              callback(version);
+              return;
             }
           }
         }
-        if (callback) return callback(version);
+        callback(version);
       });
     });
   }
@@ -186,59 +189,51 @@ export class Dependencies {
     });
   }
 
-  private async removeCore(callback: () => void): Promise<void> {
+  private removeCore(callback: () => void): void {
     if (fs.existsSync(path.join(this.extensionPath, 'wakatime-master'))) {
       try {
-        const rimraf = await import('rimraf');
         rimraf(path.join(this.extensionPath, 'wakatime-master'), () => {
-          if (callback) {
-            return callback();
-          }
+          callback();
         });
       } catch (e) {
         this.logger.warn(e);
+        callback();
       }
     } else {
-      if (callback) {
-        return callback();
-      }
+      callback();
     }
   }
 
-  private async downloadFile(url: string, outputFile: string, callback: () => void): Promise<void> {
-    const request = await import('request');
+  private downloadFile(url: string, outputFile: string, callback: () => void): void {
     this.options.getSetting('settings', 'proxy', function(_err, proxy) {
       let options = { url: url };
       if (proxy && proxy.trim()) options['proxy'] = proxy.trim();
       let r = request.get(options);
       let out = fs.createWriteStream(outputFile);
       r.pipe(out);
-      return r.on('end', function() {
-        return out.on('finish', function() {
-          if (callback != null) {
-            return callback();
-          }
+      r.on('end', () => {
+        out.on('finish', () => {
+          callback();
         });
       });
     });
   }
 
-  private async unzip(file: string, outputDir: string, callback: () => void): Promise<void> {
+  private unzip(file: string, outputDir: string, callback: () => void): void {
     if (fs.existsSync(file)) {
       try {
-        let zip = await new adm_zip(file);
+        let zip = new adm_zip(file);
         zip.extractAllTo(outputDir, true);
       } catch (e) {
         this.logger.error(e);
-        if (callback) {
-          return callback();
-        }
       } finally {
-        fs.unlink(file, () => {
-          if (callback) {
-            return callback();
-          }
-        });
+        try {
+          fs.unlink(file, () => {
+            callback();
+          });
+        } catch (e2) {
+          callback();
+        }
       }
     }
   }
@@ -261,15 +256,17 @@ export class Dependencies {
       let zipFile = path.join(this.extensionPath, 'python.zip');
       this.downloadFile(url, zipFile, () => {
         this.logger.debug('Extracting python...');
-        this.unzip(zipFile, path.join(this.extensionPath, 'python'), callback);
-        this.logger.debug('Finished installing python.');
-        callback();
+        this.unzip(zipFile, path.join(this.extensionPath, 'python'), () => {
+          this.logger.debug('Finished installing python.');
+          callback();
+        });
       });
     } else {
       let error_msg =
         'WakaTime depends on Python. Install it from https://python.org/downloads then restart VS Code';
       this.logger.warn(error_msg);
       vscode.window.showWarningMessage(error_msg);
+      callback();
     }
   }
 

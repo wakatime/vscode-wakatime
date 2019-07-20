@@ -212,7 +212,7 @@ export class WakaTime {
     }
   }
 
-  private async getCodingActivity(force: boolean = false) {
+  private getCodingActivity(force: boolean = false) {
     if (!this.showCodingActivity || !this.showStatusBar) return;
     const cutoff = Date.now() - this.fetchTodayInterval;
     if (!force && this.lastFetchToday > cutoff) return;
