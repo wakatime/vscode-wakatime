@@ -6,7 +6,6 @@ import { COMMAND_DASHBOARD } from './constants';
 import { Options } from './options';
 import { Logger } from './logger';
 import { Libs } from './libs';
-import { Stats } from './stats';
 
 export class WakaTime {
   private appNames = {
@@ -25,7 +24,6 @@ export class WakaTime {
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
-  private stats: Stats;
   private getCodingActivityTimeout: NodeJS.Timer;
   private fetchTodayInterval: number = 60000;
   private lastFetchToday: number = 0;
@@ -49,14 +47,13 @@ export class WakaTime {
     this.statusBar.text = '$(clock) WakaTime Initializing...';
     this.statusBar.show();
     this.checkApiKey();
-    this.stats = new Stats(this.options, this.logger);
 
     this.dependencies.checkAndInstall(() => {
       this.logger.debug('WakaTime: Initialized');
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
       this.options.getSetting('settings', 'status_bar_enabled', (_err, val) => {
-        if (val && val.trim() == 'false') {
+        if (val == 'false') {
           this.showStatusBar = false;
           this.statusBar.hide();
         } else {
@@ -65,7 +62,7 @@ export class WakaTime {
         }
       });
       this.options.getSetting('settings', 'status_bar_coding_activity', (_err, val) => {
-        if (val && val.trim() == 'false') {
+        if (val == 'false') {
           this.showCodingActivity = false;
         } else {
           this.showCodingActivity = true;
@@ -115,7 +112,7 @@ export class WakaTime {
 
   public promptForDebug(): void {
     this.options.getSetting('settings', 'debug', (_err, defaultVal) => {
-      if (!defaultVal || defaultVal.trim() !== 'true') defaultVal = 'false';
+      if (!defaultVal || defaultVal !== 'true') defaultVal = 'false';
       let items: string[] = ['true', 'false'];
       let promptOptions = {
         placeHolder: `true or false (current value \"${defaultVal}\")`,
@@ -137,7 +134,7 @@ export class WakaTime {
 
   public promptStatusBarIcon(): void {
     this.options.getSetting('settings', 'status_bar_enabled', (_err, defaultVal) => {
-      if (!defaultVal || defaultVal.trim() !== 'false') defaultVal = 'true';
+      if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
       let items: string[] = ['true', 'false'];
       let promptOptions = {
         placeHolder: `true or false (current value \"${defaultVal}\")`,
@@ -162,7 +159,7 @@ export class WakaTime {
 
   public promptStatusBarCodingActivity(): void {
     this.options.getSetting('settings', 'status_bar_coding_activity', (_err, defaultVal) => {
-      if (!defaultVal || defaultVal.trim() !== 'false') defaultVal = 'true';
+      if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
       let items: string[] = ['true', 'false'];
       let promptOptions = {
         placeHolder: `true or false (current value \"${defaultVal}\")`,
@@ -210,23 +207,6 @@ export class WakaTime {
         doc.viewColumn = vscode.ViewColumn.Beside;
       });
     }
-  }
-
-  private getCodingActivity(force: boolean = false) {
-    if (!this.showCodingActivity || !this.showStatusBar) return;
-    const cutoff = Date.now() - this.fetchTodayInterval;
-    if (!force && this.lastFetchToday > cutoff) return;
-
-    this.lastFetchToday = Date.now();
-    this.getCodingActivityTimeout = setTimeout(this.getCodingActivity, this.fetchTodayInterval);
-    this.stats
-      .getCodingActivity()
-      .then((val: any) => {
-        this.statusBar.text = `$(clock) ${val}`;
-      })
-      .catch(() => {
-        this.statusBar.text = `$(clock)`;
-      });
   }
 
   public dispose() {
@@ -366,6 +346,69 @@ export class WakaTime {
       } else {
         this.promptForApiKey();
       }
+    });
+  }
+
+  private getCodingActivity(force: boolean = false) {
+    if (!this.showCodingActivity || !this.showStatusBar) return;
+    const cutoff = Date.now() - this.fetchTodayInterval;
+    if (!force && this.lastFetchToday > cutoff) return;
+
+    this.lastFetchToday = Date.now();
+    this.getCodingActivityTimeout = setTimeout(this.getCodingActivity, this.fetchTodayInterval);
+
+    this.hasApiKey(hasApiKey => {
+      if (!hasApiKey) return;
+
+      this.dependencies.getPythonLocation(pythonBinary => {
+        if (!pythonBinary) return;
+
+        let core = this.dependencies.getCoreLocation();
+        let user_agent =
+          this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
+        let args = [core, '--today', '--plugin', Libs.quote(user_agent)];
+        if (Dependencies.isWindows()) {
+          args.push(
+            '--config',
+            Libs.quote(this.options.getConfigFile()),
+            '--logfile',
+            Libs.quote(this.options.getLogFile()),
+          );
+        }
+
+        this.logger.debug(
+          `Fetching coding activity for Today from api: ${this.formatArguments(
+            pythonBinary,
+            args,
+          )}`,
+        );
+
+        let process = child_process.execFile(pythonBinary, args, (error, stdout, stderr) => {
+          if (error != null) {
+            if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
+            if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
+            this.logger.error(error.toString());
+          }
+        });
+        let output = '';
+        if (process.stdout) {
+          process.stdout.on('data', (data: string | null) => {
+            if (data) output += data;
+          });
+        }
+        process.on('close', (code, _signal) => {
+          if (code == 0) {
+            if (output && this.showStatusBar && this.showCodingActivity) {
+              this.statusBar.text = `$(clock) ${output}`;
+            }
+          } else if (code == 102) {
+            // noop, working offline
+          } else {
+            let error_msg = `Error fetching today coding activity (${code}); Check your ${this.options.getLogFile()} file for more details`;
+            this.logger.debug(error_msg);
+          }
+        });
+      });
     });
   }
 

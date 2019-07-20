@@ -73,7 +73,7 @@ export function activate(ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(wakatime);
 
   options.getSetting('settings', 'debug', function(_error, debug) {
-    if (debug && debug.trim() === 'true') {
+    if (debug === 'true') {
       logger.setLevel('debug');
       logger.debug('::WakaTime debug mode::');
     }

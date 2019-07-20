@@ -149,24 +149,27 @@ export class Dependencies {
 
   private getLatestCoreVersion(callback: (arg0: string) => void): void {
     let url = 'https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py';
-    this.options.getSetting('settings', 'proxy', function(_err, proxy) {
-      let options = { url: url };
-      if (proxy && proxy.trim()) options['proxy'] = proxy.trim();
-      request.get(options, function(error, response, body) {
-        let version: string = '';
-        if (!error && response.statusCode == 200) {
-          let lines = body.split('\n');
-          for (var i = 0; i < lines.length; i++) {
-            let re = /^__version_info__ = \('([0-9]+)', '([0-9]+)', '([0-9]+)'\)/g;
-            let match = re.exec(lines[i]);
-            if (match) {
-              version = match[1] + '.' + match[2] + '.' + match[3];
-              callback(version);
-              return;
+    this.options.getSetting('settings', 'proxy', (proxy: string) => {
+      this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
+        let options = { url: url };
+        if (proxy) options['proxy'] = proxy;
+        if (noSSLVerify === 'true') options['strictSSL'] = false;
+        request.get(options, (error, response, body) => {
+          let version: string = '';
+          if (!error && response.statusCode == 200) {
+            let lines = body.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+              let re = /^__version_info__ = \('([0-9]+)', '([0-9]+)', '([0-9]+)'\)/g;
+              let match = re.exec(lines[i]);
+              if (match) {
+                version = match[1] + '.' + match[2] + '.' + match[3];
+                callback(version);
+                return;
+              }
             }
           }
-        }
-        callback(version);
+          callback(version);
+        });
       });
     });
   }
@@ -205,15 +208,18 @@ export class Dependencies {
   }
 
   private downloadFile(url: string, outputFile: string, callback: () => void): void {
-    this.options.getSetting('settings', 'proxy', function(_err, proxy) {
-      let options = { url: url };
-      if (proxy && proxy.trim()) options['proxy'] = proxy.trim();
-      let r = request.get(options);
-      let out = fs.createWriteStream(outputFile);
-      r.pipe(out);
-      r.on('end', () => {
-        out.on('finish', () => {
-          callback();
+    this.options.getSetting('settings', 'proxy', (_err, proxy) => {
+      this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
+        let options = { url: url };
+        if (proxy) options['proxy'] = proxy;
+        if (noSSLVerify === 'true') options['strictSSL'] = false;
+        let r = request.get(options);
+        let out = fs.createWriteStream(outputFile);
+        r.pipe(out);
+        r.on('end', () => {
+          out.on('finish', () => {
+            callback();
+          });
         });
       });
     });
