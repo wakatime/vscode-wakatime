@@ -9,12 +9,13 @@ import {
   COMMAND_DASHBOARD,
   COMMAND_CONFIG_FILE,
   COMMAND_LOG_FILE,
+  LogLevel,
 } from './constants';
 import { Logger } from './logger';
 import { Options } from './options';
 import { WakaTime } from './wakatime';
 
-var logger = new Logger('info');
+var logger = new Logger(LogLevel.INFO);
 var wakatime: WakaTime;
 
 export function activate(ctx: vscode.ExtensionContext) {
@@ -74,7 +75,7 @@ export function activate(ctx: vscode.ExtensionContext) {
 
   options.getSetting('settings', 'debug', function(_error, debug) {
     if (debug === 'true') {
-      logger.setLevel('debug');
+      logger.setLevel(LogLevel.DEBUG);
       logger.debug('::WakaTime debug mode::');
     }
     wakatime.initialize();

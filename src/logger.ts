@@ -1,52 +1,43 @@
-export class Logger {
-  private level: string;
-  private levels = {
-    debug: 0,
-    info: 1,
-    warn: 2,
-    error: 3,
-  };
+import { LogLevel } from './constants';
 
-  constructor(level: string) {
+export class Logger {
+  private level: LogLevel;
+
+  constructor(level: LogLevel) {
     this.setLevel(level);
   }
 
-  public setLevel(level: string): void {
-    if (level in this.levels) {
-      this.level = level;
-    } else {
-      throw new TypeError(`Invalid level: ${level}`);
-    }
+  public getLevel(): LogLevel {
+    return this.level;
   }
 
-  public log(level: string, msg: string): void {
-    if (!(level in this.levels)) throw new TypeError(`Invalid level: ${level}`);
+  public setLevel(level: LogLevel): void {
+    this.level = level;
+  }
 
-    const current: number = this.levels[level];
-    const cutoff: number = this.levels[this.level];
-
-    if (current >= cutoff) {
-      msg = `[WakaTime][${level.toUpperCase()}] ${msg}`;
-      if (level == 'debug') console.log(msg);
-      if (level == 'info') console.info(msg);
-      if (level == 'warn') console.warn(msg);
-      if (level == 'error') console.error(msg);
+  public log(level: LogLevel, msg: string): void {
+    if (level >= this.level) {
+      msg = `[WakaTime][${LogLevel[level]}] ${msg}`;
+      if (level == LogLevel.DEBUG) console.log(msg);
+      if (level == LogLevel.INFO) console.info(msg);
+      if (level == LogLevel.WARN) console.warn(msg);
+      if (level == LogLevel.ERROR) console.error(msg);
     }
   }
 
   public debug(msg: string): void {
-    this.log('debug', msg);
+    this.log(LogLevel.DEBUG, msg);
   }
 
   public info(msg: string): void {
-    this.log('info', msg);
+    this.log(LogLevel.INFO, msg);
   }
 
   public warn(msg: string): void {
-    this.log('warn', msg);
+    this.log(LogLevel.WARN, msg);
   }
 
   public error(msg: string): void {
-    this.log('error', msg);
+    this.log(LogLevel.ERROR, msg);
   }
 }

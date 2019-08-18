@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as child_process from 'child_process';
 
 import { Dependencies } from './dependencies';
-import { COMMAND_DASHBOARD } from './constants';
+import { COMMAND_DASHBOARD, LogLevel } from './constants';
 import { Options } from './options';
 import { Logger } from './logger';
 import { Libs } from './libs';
@@ -123,10 +123,10 @@ export class WakaTime {
         if (newVal == null) return;
         this.options.setSetting('settings', 'debug', newVal);
         if (newVal === 'true') {
-          this.logger.setLevel('debug');
+          this.logger.setLevel(LogLevel.DEBUG);
           this.logger.debug('Debug enabled');
         } else {
-          this.logger.setLevel('info');
+          this.logger.setLevel(LogLevel.INFO);
         }
       });
     });
