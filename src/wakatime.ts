@@ -300,14 +300,11 @@ export class WakaTime {
             });
             process.on('close', (code, _signal) => {
               if (code == 0) {
-                let today = new Date();
                 if (this.showStatusBar) {
                   if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
-                  this.statusBar.tooltip = `WakaTime: last heartbeat sent ${this.formatDate(
-                    today,
-                  )}`;
                   this.getCodingActivity();
                 }
+                let today = new Date();
                 this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
               } else if (code == 102) {
                 if (this.showStatusBar) {
@@ -400,6 +397,7 @@ export class WakaTime {
           if (code == 0) {
             if (output && this.showStatusBar && this.showCodingActivity) {
               this.statusBar.text = `$(clock) ${output}`;
+              this.statusBar.tooltip = `WakaTime: You coded a total of ${output.trim()} today.`;
             }
           } else if (code == 102) {
             // noop, working offline
