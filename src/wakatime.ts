@@ -280,11 +280,11 @@ export class WakaTime {
             let project = this.getProjectName(file);
             if (project) args.push('--alternate-project', Libs.quote(project));
             if (isWrite) args.push('--write');
-            if (Dependencies.isWindows()) {
+            if (Dependencies.isWindows() || this.options.isPortable()) {
               args.push(
                 '--config',
                 Libs.quote(this.options.getConfigFile()),
-                '--logfile',
+                '--log-file',
                 Libs.quote(this.options.getLogFile()),
               );
             }

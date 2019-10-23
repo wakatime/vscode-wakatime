@@ -145,9 +145,13 @@ export class Options {
   }
 
   public getUserHomeDir(): string {
-    if (process.env['VSCODE_PORTABLE']) return process.env['VSCODE_PORTABLE'] as string;
+    if (this.isPortable()) return process.env['VSCODE_PORTABLE'] as string;
 
     return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || '';
+  }
+
+  public isPortable(): boolean {
+    return !!process.env['VSCODE_PORTABLE'];
   }
 
   public startsWith(outer: string, inner: string): boolean {
