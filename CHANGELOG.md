@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 2.2.1 (2019-10-23)
+
+- Support Portable version on all platforms.
+  [#116](https://github.com/wakatime/vscode-wakatime/issues/116)
+
+
 ## 2.2.0 (2019-07-20)
 
 - Respect no_ssl_verify config for all network requests.
