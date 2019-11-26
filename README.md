@@ -1,3 +1,6 @@
+[![Coding time tracker](https://wakatime.com/badge/github/wakatime/vscode-wakatime.svg)](https://wakatime.com/badge/github/wakatime/vscode-wakatime)
+
+
 # WakaTime for Visual Studio Code
 
 [![Build Status](https://travis-ci.com/wakatime/vscode-wakatime.svg?branch=master)](https://travis-ci.com/wakatime/vscode-wakatime)
