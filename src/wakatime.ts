@@ -193,9 +193,7 @@ export class WakaTime {
     let path = this.options.getConfigFile();
     if (path) {
       let uri = vscode.Uri.file(path);
-      vscode.window.showTextDocument(uri).then(doc => {
-        doc.viewColumn = vscode.ViewColumn.Beside;
-      });
+      vscode.window.showTextDocument(uri);
     }
   }
 
@@ -203,9 +201,7 @@ export class WakaTime {
     let path = this.options.getLogFile();
     if (path) {
       let uri = vscode.Uri.file(path);
-      vscode.window.showTextDocument(uri).then(doc => {
-        doc.viewColumn = vscode.ViewColumn.Beside;
-      });
+      vscode.window.showTextDocument(uri);
     }
   }
 
