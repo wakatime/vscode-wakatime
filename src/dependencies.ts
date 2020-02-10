@@ -3,6 +3,7 @@ import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import * as process from 'process';
 import * as request from 'request';
 import * as rimraf from 'rimraf';
 import * as vscode from 'vscode';
@@ -61,10 +62,15 @@ export class Dependencies {
       '/usr/bin/python3',
       '/usr/bin/python',
     ];
-    for (var i = 39; i >= 27; i--) {
-      if (i >= 30 && i <= 32) continue;
-      locations.push(`\\python${i}\\pythonw`);
-      locations.push(`\\Python${i}\\pythonw`);
+    if (Dependencies.isWindows()) {
+      for (var i = 39; i >= 27; i--) {
+        if (i >= 30 && i <= 33) continue;
+        locations.push(`\\python${i}\\pythonw`);
+        locations.push(`\\Python${i}\\pythonw`);
+        locations.push(process.env.LOCALAPPDATA + `\\Programs\Python${i}\\pythonw`);
+        locations.push(process.env.LOCALAPPDATA + `\\Programs\Python${i}-32\\pythonw`);
+        locations.push(process.env.LOCALAPPDATA + `\\Programs\Python${i}-64\\pythonw`);
+      }
     }
 
     this.findPython(locations, python => {
