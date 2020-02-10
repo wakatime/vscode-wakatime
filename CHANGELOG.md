@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 2.3.0 (2020-02-09)
+
+- Detect python in Windows LocalAppData install locations.
+- Upgrade embedded python to v3.8.1.
+
+
 ## 2.2.1 (2019-10-23)
 
 - Support Portable version on all platforms.
