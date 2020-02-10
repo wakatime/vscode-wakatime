@@ -1,8 +1,8 @@
 # WakaTime for Visual Studio Code
 
-[![Build Status](https://travis-ci.com/wakatime/vscode-wakatime.svg?branch=master)](https://travis-ci.com/wakatime/vscode-wakatime)
-![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/WakaTime.vscode-wakatime.svg?label=Visual%20Studio%20Marketplace)
-[![Coding time tracker](https://wakatime.com/badge/github/wakatime/vscode-wakatime.svg?branch=master)](https://wakatime.com/badge/github/wakatime/vscode-wakatime)
+[![Build Status](https://travis-ci.com/wakatime/vscode-wakatime.png?branch=master)](https://travis-ci.com/wakatime/vscode-wakatime)
+![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/WakaTime.vscode-wakatime.png?label=Visual%20Studio%20Marketplace)
+[![Coding time tracker](https://wakatime.com/badge/github/wakatime/vscode-wakatime.png?branch=master)](https://wakatime.com/badge/github/wakatime/vscode-wakatime)
 
 Metrics, insights, and time tracking automatically generated from your programming activity.
 
