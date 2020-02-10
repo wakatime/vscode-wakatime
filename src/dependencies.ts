@@ -252,7 +252,7 @@ export class Dependencies {
 
   private installPython(callback: () => void): void {
     if (Dependencies.isWindows()) {
-      let ver = '3.5.1';
+      let ver = '3.8.1';
       let arch = 'win32';
       if (os.arch().indexOf('x64') > -1) arch = 'amd64';
       let url =
