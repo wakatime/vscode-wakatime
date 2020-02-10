@@ -1,11 +1,11 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as os from 'os';
-import * as fs from 'fs';
-import * as child_process from 'child_process';
 import * as adm_zip from 'adm-zip';
+import * as child_process from 'child_process';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import * as request from 'request';
 import * as rimraf from 'rimraf';
+import * as vscode from 'vscode';
 
 import { Options } from './options';
 import { Logger } from './logger';
