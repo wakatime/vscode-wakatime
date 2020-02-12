@@ -393,7 +393,7 @@ export class WakaTime {
           if (code == 0) {
             if (output && this.showStatusBar && this.showCodingActivity) {
               this.statusBar.text = `$(clock) ${output}`;
-              this.statusBar.tooltip = `WakaTime: You coded a total of ${output.trim()} today.`;
+              this.statusBar.tooltip = `WakaTime: You coded ${output.trim()} today.`;
             }
           } else if (code == 102) {
             // noop, working offline
