@@ -28,7 +28,7 @@
         "color": "#AEC3D8",
         "theme": "light"
     },
-    "extensionKind": "workspace",
+    "extensionKind": ["workspace"],
     "activationEvents": [
         "*"
     ],
