@@ -16,34 +16,27 @@ export class Dependencies {
   private options: Options;
   private logger: Logger;
   private extensionPath: string;
+  private s3urlprefix = 'https://wakatime-cli.s3-us-west-2.amazonaws.com/';
+  private standalone: boolean;
 
-  constructor(options: Options, extensionPath: string, logger: Logger) {
+  constructor(options: Options, extensionPath: string, logger: Logger, standalone: boolean) {
     this.options = options;
     this.logger = logger;
     this.extensionPath = extensionPath;
+    this.standalone = standalone;
   }
 
   public checkAndInstall(callback: () => void): void {
-    this.isPythonInstalled(isInstalled => {
-      if (!isInstalled) {
-        this.installPython(() => {
-          this.checkAndInstallCore(callback);
-        });
-      } else {
-        this.checkAndInstallCore(callback);
-      }
-    });
-  }
-
-  public checkAndInstallCore(callback: () => void): void {
-    if (!this.isCoreInstalled()) {
-      this.installCore(callback);
+    if (this.standalone) {
+      this.checkAndInstallStandaloneCli(callback);
     } else {
-      this.isCoreLatest(isLatest => {
-        if (!isLatest) {
-          this.installCore(callback);
+      this.isPythonInstalled(isInstalled => {
+        if (!isInstalled) {
+          this.installPython(() => {
+            this.checkAndInstallCli(callback);
+          });
         } else {
-          callback();
+          this.checkAndInstallCli(callback);
         }
       });
     }
@@ -79,13 +72,44 @@ export class Dependencies {
     });
   }
 
-  public getCoreLocation(): string {
-    let dir = path.join(this.extensionPath, 'wakatime-master', 'wakatime', 'cli.py');
-    return dir;
+  public getCliLocation(): string {
+    return path.join(this.extensionPath, 'wakatime-master', 'wakatime', 'cli.py');
+  }
+
+  public getStandaloneCliLocation(): string {
+    return path.join(this.extensionPath, 'wakatime');
   }
 
   public static isWindows(): boolean {
-    return os.type() === 'Windows_NT';
+    return os.platform() === 'win32';
+  }
+
+  private checkAndInstallCli(callback: () => void): void {
+    if (!this.isCliInstalled()) {
+      this.installCli(callback);
+    } else {
+      this.isCliLatest(isLatest => {
+        if (!isLatest) {
+          this.installCli(callback);
+        } else {
+          callback();
+        }
+      });
+    }
+  }
+
+  private checkAndInstallStandaloneCli(callback: () => void): void {
+    if (!this.isStandaloneCliInstalled()) {
+      this.installStandaloneCli(callback);
+    } else {
+      this.isStandaloneCliLatest(isLatest => {
+        if (!isLatest) {
+          this.installStandaloneCli(callback);
+        } else {
+          callback();
+        }
+      });
+    }
   }
 
   private findPython(locations: string[], callback: (arg0: string) => void): void {
@@ -117,29 +141,33 @@ export class Dependencies {
     }
   }
 
-  private isCoreInstalled(): boolean {
-    return fs.existsSync(this.getCoreLocation());
+  private isCliInstalled(): boolean {
+    return fs.existsSync(this.getCliLocation());
   }
 
-  private isCoreLatest(callback: (arg0: boolean) => void): void {
+  private isStandaloneCliInstalled(): boolean {
+    return fs.existsSync(this.getStandaloneCliLocation());
+  }
+
+  private isCliLatest(callback: (arg0: boolean) => void): void {
     this.getPythonLocation(pythonBinary => {
       if (pythonBinary) {
-        let args = [this.getCoreLocation(), '--version'];
+        let args = [this.getCliLocation(), '--version'];
         child_process.execFile(pythonBinary, args, (error, _stdout, stderr) => {
           if (!(error != null)) {
-            let currentVersion = stderr.toString().trim();
-            this.logger.debug(`Current wakatime-core version is ${currentVersion}`);
+            let currentVersion = _stdout.toString().trim() + stderr.toString().trim();
+            this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
 
-            this.logger.debug('Checking for updates to wakatime-core...');
-            this.getLatestCoreVersion(latestVersion => {
+            this.logger.debug('Checking for updates to wakatime-cli...');
+            this.getLatestCliVersion(latestVersion => {
               if (currentVersion === latestVersion) {
-                this.logger.debug('wakatime-core is up to date');
+                this.logger.debug('wakatime-cli is up to date');
                 callback(true);
               } else if (latestVersion) {
-                this.logger.debug(`Found an updated wakatime-core v${latestVersion}`);
+                this.logger.debug(`Found an updated wakatime-cli v${latestVersion}`);
                 callback(false);
               } else {
-                this.logger.debug('Unable to find latest wakatime-core version from GitHub');
+                this.logger.debug('Unable to find latest wakatime-cli version');
                 callback(false);
               }
             });
@@ -153,7 +181,33 @@ export class Dependencies {
     });
   }
 
-  private getLatestCoreVersion(callback: (arg0: string) => void): void {
+  private isStandaloneCliLatest(callback: (arg0: boolean) => void): void {
+    let args = ['--version'];
+    child_process.execFile(this.getStandaloneCliLocation(), args, (error, _stdout, stderr) => {
+      if (!(error != null)) {
+        let currentVersion = _stdout.toString().trim() + stderr.toString().trim();
+        this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
+
+        this.logger.debug('Checking for updates to wakatime-cli...');
+        this.getLatestStandaloneCliVersion(latestVersion => {
+          if (currentVersion === latestVersion) {
+            this.logger.debug('wakatime-cli is up to date');
+            callback(true);
+          } else if (latestVersion) {
+            this.logger.debug(`Found an updated wakatime-cli v${latestVersion}`);
+            callback(false);
+          } else {
+            this.logger.debug('Unable to find latest wakatime-cli version');
+            callback(false);
+          }
+        });
+      } else {
+        callback(false);
+      }
+    });
+  }
+
+  private getLatestCliVersion(callback: (arg0: string) => void): void {
     let url = 'https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py';
     this.options.getSetting('settings', 'proxy', (proxy: string) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
@@ -180,25 +234,54 @@ export class Dependencies {
     });
   }
 
-  private installCore(callback: () => void): void {
-    this.logger.debug('Downloading wakatime-core...');
+  private getLatestStandaloneCliVersion(callback: (arg0: string) => void): void {
+    const url = this.s3BucketUrl() + 'current_version.txt';
+    this.options.getSetting('settings', 'proxy', (proxy: string) => {
+      this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
+        let options = { url: url };
+        if (proxy) options['proxy'] = proxy;
+        if (noSSLVerify === 'true') options['strictSSL'] = false;
+        request.get(options, (error, response, body) => {
+          if (!error && response.statusCode == 200) {
+            callback(body.trim());
+          } else {
+            callback('');
+          }
+        });
+      });
+    });
+  }
+
+  private installCli(callback: () => void): void {
+    this.logger.debug('Downloading wakatime-cli...');
     let url = 'https://github.com/wakatime/wakatime/archive/master.zip';
     let zipFile = path.join(this.extensionPath, 'wakatime-master.zip');
 
     this.downloadFile(url, zipFile, () => {
-      this.extractCore(zipFile, callback);
+      this.extractCli(zipFile, callback);
     });
   }
 
-  private extractCore(zipFile: string, callback: () => void): void {
-    this.logger.debug(`Extracting wakatime-core into "${this.extensionPath}"...`);
-    this.removeCore(() => {
+  private installStandaloneCli(callback: () => void): void {
+    this.logger.debug('Downloading wakatime-cli standalone...');
+    const url = this.s3BucketUrl() + 'wakatime';
+    this.logger.debug(url);
+    const localFile = path.join(this.extensionPath, 'wakatime');
+    this.downloadFile(url, localFile, () => {
+      fs.chmodSync(localFile, 0o755);
+      callback();
+    });
+  }
+
+  private extractCli(zipFile: string, callback: () => void): void {
+    this.logger.debug(`Extracting wakatime-cli into "${this.extensionPath}"...`);
+    this.removeCli(() => {
       this.unzip(zipFile, this.extensionPath, callback);
-      this.logger.debug('Finished extracting wakatime-core.');
+      this.logger.debug('Finished extracting wakatime-cli.');
     });
   }
 
-  private removeCore(callback: () => void): void {
+  private removeCli(callback: () => void): void {
     if (fs.existsSync(path.join(this.extensionPath, 'wakatime-master'))) {
       try {
         rimraf(path.join(this.extensionPath, 'wakatime-master'), () => {
@@ -301,5 +384,20 @@ export class Dependencies {
     }
 
     return false;
+  }
+
+  private architecture(): string {
+    return os.arch().indexOf('32') > -1 ? '32' : '64';
+  }
+
+  private s3BucketUrl(): string {
+    switch (os.platform()) {
+      case 'darwin':
+        return this.s3urlprefix + 'mac-x86-64/';
+      case 'win32':
+        return this.s3urlprefix + 'windows-x86-' + this.architecture() + '/';
+      default:
+        return this.s3urlprefix + 'linux-x86-64/';
+    }
   }
 }

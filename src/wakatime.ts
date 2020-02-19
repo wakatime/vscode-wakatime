@@ -29,6 +29,7 @@ export class WakaTime {
   private lastFetchToday: number = 0;
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
+  private standalone: boolean;
 
   constructor(extensionPath: string, logger: Logger, options: Options) {
     this.extensionPath = extensionPath;
@@ -36,8 +37,14 @@ export class WakaTime {
     this.options = options;
   }
 
-  public initialize(): void {
-    this.dependencies = new Dependencies(this.options, this.extensionPath, this.logger);
+  public initialize(standalone: boolean): void {
+    this.standalone = standalone;
+    this.dependencies = new Dependencies(
+      this.options,
+      this.extensionPath,
+      this.logger,
+      this.standalone,
+    );
     this.statusBar.command = COMMAND_DASHBOARD;
 
     let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
@@ -46,6 +53,7 @@ export class WakaTime {
     this.agentName = this.appNames[vscode.env.appName] || 'vscode';
     this.statusBar.text = '$(clock) WakaTime Initializing...';
     this.statusBar.show();
+    if (this.standalone) this.logger.debug('Using standalone wakatime-cli.');
     this.checkApiKey();
 
     this.dependencies.checkAndInstall(() => {
@@ -267,77 +275,89 @@ export class WakaTime {
   private sendHeartbeat(file: string, isWrite: boolean): void {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
-        this.dependencies.getPythonLocation(pythonBinary => {
-          if (pythonBinary) {
-            let core = this.dependencies.getCoreLocation();
-            let user_agent =
-              this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-            let args = [core, '--file', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
-            let project = this.getProjectName(file);
-            if (project) args.push('--alternate-project', Libs.quote(project));
-            if (isWrite) args.push('--write');
-            if (Dependencies.isWindows() || this.options.isPortable()) {
-              args.push(
-                '--config',
-                Libs.quote(this.options.getConfigFile()),
-                '--log-file',
-                Libs.quote(this.options.getLogFile()),
-              );
+        if (this.standalone === undefined) return;
+        if (this.standalone) {
+          this._sendHeartbeat(file, isWrite);
+        } else {
+          this.dependencies.getPythonLocation(pythonBinary => {
+            if (pythonBinary) {
+              this._sendHeartbeat(file, isWrite, pythonBinary);
             }
-
-            this.logger.debug(`Sending heartbeat: ${this.formatArguments(pythonBinary, args)}`);
-
-            let process = child_process.execFile(pythonBinary, args, (error, stdout, stderr) => {
-              if (error != null) {
-                if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
-                if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
-                this.logger.error(error.toString());
-              }
-            });
-            process.on('close', (code, _signal) => {
-              if (code == 0) {
-                if (this.showStatusBar) {
-                  if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
-                  this.getCodingActivity();
-                }
-                let today = new Date();
-                this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
-              } else if (code == 102) {
-                if (this.showStatusBar) {
-                  if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
-                  this.statusBar.tooltip =
-                    'WakaTime: working offline... coding activity will sync next time we are online';
-                }
-                this.logger.warn(
-                  `Api eror (102); Check your ${this.options.getLogFile()} file for more details`,
-                );
-              } else if (code == 103) {
-                let error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
-                if (this.showStatusBar) {
-                  this.statusBar.text = '$(clock) WakaTime Error';
-                  this.statusBar.tooltip = `WakaTime: ${error_msg}`;
-                }
-                this.logger.error(error_msg);
-              } else if (code == 104) {
-                let error_msg = 'Invalid Api Key (104); Make sure your Api Key is correct!';
-                if (this.showStatusBar) {
-                  this.statusBar.text = '$(clock) WakaTime Error';
-                  this.statusBar.tooltip = `WakaTime: ${error_msg}`;
-                }
-                this.logger.error(error_msg);
-              } else {
-                let error_msg = `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
-                if (this.showStatusBar) {
-                  this.statusBar.text = '$(clock) WakaTime Error';
-                  this.statusBar.tooltip = `WakaTime: ${error_msg}`;
-                }
-                this.logger.error(error_msg);
-              }
-            });
-          }
-        });
+          });
+        }
       } else {
         this.promptForApiKey();
+      }
+    });
+  }
+
+  private _sendHeartbeat(file: string, isWrite: boolean, pythonBinary?: string): void {
+    let cli = this.standalone
+      ? this.dependencies.getStandaloneCliLocation()
+      : this.dependencies.getCliLocation();
+    let user_agent =
+      this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
+    let args = ['--file', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
+    if (!this.standalone) args.unshift(cli);
+    let project = this.getProjectName(file);
+    if (project) args.push('--alternate-project', Libs.quote(project));
+    if (isWrite) args.push('--write');
+    if (Dependencies.isWindows() || this.options.isPortable()) {
+      args.push(
+        '--config',
+        Libs.quote(this.options.getConfigFile()),
+        '--log-file',
+        Libs.quote(this.options.getLogFile()),
+      );
+    }
+
+    const binary = this.standalone || !pythonBinary ? cli : pythonBinary;
+    this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
+    let process = child_process.execFile(binary, args, (error, stdout, stderr) => {
+      if (error != null) {
+        if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
+        if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
+        this.logger.error(error.toString());
+      }
+    });
+    process.on('close', (code, _signal) => {
+      if (code == 0) {
+        if (this.showStatusBar) {
+          if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
+          this.getCodingActivity();
+        }
+        let today = new Date();
+        this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
+      } else if (code == 102) {
+        if (this.showStatusBar) {
+          if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
+          this.statusBar.tooltip =
+            'WakaTime: working offline... coding activity will sync next time we are online';
+        }
+        this.logger.warn(
+          `Api eror (102); Check your ${this.options.getLogFile()} file for more details`,
+        );
+      } else if (code == 103) {
+        let error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
+        if (this.showStatusBar) {
+          this.statusBar.text = '$(clock) WakaTime Error';
+          this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+        }
+        this.logger.error(error_msg);
+      } else if (code == 104) {
+        let error_msg = 'Invalid Api Key (104); Make sure your Api Key is correct!';
+        if (this.showStatusBar) {
+          this.statusBar.text = '$(clock) WakaTime Error';
+          this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+        }
+        this.logger.error(error_msg);
+      } else {
+        let error_msg = `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
+        if (this.showStatusBar) {
+          this.statusBar.text = '$(clock) WakaTime Error';
+          this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+        }
+        this.logger.error(error_msg);
       }
     });
   }
@@ -353,56 +373,64 @@ export class WakaTime {
     this.hasApiKey(hasApiKey => {
       if (!hasApiKey) return;
 
-      this.dependencies.getPythonLocation(pythonBinary => {
-        if (!pythonBinary) return;
-
-        let core = this.dependencies.getCoreLocation();
-        let user_agent =
-          this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-        let args = [core, '--today', '--plugin', Libs.quote(user_agent)];
-        if (Dependencies.isWindows()) {
-          args.push(
-            '--config',
-            Libs.quote(this.options.getConfigFile()),
-            '--logfile',
-            Libs.quote(this.options.getLogFile()),
-          );
-        }
-
-        this.logger.debug(
-          `Fetching coding activity for Today from api: ${this.formatArguments(
-            pythonBinary,
-            args,
-          )}`,
-        );
-
-        let process = child_process.execFile(pythonBinary, args, (error, stdout, stderr) => {
-          if (error != null) {
-            if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
-            if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
-            this.logger.error(error.toString());
+      if (this.standalone) {
+        this._getCodingActivity();
+      } else {
+        this.dependencies.getPythonLocation(pythonBinary => {
+          if (pythonBinary) {
+            this._getCodingActivity(pythonBinary);
           }
         });
-        let output = '';
-        if (process.stdout) {
-          process.stdout.on('data', (data: string | null) => {
-            if (data) output += data;
-          });
-        }
-        process.on('close', (code, _signal) => {
-          if (code == 0) {
-            if (output && this.showStatusBar && this.showCodingActivity) {
-              this.statusBar.text = `$(clock) ${output}`;
-              this.statusBar.tooltip = `WakaTime: You coded ${output.trim()} today.`;
-            }
-          } else if (code == 102) {
-            // noop, working offline
-          } else {
-            let error_msg = `Error fetching today coding activity (${code}); Check your ${this.options.getLogFile()} file for more details`;
-            this.logger.debug(error_msg);
-          }
-        });
+      }
+    });
+  }
+
+  private _getCodingActivity(pythonBinary?: string) {
+    let cli = this.standalone
+      ? this.dependencies.getStandaloneCliLocation()
+      : this.dependencies.getCliLocation();
+    let user_agent =
+      this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
+    let args = ['--today', '--plugin', Libs.quote(user_agent)];
+    if (!this.standalone) args.unshift(cli);
+    if (Dependencies.isWindows()) {
+      args.push(
+        '--config',
+        Libs.quote(this.options.getConfigFile()),
+        '--logfile',
+        Libs.quote(this.options.getLogFile()),
+      );
+    }
+
+    const binary = this.standalone || !pythonBinary ? cli : pythonBinary;
+    this.logger.debug(
+      `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
+    );
+    let process = child_process.execFile(binary, args, (error, stdout, stderr) => {
+      if (error != null) {
+        if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
+        if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
+        this.logger.error(error.toString());
+      }
+    });
+    let output = '';
+    if (process.stdout) {
+      process.stdout.on('data', (data: string | null) => {
+        if (data) output += data;
       });
+    }
+    process.on('close', (code, _signal) => {
+      if (code == 0) {
+        if (output && this.showStatusBar && this.showCodingActivity) {
+          this.statusBar.text = `$(clock) ${output}`;
+          this.statusBar.tooltip = `WakaTime: You coded ${output.trim()} today.`;
+        }
+      } else if (code == 102) {
+        // noop, working offline
+      } else {
+        let error_msg = `Error fetching today coding activity (${code}); Check your ${this.options.getLogFile()} file for more details`;
+        this.logger.debug(error_msg);
+      }
     });
   }
 
@@ -466,9 +494,9 @@ export class WakaTime {
     return arg;
   }
 
-  private formatArguments(python: string, args: string[]): string {
+  private formatArguments(binary: string, args: string[]): string {
     let clone = args.slice(0);
-    clone.unshift(this.wrapArg(python));
+    clone.unshift(this.wrapArg(binary));
     let newCmds: string[] = [];
     let lastCmd = '';
     for (let i = 0; i < clone.length; i++) {
