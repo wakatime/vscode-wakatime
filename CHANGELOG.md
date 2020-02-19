@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 2.3.1 (2020-02-19)
+
+- Support for standalone wakatime-cli, off by default.
+
+
 ## 2.3.0 (2020-02-09)
 
 - Detect python in Windows LocalAppData install locations.
