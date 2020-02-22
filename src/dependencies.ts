@@ -77,7 +77,8 @@ export class Dependencies {
   }
 
   public getStandaloneCliLocation(): string {
-    return path.join(this.extensionPath, 'wakatime');
+    const ext = Dependencies.isWindows() ? '.exe' : '';
+    return path.join(this.extensionPath, 'wakatime' + ext);
   }
 
   public static isWindows(): boolean {
@@ -264,9 +265,10 @@ export class Dependencies {
 
   private installStandaloneCli(callback: () => void): void {
     this.logger.debug('Downloading wakatime-cli standalone...');
-    const url = this.s3BucketUrl() + 'wakatime';
+    const ext = Dependencies.isWindows() ? '.exe' : '';
+    const url = this.s3BucketUrl() + 'wakatime' + ext;
     this.logger.debug(url);
-    const localFile = path.join(this.extensionPath, 'wakatime');
+    const localFile = path.join(this.extensionPath, 'wakatime' + ext);
     this.downloadFile(url, localFile, () => {
       fs.chmodSync(localFile, 0o755);
       callback();
