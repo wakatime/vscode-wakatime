@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 3.0.0 (2020-02-22)
+
+- Use standalone wakatime-cli by default over source version.
+
+
 ## 2.3.2 (2020-02-22)
 
 - Use exe file extension for standalone wakatime-cli on Windows platform.
