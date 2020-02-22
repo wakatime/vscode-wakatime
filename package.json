@@ -2,7 +2,7 @@
     "name": "vscode-wakatime",
     "displayName": "WakaTime",
     "description": "Metrics, insights, and time tracking automatically generated from your programming activity.",
-    "version": "2.3.1",
+    "version": "2.3.2",
     "publisher": "WakaTime",
     "author": {
         "name": "WakaTime"
@@ -28,7 +28,9 @@
         "color": "#AEC3D8",
         "theme": "light"
     },
-    "extensionKind": ["workspace"],
+    "extensionKind": [
+        "workspace"
+    ],
     "activationEvents": [
         "*"
     ],
