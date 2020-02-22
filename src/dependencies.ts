@@ -270,7 +270,7 @@ export class Dependencies {
     this.logger.debug(url);
     const localFile = path.join(this.extensionPath, 'wakatime' + ext);
     this.downloadFile(url, localFile, () => {
-      fs.chmodSync(localFile, 0o755);
+      if (!Dependencies.isWindows()) fs.chmodSync(localFile, 0o755);
       callback();
     });
   }
