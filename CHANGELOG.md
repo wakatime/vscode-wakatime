@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 3.0.1 (2020-02-22)
+
+- Prevent sending heartbeats before wakatime-cli has finished downloading.
+
+
 ## 3.0.0 (2020-02-22)
 
 - Use standalone wakatime-cli by default over source version.
