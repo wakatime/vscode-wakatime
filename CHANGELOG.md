@@ -2,6 +2,11 @@
 # Changelog
 
 
+## 4.0.0 (2020-02-23)
+
+- Download wakatime-cli standalone as zipped folder for improved performance.
+
+
 ## 3.0.1 (2020-02-22)
 
 - Prevent sending heartbeats before wakatime-cli has finished downloading.
