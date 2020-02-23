@@ -85,6 +85,10 @@ export class Dependencies {
     return os.platform() === 'win32';
   }
 
+  public isStandaloneCliInstalled(): boolean {
+    return fs.existsSync(this.getStandaloneCliLocation());
+  }
+
   private checkAndInstallCli(callback: () => void): void {
     if (!this.isCliInstalled()) {
       this.installCli(callback);
@@ -144,10 +148,6 @@ export class Dependencies {
 
   private isCliInstalled(): boolean {
     return fs.existsSync(this.getCliLocation());
-  }
-
-  private isStandaloneCliInstalled(): boolean {
-    return fs.existsSync(this.getStandaloneCliLocation());
   }
 
   private isCliLatest(callback: (arg0: boolean) => void): void {

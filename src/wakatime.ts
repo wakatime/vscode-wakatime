@@ -292,6 +292,7 @@ export class WakaTime {
   }
 
   private _sendHeartbeat(file: string, isWrite: boolean, pythonBinary?: string): void {
+    if (this.standalone && !this.dependencies.isStandaloneCliInstalled()) return;
     let cli = this.standalone
       ? this.dependencies.getStandaloneCliLocation()
       : this.dependencies.getCliLocation();
@@ -386,6 +387,7 @@ export class WakaTime {
   }
 
   private _getCodingActivity(pythonBinary?: string) {
+    if (this.standalone && !this.dependencies.isStandaloneCliInstalled()) return;
     let cli = this.standalone
       ? this.dependencies.getStandaloneCliLocation()
       : this.dependencies.getCliLocation();
