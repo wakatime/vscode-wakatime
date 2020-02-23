@@ -268,7 +268,10 @@ export class Dependencies {
     const url = this.s3BucketUrl() + 'wakatime-cli.zip';
     let zipFile = path.join(this.extensionPath, 'wakatime-cli.zip');
     this.downloadFile(url, zipFile, () => {
-      this.extractStandaloneCli(zipFile, callback);
+      this.extractStandaloneCli(zipFile, () => {
+        if (!Dependencies.isWindows()) fs.chmodSync(this.getStandaloneCliLocation(), 0o755);
+        callback();
+      });
     });
   }
 
