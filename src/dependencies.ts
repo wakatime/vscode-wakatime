@@ -78,7 +78,7 @@ export class Dependencies {
 
   public getStandaloneCliLocation(): string {
     const ext = Dependencies.isWindows() ? '.exe' : '';
-    return path.join(this.extensionPath, 'wakatime' + ext);
+    return path.join(this.extensionPath, 'wakatime-cli', 'wakatime-cli' + ext);
   }
 
   public static isWindows(): boolean {
@@ -265,13 +265,10 @@ export class Dependencies {
 
   private installStandaloneCli(callback: () => void): void {
     this.logger.debug('Downloading wakatime-cli standalone...');
-    const ext = Dependencies.isWindows() ? '.exe' : '';
-    const url = this.s3BucketUrl() + 'wakatime' + ext;
-    this.logger.debug(url);
-    const localFile = path.join(this.extensionPath, 'wakatime' + ext);
-    this.downloadFile(url, localFile, () => {
-      if (!Dependencies.isWindows()) fs.chmodSync(localFile, 0o755);
-      callback();
+    const url = this.s3BucketUrl() + 'wakatime-cli.zip';
+    let zipFile = path.join(this.extensionPath, 'wakatime-cli.zip');
+    this.downloadFile(url, zipFile, () => {
+      this.extractStandaloneCli(zipFile, callback);
     });
   }
 
@@ -283,10 +280,33 @@ export class Dependencies {
     });
   }
 
+  private extractStandaloneCli(zipFile: string, callback: () => void): void {
+    this.logger.debug(`Extracting wakatime-cli into "${this.extensionPath}"...`);
+    this.removeStandaloneCli(() => {
+      this.unzip(zipFile, this.extensionPath, callback);
+      this.logger.debug('Finished extracting wakatime-cli standalone.');
+    });
+  }
+
   private removeCli(callback: () => void): void {
     if (fs.existsSync(path.join(this.extensionPath, 'wakatime-master'))) {
       try {
         rimraf(path.join(this.extensionPath, 'wakatime-master'), () => {
+          callback();
+        });
+      } catch (e) {
+        this.logger.warn(e);
+        callback();
+      }
+    } else {
+      callback();
+    }
+  }
+
+  private removeStandaloneCli(callback: () => void): void {
+    if (fs.existsSync(path.join(this.extensionPath, 'wakatime-cli'))) {
+      try {
+        rimraf(path.join(this.extensionPath, 'wakatime-cli'), () => {
           callback();
         });
       } catch (e) {
