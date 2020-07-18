@@ -1,6 +1,7 @@
 dist
 out/**
 node_modules
+wakatime-cli
 .vscode-test/**
 *.vsix
 npm-debug.log*
