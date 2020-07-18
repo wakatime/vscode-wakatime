@@ -1,6 +1,9 @@
 
 # Changelog
 
+## 4.0.1 (2020-07-11)
+
+- Add config option to disable extension.
 
 ## 4.0.0 (2020-02-23)
 
