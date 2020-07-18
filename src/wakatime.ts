@@ -83,22 +83,26 @@ export class WakaTime {
   }
 
   public promptForApiKey(): void {
-    this.options.getSetting('settings', 'api_key', (_err, defaultVal) => {
-      if (Libs.validateKey(defaultVal) != '') defaultVal = '';
-      let promptOptions = {
-        prompt: 'WakaTime Api Key',
-        placeHolder: 'Enter your api key from https://wakatime.com/settings',
-        value: defaultVal,
-        ignoreFocusOut: true,
-        validateInput: Libs.validateKey.bind(this),
-      };
-      vscode.window.showInputBox(promptOptions).then(val => {
-        if (val != undefined) {
-          let validation = Libs.validateKey(val);
-          if (validation === '') this.options.setSetting('settings', 'api_key', val);
-          else vscode.window.setStatusBarMessage(validation);
-        } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
-      });
+    this.options.getSetting('settings', 'disabled', (_e, disabled) => {
+      if (disabled !== 'true'){
+        this.options.getSetting('settings', 'api_key', (_err, defaultVal) => {
+          if (Libs.validateKey(defaultVal) != '') defaultVal = '';
+          let promptOptions = {
+            prompt: 'WakaTime Api Key',
+            placeHolder: 'Enter your api key from https://wakatime.com/settings',
+            value: defaultVal,
+            ignoreFocusOut: true,
+            validateInput: Libs.validateKey.bind(this),
+          };
+          vscode.window.showInputBox(promptOptions).then(val => {
+            if (val != undefined) {
+              let validation = Libs.validateKey(val);
+              if (validation === '') this.options.setSetting('settings', 'api_key', val);
+              else vscode.window.setStatusBarMessage(validation);
+            } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
+          });
+        });
+      }
     });
   }
 

@@ -20,7 +20,7 @@ var wakatime: WakaTime;
 
 export function activate(ctx: vscode.ExtensionContext) {
   var options = new Options();
-
+  
   wakatime = new WakaTime(ctx.extensionPath, logger, options);
 
   ctx.subscriptions.push(
@@ -79,7 +79,11 @@ export function activate(ctx: vscode.ExtensionContext) {
       logger.debug('::WakaTime debug mode::');
     }
     options.getSetting('settings', 'standalone', (_err, standalone) => {
-      wakatime.initialize(standalone !== 'false');
+      wakatime.initialize(standalone !== 'false');  
+
+      options.getSetting('settings', 'disabled', (_e, disabled) => {
+        if (disabled === 'true') deactivate();
+      });
     });
   });
 }
