@@ -1,7 +1,7 @@
 
 # Changelog
 
-## 4.0.1 (2020-07-11)
+## 4.0.1 (Unreleased)
 
 - Add config option to disable extension.
 
@@ -460,4 +460,3 @@
 ## 0.0.1 (2015-11-16)
 
 - Birth
-
