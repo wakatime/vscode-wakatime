@@ -46,7 +46,7 @@ More information can be found from [wakatime core](https://github.com/wakatime/w
 
 Notes: 
 1. `$WAKATIME_HOME` defaults to `$HOME`
-1. To disable the extension at startup add `disabled=true` to your config 
+1. To disable the extension at startup add `disabled=true` to your config, this operation can also be performed by pressing `⌘ + Shift + P` and selecting `WakaTime: Disable`.
 
 ## Troubleshooting
 
