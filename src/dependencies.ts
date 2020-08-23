@@ -212,7 +212,10 @@ export class Dependencies {
     let url = 'https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py';
     this.options.getSetting('settings', 'proxy', (proxy: string) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
-        let options = { followRedirect: true };
+        let options = {
+          followRedirect: true,
+          timeout: 60000,
+        };
         if (proxy) {
           options['proxy'] = proxy;
           options['enableProxy'] = true;
@@ -247,7 +250,10 @@ export class Dependencies {
     const url = this.s3BucketUrl() + 'current_version.txt';
     this.options.getSetting('settings', 'proxy', (proxy: string) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
-        let options = { followRedirect: true };
+        let options = {
+          followRedirect: true,
+          timeout: 60000,
+        };
         if (proxy) {
           options['proxy'] = proxy;
           options['enableProxy'] = true;
@@ -346,7 +352,10 @@ export class Dependencies {
   private downloadFile(url: string, outputFile: string, callback: () => void): void {
     this.options.getSetting('settings', 'proxy', (_err, proxy) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
-        let options = { followRedirect: true };
+        let options = {
+          followRedirect: true,
+          timeout: 60000,
+        };
         if (proxy) {
           options['proxy'] = proxy;
           options['enableProxy'] = true;
@@ -356,7 +365,7 @@ export class Dependencies {
           urllib.request(url, (error, data) => {
             if (!error) {
               let out = fs.createWriteStream(outputFile);
-              out.once('open', function() {
+              out.once('open', function () {
                 out.write(data);
                 out.end();
                 callback();
