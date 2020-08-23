@@ -1,110 +1,109 @@
 {
-    "name": "vscode-wakatime",
-    "displayName": "WakaTime",
-    "description": "Metrics, insights, and time tracking automatically generated from your programming activity.",
-    "version": "4.0.0",
-    "publisher": "WakaTime",
-    "author": {
-        "name": "WakaTime"
-    },
-    "categories": [
-        "Other"
-    ],
-    "keywords": [
-        "productivity",
-        "time tracking",
-        "project",
-        "git",
-        "timer"
-    ],
-    "homepage": "https://wakatime.com/",
-    "bugs": {
-        "url": "https://github.com/wakatime/vscode-wakatime/issues",
-        "email": "support@wakatime.com"
-    },
-    "license": "BSD-3-Clause",
-    "icon": "images/wakatime-logo.png",
-    "galleryBanner": {
-        "color": "#AEC3D8",
-        "theme": "light"
-    },
-    "extensionKind": [
-        "workspace"
-    ],
-    "activationEvents": [
-        "*"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/wakatime/vscode-wakatime.git"
-    },
-    "engines": {
-        "vscode": "^1.31.0",
-        "sqlops": "*"
-    },
-    "main": "./dist/extension",
-    "scripts": {
-        "vscode:prepublish": "webpack --mode production",
-        "compile": "webpack --mode none",
-        "compile:dev": "tsc -p ./",
-        "watch": "webpack --mode none --watch",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile:dev && node ./node_modules/vscode/bin/test"
-    },
-    "contributes": {
-        "commands": [
-            {
-                "command": "wakatime.apikey",
-                "title": "WakaTime: Api Key"
-            },
-            {
-                "command": "wakatime.proxy",
-                "title": "WakaTime: Proxy"
-            },
-            {
-                "command": "wakatime.debug",
-                "title": "WakaTime: Debug"
-            },
-            {
-                "command": "wakatime.status_bar_enabled",
-                "title": "WakaTime: Status Bar Enabled"
-            },
-            {
-                "command": "wakatime.status_bar_coding_activity",
-                "title": "WakaTime: Status Bar Coding Activity"
-            },
-            {
-                "command": "wakatime.dashboard",
-                "title": "WakaTime: Open Dashboard"
-            },
-            {
-                "command": "wakatime.config_file",
-                "title": "WakaTime: Open Config File..."
-            },
-            {
-                "command": "wakatime.log_file",
-                "title": "WakaTime: Open Log File..."
-            }
-        ]
-    },
-    "devDependencies": {
-        "@types/adm-zip": "^0.4.32",
-        "@types/mocha": "^5.2.7",
-        "@types/node": "^12.6.8",
-        "@types/request": "^2.48.2",
-        "@types/rimraf": "^2.0.2",
-        "@types/webpack": "^4.32.0",
-        "adm-zip": "0.4.13",
-        "del-cli": "^2.0.0",
-        "original-fs": "^1.0.0",
-        "prettier": "1.18.2",
-        "request": "2.88.0",
-        "rimraf": "^2.6.3",
-        "ts-loader": "^6.0.4",
-        "tslib": "^1.10.0",
-        "typescript": "^3.5.3",
-        "vscode": "^1.1.35",
-        "webpack": "^4.36.1",
-        "webpack-cli": "^3.3.6"
-    }
+  "name": "vscode-wakatime",
+  "displayName": "WakaTime",
+  "description": "Metrics, insights, and time tracking automatically generated from your programming activity.",
+  "version": "4.0.1",
+  "publisher": "WakaTime",
+  "author": {
+    "name": "WakaTime"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "productivity",
+    "time tracking",
+    "project",
+    "git",
+    "timer"
+  ],
+  "homepage": "https://wakatime.com/",
+  "bugs": {
+    "url": "https://github.com/wakatime/vscode-wakatime/issues",
+    "email": "support@wakatime.com"
+  },
+  "license": "BSD-3-Clause",
+  "icon": "images/wakatime-logo.png",
+  "galleryBanner": {
+    "color": "#AEC3D8",
+    "theme": "light"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wakatime/vscode-wakatime.git"
+  },
+  "engines": {
+    "vscode": "^1.31.0",
+    "sqlops": "*"
+  },
+  "main": "./dist/extension",
+  "scripts": {
+    "vscode:prepublish": "webpack --mode production",
+    "compile": "webpack --mode none",
+    "compile:dev": "tsc -p ./",
+    "watch": "webpack --mode none --watch",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile:dev && node ./node_modules/vscode/bin/test"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "wakatime.apikey",
+        "title": "WakaTime: Api Key"
+      },
+      {
+        "command": "wakatime.proxy",
+        "title": "WakaTime: Proxy"
+      },
+      {
+        "command": "wakatime.debug",
+        "title": "WakaTime: Debug"
+      },
+      {
+        "command": "wakatime.status_bar_enabled",
+        "title": "WakaTime: Status Bar Enabled"
+      },
+      {
+        "command": "wakatime.status_bar_coding_activity",
+        "title": "WakaTime: Status Bar Coding Activity"
+      },
+      {
+        "command": "wakatime.dashboard",
+        "title": "WakaTime: Open Dashboard"
+      },
+      {
+        "command": "wakatime.config_file",
+        "title": "WakaTime: Open Config File..."
+      },
+      {
+        "command": "wakatime.log_file",
+        "title": "WakaTime: Open Log File..."
+      }
+    ]
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.4.33",
+    "@types/mocha": "^8.0.3",
+    "@types/node": "^14.6.0",
+    "@types/rimraf": "^3.0.0",
+    "@types/webpack": "^4.41.21",
+    "adm-zip": "0.4.16",
+    "del-cli": "^3.0.1",
+    "original-fs": "^1.1.0",
+    "prettier": "2.0.5",
+    "rimraf": "^3.0.2",
+    "ts-loader": "^8.0.2",
+    "tslib": "^2.0.1",
+    "typescript": "^4.0.2",
+    "urllib": "2.36.1",
+    "vscode": "^1.1.37",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
+  }
 }

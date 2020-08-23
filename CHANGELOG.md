@@ -5,6 +5,12 @@
 
 - Add config option to disable extension.
 
+## 4.0.1 (2020-08-22)
+
+- Replace deprecated request library with urllib.
+  [#116](https://github.com/wakatime/vscode-wakatime/issues/150)
+
+
 ## 4.0.0 (2020-02-23)
 
 - Download wakatime-cli standalone as zipped folder for improved performance.
