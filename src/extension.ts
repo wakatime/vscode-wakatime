@@ -6,7 +6,6 @@ import {
   COMMAND_DASHBOARD,
   COMMAND_DEBUG,
   COMMAND_DISABLE,
-  COMMAND_RE_ENABLE,
   COMMAND_LOG_FILE,
   COMMAND_PROXY,
   COMMAND_STATUS_BAR_CODING_ACTIVITY,
@@ -24,12 +23,6 @@ export function activate(ctx: vscode.ExtensionContext) {
   var options = new Options();
   
   wakatime = new WakaTime(ctx.extensionPath, logger, options);
-
-  ctx.subscriptions.push(
-    vscode.commands.registerCommand(COMMAND_RE_ENABLE, function() {
-      wakatime.promptToReEnable();
-    }),
-  );
 
   ctx.subscriptions.push(
     vscode.commands.registerCommand(COMMAND_DISABLE, function() {
