@@ -5,10 +5,22 @@
 
 - Add config option to disable extension.
 
+## 4.0.3 (2020-08-22)
+
+- Use options when fetching to increase default timeout.
+  [#154](https://github.com/wakatime/vscode-wakatime/issues/154)
+
+
+## 4.0.2 (2020-08-22)
+
+- Increase default network timeout from 5s to 60s.
+  [#154](https://github.com/wakatime/vscode-wakatime/issues/154)
+
+
 ## 4.0.1 (2020-08-22)
 
 - Replace deprecated request library with urllib.
-  [#116](https://github.com/wakatime/vscode-wakatime/issues/150)
+  [#150](https://github.com/wakatime/vscode-wakatime/issues/150)
 
 
 ## 4.0.0 (2020-02-23)
