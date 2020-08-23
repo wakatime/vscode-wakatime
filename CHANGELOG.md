@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 4.0.3 (2020-08-22)
+
+- Use options when fetching to increase default timeout.
+  [#154](https://github.com/wakatime/vscode-wakatime/issues/154)
+
+
 ## 4.0.2 (2020-08-22)
 
 - Increase default network timeout from 5s to 60s.
