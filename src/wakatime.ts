@@ -54,8 +54,10 @@ export class WakaTime {
     this.statusBar.text = '$(clock) WakaTime Initializing...';
     this.statusBar.show();
     if (this.standalone) this.logger.debug('Using standalone wakatime-cli.');
-    this.checkApiKey();
-
+    this.options.getSetting('settings', 'disabled', (_e, disabled) => {
+      if (disabled !== "true") this.checkApiKey();
+    });
+    
     this.dependencies.checkAndInstall(() => {
       this.logger.debug('WakaTime: Initialized');
       this.statusBar.text = '$(clock)';
@@ -82,27 +84,56 @@ export class WakaTime {
     this.setupEventListeners();
   }
 
+  public promptToReEnable(): void {
+    this.options.getSetting('settings', 'disabled', (_err, defaultVal) => {
+      if (!defaultVal || defaultVal !== 'true') defaultVal = 'false';
+      let items: string[] = ['true', 'false'];
+      const helperText =  defaultVal === 'true' ? "disabled" : "enabled";
+      let promptOptions = {
+        placeHolder: `true or false (extension is currently "${helperText}\")`,
+        value: defaultVal,
+        ignoreFocusOut: true,
+      };
+      vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+        if (newVal === 'true')this.options.setSetting('settings', 'disabled', 'false');
+      });
+    });
+
+  }
+
+  public promptToDisable(): void {
+    this.options.getSetting('settings', 'disabled', (_err, defaultVal) => {
+      if (!defaultVal || defaultVal !== 'true') defaultVal = 'false';
+      let items: string[] = ['true', 'false'];
+      const helperText =  defaultVal === 'true' ? "disabled" : "enabled";
+      let promptOptions = {
+        placeHolder: `true or false (extension is currently "${helperText}\")`,
+        value: defaultVal,
+        ignoreFocusOut: true,
+      };
+      vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+        if (newVal === 'true')this.options.setSetting('settings', 'disabled', 'true');
+      });
+    });
+  }
+
   public promptForApiKey(): void {
-    this.options.getSetting('settings', 'disabled', (_e, disabled) => {
-      if (disabled !== 'true'){
-        this.options.getSetting('settings', 'api_key', (_err, defaultVal) => {
-          if (Libs.validateKey(defaultVal) != '') defaultVal = '';
-          let promptOptions = {
-            prompt: 'WakaTime Api Key',
-            placeHolder: 'Enter your api key from https://wakatime.com/settings',
-            value: defaultVal,
-            ignoreFocusOut: true,
-            validateInput: Libs.validateKey.bind(this),
-          };
-          vscode.window.showInputBox(promptOptions).then(val => {
-            if (val != undefined) {
-              let validation = Libs.validateKey(val);
-              if (validation === '') this.options.setSetting('settings', 'api_key', val);
-              else vscode.window.setStatusBarMessage(validation);
-            } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
-          });
-        });
-      }
+    this.options.getSetting('settings', 'api_key', (_err, defaultVal) => {
+      if (Libs.validateKey(defaultVal) != '') defaultVal = '';
+      let promptOptions = {
+        prompt: 'WakaTime Api Key',
+        placeHolder: 'Enter your api key from https://wakatime.com/settings',
+        value: defaultVal,
+        ignoreFocusOut: true,
+        validateInput: Libs.validateKey.bind(this),
+      };
+      vscode.window.showInputBox(promptOptions).then(val => {
+        if (val != undefined) {
+          let validation = Libs.validateKey(val);
+          if (validation === '') this.options.setSetting('settings', 'api_key', val);
+          else vscode.window.setStatusBarMessage(validation);
+        } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
+      });
     });
   }
 
@@ -259,21 +290,25 @@ export class WakaTime {
   }
 
   private onEvent(isWrite: boolean): void {
-    let editor = vscode.window.activeTextEditor;
-    if (editor) {
-      let doc = editor.document;
-      if (doc) {
-        let file: string = doc.fileName;
-        if (file) {
-          let time: number = Date.now();
-          if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
-            this.sendHeartbeat(file, isWrite);
-            this.lastFile = file;
-            this.lastHeartbeat = time;
+    this.options.getSetting('settings', 'disabled', (_e, disabled) => {
+      if (disabled !== "true"){
+        let editor = vscode.window.activeTextEditor;
+        if (editor) {
+          let doc = editor.document;
+          if (doc) {
+            let file: string = doc.fileName;
+            if (file) {
+              let time: number = Date.now();
+              if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
+                this.sendHeartbeat(file, isWrite);
+                this.lastFile = file;
+                this.lastHeartbeat = time;
+              }
+            }
           }
         }
       }
-    }
+    });
   }
 
   private sendHeartbeat(file: string, isWrite: boolean): void {

@@ -2,13 +2,15 @@ import * as vscode from 'vscode';
 
 import {
   COMMAND_API_KEY,
-  COMMAND_PROXY,
-  COMMAND_DEBUG,
-  COMMAND_STATUS_BAR_ENABLED,
-  COMMAND_STATUS_BAR_CODING_ACTIVITY,
-  COMMAND_DASHBOARD,
   COMMAND_CONFIG_FILE,
+  COMMAND_DASHBOARD,
+  COMMAND_DEBUG,
+  COMMAND_DISABLE,
+  COMMAND_RE_ENABLE,
   COMMAND_LOG_FILE,
+  COMMAND_PROXY,
+  COMMAND_STATUS_BAR_CODING_ACTIVITY,
+  COMMAND_STATUS_BAR_ENABLED,
   LogLevel,
 } from './constants';
 import { Logger } from './logger';
@@ -22,6 +24,18 @@ export function activate(ctx: vscode.ExtensionContext) {
   var options = new Options();
   
   wakatime = new WakaTime(ctx.extensionPath, logger, options);
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND_RE_ENABLE, function() {
+      wakatime.promptToReEnable();
+    }),
+  );
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND_DISABLE, function() {
+      wakatime.promptToDisable();
+    }),
+  );
 
   ctx.subscriptions.push(
     vscode.commands.registerCommand(COMMAND_API_KEY, function() {
@@ -80,10 +94,6 @@ export function activate(ctx: vscode.ExtensionContext) {
     }
     options.getSetting('settings', 'standalone', (_err, standalone) => {
       wakatime.initialize(standalone !== 'false');  
-
-      options.getSetting('settings', 'disabled', (_e, disabled) => {
-        if (disabled === 'true') deactivate();
-      });
     });
   });
 }

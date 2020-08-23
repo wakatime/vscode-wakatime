@@ -66,6 +66,14 @@
         "title": "WakaTime: Debug"
       },
       {
+        "command": "wakatime.disable",
+        "title": "WakaTime: Disable via config (Reload required)"
+      },
+      {
+        "command": "wakatime.re_enable",
+        "title": "WakaTime: Re-enable via config if disabled (Reload required)"
+      },
+      {
         "command": "wakatime.status_bar_enabled",
         "title": "WakaTime: Status Bar Enabled"
       },

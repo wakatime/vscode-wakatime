@@ -1,7 +1,7 @@
 
 # Changelog
 
-## 4.0.1 (Unreleased)
+## 4.0.2 (Unreleased)
 
 - Add config option to disable extension.
 
