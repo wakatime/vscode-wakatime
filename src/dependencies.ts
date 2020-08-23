@@ -222,7 +222,7 @@ export class Dependencies {
         }
         if (noSSLVerify === 'true') options['strictSSL'] = false; // TODO: fix this
         try {
-          urllib.request(url, (error, data, response) => {
+          urllib.request(url, options, (error, data, response) => {
             let version: string = '';
             if (!error && response.statusCode == 200) {
               let lines = data.toString().split('\n');
@@ -260,7 +260,7 @@ export class Dependencies {
         }
         if (noSSLVerify === 'true') options['strictSSL'] = false; // TODO: fix this
         try {
-          urllib.request(url, (error, data, response) => {
+          urllib.request(url, options, (error, data, response) => {
             if (!error && response.statusCode == 200) {
               callback(data.toString().trim());
             } else {
@@ -362,7 +362,7 @@ export class Dependencies {
         }
         if (noSSLVerify === 'true') options['strictSSL'] = false; // TODO: fix this
         try {
-          urllib.request(url, (error, data) => {
+          urllib.request(url, options, (error, data) => {
             if (!error) {
               let out = fs.createWriteStream(outputFile);
               out.once('open', function () {
