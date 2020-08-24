@@ -7,8 +7,16 @@
   "author": {
     "name": "WakaTime"
   },
-  "categories": ["Other"],
-  "keywords": ["productivity", "time tracking", "project", "git", "timer"],
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "productivity",
+    "time tracking",
+    "project",
+    "git",
+    "timer"
+  ],
   "homepage": "https://wakatime.com/",
   "bugs": {
     "url": "https://github.com/wakatime/vscode-wakatime/issues",
@@ -20,8 +28,12 @@
     "color": "#AEC3D8",
     "theme": "light"
   },
-  "extensionKind": ["workspace"],
-  "activationEvents": ["*"],
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "*"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/wakatime/vscode-wakatime.git"
