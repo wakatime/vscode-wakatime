@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 4.0.5 (2020-08-23)
+
+- Listen for errors when downloading zip file to prevent extension crash.
+  [#154](https://github.com/wakatime/vscode-wakatime/issues/154)
+
+
 ## 4.0.4 (2020-08-23)
 
 - Switch back to request library since urllib causing problems on Linux.
