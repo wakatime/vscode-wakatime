@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 4.0.4 (2020-08-23)
+
+- Switch back to request library since urllib causing problems on Linux.
+  [#155](https://github.com/wakatime/vscode-wakatime/issues/155)
+
+
 ## 4.0.3 (2020-08-22)
 
 - Use options when fetching to increase default timeout.
