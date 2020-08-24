@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 4.0.6 (2020-08-24)
+
+- Fix plugin initializing.
+  [#156](https://github.com/wakatime/vscode-wakatime/issues/156)
+
+
 ## 4.0.5 (2020-08-23)
 
 - Listen for errors when downloading zip file to prevent extension crash.
