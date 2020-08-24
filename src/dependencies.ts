@@ -4,8 +4,8 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as process from 'process';
+import * as request from 'request';
 import * as rimraf from 'rimraf';
-import * as urllib from 'urllib';
 import * as vscode from 'vscode';
 
 import { Options } from './options';
@@ -212,20 +212,14 @@ export class Dependencies {
     let url = 'https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py';
     this.options.getSetting('settings', 'proxy', (proxy: string) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
-        let options = {
-          followRedirect: true,
-          timeout: 60000,
-        };
-        if (proxy) {
-          options['proxy'] = proxy;
-          options['enableProxy'] = true;
-        }
-        if (noSSLVerify === 'true') options['strictSSL'] = false; // TODO: fix this
+        let options = { url: url };
+        if (proxy) options['proxy'] = proxy;
+        if (noSSLVerify === 'true') options['strictSSL'] = false;
         try {
-          urllib.request(url, options, (error, data, response) => {
+          request.get(options, (error, response, body) => {
             let version: string = '';
             if (!error && response.statusCode == 200) {
-              let lines = data.toString().split('\n');
+              let lines = body.split('\n');
               for (var i = 0; i < lines.length; i++) {
                 let re = /^__version_info__ = \('([0-9]+)', '([0-9]+)', '([0-9]+)'\)/g;
                 let match = re.exec(lines[i]);
@@ -250,19 +244,13 @@ export class Dependencies {
     const url = this.s3BucketUrl() + 'current_version.txt';
     this.options.getSetting('settings', 'proxy', (proxy: string) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
-        let options = {
-          followRedirect: true,
-          timeout: 60000,
-        };
-        if (proxy) {
-          options['proxy'] = proxy;
-          options['enableProxy'] = true;
-        }
-        if (noSSLVerify === 'true') options['strictSSL'] = false; // TODO: fix this
+        let options = { url: url };
+        if (proxy) options['proxy'] = proxy;
+        if (noSSLVerify === 'true') options['strictSSL'] = false;
         try {
-          urllib.request(url, options, (error, data, response) => {
+          request.get(options, (error, response, body) => {
             if (!error && response.statusCode == 200) {
-              callback(data.toString().trim());
+              callback(body.trim());
             } else {
               callback('');
             }
@@ -352,26 +340,20 @@ export class Dependencies {
   private downloadFile(url: string, outputFile: string, callback: () => void): void {
     this.options.getSetting('settings', 'proxy', (_err, proxy) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
-        let options = {
-          followRedirect: true,
-          timeout: 60000,
-        };
-        if (proxy) {
-          options['proxy'] = proxy;
-          options['enableProxy'] = true;
-        }
-        if (noSSLVerify === 'true') options['strictSSL'] = false; // TODO: fix this
+        let options = { url: url };
+        if (proxy) options['proxy'] = proxy;
+        if (noSSLVerify === 'true') options['strictSSL'] = false;
         try {
-          urllib.request(url, options, (error, data) => {
-            if (!error) {
-              let out = fs.createWriteStream(outputFile);
-              out.once('open', function () {
-                out.write(data);
-                out.end();
+          let r = request.get(options);
+          let out = fs.createWriteStream(outputFile);
+          r.pipe(out);
+          r.on('end', () => {
+            try {
+              out.on('finish', () => {
                 callback();
               });
-            } else {
-              this.logger.warn(error.toString());
+            } catch (e) {
+              this.logger.warn(e);
               callback();
             }
           });
