@@ -268,27 +268,47 @@ export class Dependencies {
     let url = 'https://github.com/wakatime/wakatime/archive/master.zip';
     let zipFile = path.join(this.extensionPath, 'wakatime-master.zip');
 
-    this.downloadFile(url, zipFile, () => {
-      this.extractCli(zipFile, callback);
-    });
+    this.downloadFile(
+      url,
+      zipFile,
+      () => {
+        this.extractCli(zipFile, callback);
+      },
+      () => {
+        callback();
+      },
+    );
   }
 
   private installStandaloneCli(callback: () => void): void {
     this.logger.debug('Downloading wakatime-cli standalone...');
     const url = this.s3BucketUrl() + 'wakatime-cli.zip';
     let zipFile = path.join(this.extensionPath, 'wakatime-cli.zip');
-    this.downloadFile(url, zipFile, () => {
-      this.extractStandaloneCli(zipFile, () => {
-        if (!Dependencies.isWindows()) {
-          try {
-            fs.chmodSync(this.getStandaloneCliLocation(), 0o755);
-          } catch (e) {
-            this.logger.warn(e);
-          }
-        }
-        callback();
-      });
-    });
+    try {
+      this.downloadFile(
+        url,
+        zipFile,
+        () => {
+          this.extractStandaloneCli(zipFile, () => {
+            if (!Dependencies.isWindows()) {
+              try {
+                this.logger.debug('Chmod 755 wakatime-cli standalone...');
+                fs.chmodSync(this.getStandaloneCliLocation(), 0o755);
+              } catch (e) {
+                this.logger.warn(e);
+              }
+            }
+            callback();
+          });
+        },
+        () => {
+          callback();
+        },
+      );
+    } catch (e) {
+      this.logger.warn(e);
+      callback();
+    }
   }
 
   private extractCli(zipFile: string, callback: () => void): void {
@@ -337,7 +357,12 @@ export class Dependencies {
     }
   }
 
-  private downloadFile(url: string, outputFile: string, callback: () => void): void {
+  private downloadFile(
+    url: string,
+    outputFile: string,
+    callback: () => void,
+    error: () => void,
+  ): void {
     this.options.getSetting('settings', 'proxy', (_err, proxy) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
         let options = { url: url };
@@ -345,17 +370,16 @@ export class Dependencies {
         if (noSSLVerify === 'true') options['strictSSL'] = false;
         try {
           let r = request.get(options);
-          let out = fs.createWriteStream(outputFile);
-          r.pipe(out);
+          r.on('error', e => {
+            this.logger.warn(`Failed to download ${url}`);
+            this.logger.warn(e.toString());
+            error();
+          });
           r.on('end', () => {
-            try {
-              out.on('finish', () => {
-                callback();
-              });
-            } catch (e) {
-              this.logger.warn(e);
+            let out = fs.createWriteStream(outputFile);
+            out.on('finish', () => {
               callback();
-            }
+            });
           });
         } catch (e) {
           this.logger.warn(e);
@@ -400,13 +424,20 @@ export class Dependencies {
 
       this.logger.debug('Downloading python...');
       let zipFile = path.join(this.extensionPath, 'python.zip');
-      this.downloadFile(url, zipFile, () => {
-        this.logger.debug('Extracting python...');
-        this.unzip(zipFile, path.join(this.extensionPath, 'python'), () => {
-          this.logger.debug('Finished installing python.');
+      this.downloadFile(
+        url,
+        zipFile,
+        () => {
+          this.logger.debug('Extracting python...');
+          this.unzip(zipFile, path.join(this.extensionPath, 'python'), () => {
+            this.logger.debug('Finished installing python.');
+            callback();
+          });
+        },
+        () => {
           callback();
-        });
-      });
+        },
+      );
     } else {
       let error_msg =
         'WakaTime depends on Python. Install it from https://python.org/downloads then restart VS Code';
