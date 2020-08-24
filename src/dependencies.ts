@@ -375,8 +375,9 @@ export class Dependencies {
             this.logger.warn(e.toString());
             error();
           });
+          let out = fs.createWriteStream(outputFile);
+          r.pipe(out);
           r.on('end', () => {
-            let out = fs.createWriteStream(outputFile);
             out.on('finish', () => {
               callback();
             });
