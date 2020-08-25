@@ -2,6 +2,12 @@
 # Changelog
 
 
+## 4.0.7 (2020-08-25)
+
+- Downgrade request library to v2.88.0 because possible bad deprecated release.
+  [#160](https://github.com/wakatime/vscode-wakatime/issues/160)
+
+
 ## 4.0.6 (2020-08-24)
 
 - Fix plugin initializing.
