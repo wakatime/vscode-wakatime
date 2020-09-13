@@ -154,10 +154,12 @@ export class WakaTime {
         if (this.disabled) {
           this.options.setSetting('settings', 'disabled', 'true');
           this.setStatusBarVisibility(false);
+          this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
         } else {
           this.options.setSetting('settings', 'disabled', 'false');
           this.checkApiKey();
           if (this.showStatusBar) this.setStatusBarVisibility(true);
+          this.logger.debug('Extension enabled and reporting coding stats to dashboard.');
         }
       });
     });
