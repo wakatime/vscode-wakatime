@@ -30,7 +30,7 @@ export class WakaTime {
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
   private standalone: boolean;
-  private disabled: boolean;
+  private disabled: boolean = true;
 
   constructor(extensionPath: string, logger: Logger, options: Options) {
     this.extensionPath = extensionPath;
@@ -54,12 +54,24 @@ export class WakaTime {
     this.agentName = this.appNames[vscode.env.appName] || 'vscode';
     this.statusBar.text = '$(clock) WakaTime Initializing...';
     this.statusBar.show();
-    if (this.standalone) this.logger.debug('Using standalone wakatime-cli.');
+
+    this.setupEventListeners();
+
     this.options.getSetting('settings', 'disabled', (_e, disabled) => {
       this.disabled = disabled === 'true';
-      if (!this.disabled) this.checkApiKey();
-    });
+      if (this.disabled) {
+        this.setStatusBarVisibility(false);
+        this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
+        return;
+      }
 
+      this.checkApiKey();
+      this.initializeDependencies();
+    });
+  }
+
+  public initializeDependencies(): void {
+    if (this.standalone) this.logger.debug('Using standalone wakatime-cli.');
     this.dependencies.checkAndInstall(() => {
       this.logger.debug('WakaTime: Initialized');
       this.statusBar.text = '$(clock)';
@@ -77,8 +89,6 @@ export class WakaTime {
         }
       });
     });
-
-    this.setupEventListeners();
   }
 
   public promptForApiKey(): void {
@@ -158,6 +168,7 @@ export class WakaTime {
         } else {
           this.options.setSetting('settings', 'disabled', 'false');
           this.checkApiKey();
+          this.initializeDependencies();
           if (this.showStatusBar) this.setStatusBarVisibility(true);
           this.logger.debug('Extension enabled and reporting coding stats to dashboard.');
         }
@@ -256,10 +267,10 @@ export class WakaTime {
   private setStatusBarVisibility(isVisible: boolean): void {
     if (isVisible) {
       this.statusBar.show();
-      this.logger.debug('Status bar icon enabled');
+      this.logger.debug('Status bar icon enabled.');
     } else {
       this.statusBar.hide();
-      this.logger.debug('Status bar icon disabled');
+      this.logger.debug('Status bar icon disabled.');
     }
   }
 

@@ -83,7 +83,6 @@ export function activate(ctx: vscode.ExtensionContext) {
   options.getSetting('settings', 'debug', function (_error, debug) {
     if (debug === 'true') {
       logger.setLevel(LogLevel.DEBUG);
-      logger.debug('::WakaTime debug mode::');
     }
     options.getSetting('settings', 'standalone', (_err, standalone) => {
       wakatime.initialize(standalone !== 'false');
