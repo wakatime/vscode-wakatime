@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 4.0.4 (Unreleased)
+
+- Add config option to disable extension.
+  [#141](https://github.com/wakatime/vscode-wakatime/issues/141)
 
 ## 4.0.7 (2020-08-25)
 
@@ -499,4 +503,3 @@
 ## 0.0.1 (2015-11-16)
 
 - Birth
-

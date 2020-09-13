@@ -54,8 +54,10 @@ export class WakaTime {
     this.statusBar.text = '$(clock) WakaTime Initializing...';
     this.statusBar.show();
     if (this.standalone) this.logger.debug('Using standalone wakatime-cli.');
-    this.checkApiKey();
-
+    this.options.getSetting('settings', 'disabled', (_e, disabled) => {
+      if (disabled !== "true") this.checkApiKey();
+    });
+    
     this.dependencies.checkAndInstall(() => {
       this.logger.debug('WakaTime: Initialized');
       this.statusBar.text = '$(clock)';
@@ -80,6 +82,33 @@ export class WakaTime {
     });
 
     this.setupEventListeners();
+  }
+
+  public promptToDisable(): void {
+    this.options.getSetting('settings', 'disabled', (_err, currentVal) => {
+      if (!currentVal || currentVal !== 'true') currentVal = 'false';
+      let items: string[] = ['disable', 'enable'];
+      const helperText =  currentVal === 'true' ? "disabled" : "enabled";
+      let promptOptions = {
+        placeHolder: `disable or enable (extension is currently "${helperText}")`,
+        ignoreFocusOut: true,
+      };
+      vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+        if (newVal === 'disable') {
+          this.options.setSetting('settings', 'disabled', 'true');
+          this.options.getSetting('settings', 'status_bar_enabled', (_err, currentValue) => {
+            if (!currentValue || currentValue === 'true')  this.updateStatusBar('false');
+          });
+          
+        };
+        if (newVal === 'enable') {
+          this.options.setSetting('settings', 'disabled', 'false');
+          this.options.getSetting('settings', 'status_bar_enabled', (_err, currentValue) => {
+            if (currentValue === 'false') this.updateStatusBar('true');
+          });
+        }
+      });
+    });
   }
 
   public promptForApiKey(): void {
@@ -149,20 +178,22 @@ export class WakaTime {
         value: defaultVal,
         ignoreFocusOut: true,
       };
-      vscode.window.showQuickPick(items, promptOptions).then(newVal => {
-        if (newVal == null) return;
-        this.options.setSetting('settings', 'status_bar_enabled', newVal);
-        if (newVal === 'true') {
-          this.showStatusBar = true;
-          this.statusBar.show();
-          this.logger.debug('Status bar icon enabled');
-        } else {
-          this.showStatusBar = false;
-          this.statusBar.hide();
-          this.logger.debug('Status bar icon disabled');
-        }
-      });
+      vscode.window.showQuickPick(items, promptOptions).then(newVal => this.updateStatusBar(newVal));
     });
+  }
+
+  private updateStatusBar = (newVal) => {
+    if (newVal == null) return;
+    this.options.setSetting('settings', 'status_bar_enabled', newVal);
+    if (newVal === 'true') {
+      this.showStatusBar = true;
+      this.statusBar.show();
+      this.logger.debug('Status bar icon enabled');
+    } else {
+      this.showStatusBar = false;
+      this.statusBar.hide();
+      this.logger.debug('Status bar icon disabled');
+    }
   }
 
   public promptStatusBarCodingActivity(): void {
@@ -255,21 +286,25 @@ export class WakaTime {
   }
 
   private onEvent(isWrite: boolean): void {
-    let editor = vscode.window.activeTextEditor;
-    if (editor) {
-      let doc = editor.document;
-      if (doc) {
-        let file: string = doc.fileName;
-        if (file) {
-          let time: number = Date.now();
-          if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
-            this.sendHeartbeat(file, isWrite);
-            this.lastFile = file;
-            this.lastHeartbeat = time;
+    this.options.getSetting('settings', 'disabled', (_e, disabled) => {
+      if (disabled !== "true"){
+        let editor = vscode.window.activeTextEditor;
+        if (editor) {
+          let doc = editor.document;
+          if (doc) {
+            let file: string = doc.fileName;
+            if (file) {
+              let time: number = Date.now();
+              if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
+                this.sendHeartbeat(file, isWrite);
+                this.lastFile = file;
+                this.lastHeartbeat = time;
+              }
+            }
           }
         }
       }
-    }
+    });
   }
 
   private sendHeartbeat(file: string, isWrite: boolean): void {
