@@ -30,6 +30,7 @@ export class WakaTime {
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
   private standalone: boolean;
+  private disabled: boolean;
 
   constructor(extensionPath: string, logger: Logger, options: Options) {
     this.extensionPath = extensionPath;
@@ -55,7 +56,8 @@ export class WakaTime {
     this.statusBar.show();
     if (this.standalone) this.logger.debug('Using standalone wakatime-cli.');
     this.options.getSetting('settings', 'disabled', (_e, disabled) => {
-      if (disabled !== 'true') this.checkApiKey();
+      this.disabled = disabled === 'true';
+      if (!this.disabled) this.checkApiKey();
     });
 
     this.dependencies.checkAndInstall(() => {
@@ -63,13 +65,8 @@ export class WakaTime {
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
       this.options.getSetting('settings', 'status_bar_enabled', (_err, val) => {
-        if (val == 'false') {
-          this.showStatusBar = false;
-          this.statusBar.hide();
-        } else {
-          this.showStatusBar = true;
-          this.statusBar.show();
-        }
+        this.showStatusBar = val === 'true';
+        this.setStatusBarVisibility(this.showStatusBar);
       });
       this.options.getSetting('settings', 'status_bar_coding_activity', (_err, val) => {
         if (val == 'false') {
@@ -82,32 +79,6 @@ export class WakaTime {
     });
 
     this.setupEventListeners();
-  }
-
-  public promptToDisable(): void {
-    this.options.getSetting('settings', 'disabled', (_err, currentVal) => {
-      if (!currentVal || currentVal !== 'true') currentVal = 'false';
-      let items: string[] = ['disable', 'enable'];
-      const helperText = currentVal === 'true' ? 'disabled' : 'enabled';
-      let promptOptions = {
-        placeHolder: `disable or enable (extension is currently "${helperText}")`,
-        ignoreFocusOut: true,
-      };
-      vscode.window.showQuickPick(items, promptOptions).then(newVal => {
-        if (newVal === 'disable') {
-          this.options.setSetting('settings', 'disabled', 'true');
-          this.options.getSetting('settings', 'status_bar_enabled', (_err, currentValue) => {
-            if (!currentValue || currentValue === 'true') this.setStatusBarVisibility('false');
-          });
-        }
-        if (newVal === 'enable') {
-          this.options.setSetting('settings', 'disabled', 'false');
-          this.options.getSetting('settings', 'status_bar_enabled', (_err, currentValue) => {
-            if (currentValue === 'false') this.setStatusBarVisibility('true');
-          });
-        }
-      });
-    });
   }
 
   public promptForApiKey(): void {
@@ -168,6 +139,30 @@ export class WakaTime {
     });
   }
 
+  public promptToDisable(): void {
+    this.options.getSetting('settings', 'disabled', (_err, currentVal) => {
+      if (!currentVal || currentVal !== 'true') currentVal = 'false';
+      let items: string[] = ['disable', 'enable'];
+      const helperText = currentVal === 'true' ? 'disabled' : 'enabled';
+      let promptOptions = {
+        placeHolder: `disable or enable (extension is currently "${helperText}")`,
+        ignoreFocusOut: true,
+      };
+      vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+        if (newVal !== 'enable' && newVal !== 'disable') return;
+        this.disabled = newVal === 'disable';
+        if (this.disabled) {
+          this.options.setSetting('settings', 'disabled', 'true');
+          this.setStatusBarVisibility(false);
+        } else {
+          this.options.setSetting('settings', 'disabled', 'false');
+          this.checkApiKey();
+          if (this.showStatusBar) this.setStatusBarVisibility(true);
+        }
+      });
+    });
+  }
+
   public promptStatusBarIcon(): void {
     this.options.getSetting('settings', 'status_bar_enabled', (_err, defaultVal) => {
       if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
@@ -177,25 +172,14 @@ export class WakaTime {
         value: defaultVal,
         ignoreFocusOut: true,
       };
-      vscode.window
-        .showQuickPick(items, promptOptions)
-        .then(newVal => this.setStatusBarVisibility(newVal));
+      vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+        if (newVal !== 'true' && newVal !== 'false') return;
+        this.options.setSetting('settings', 'status_bar_enabled', newVal);
+        this.showStatusBar = newVal === 'true'; // cache setting to prevent reading from disc too often
+        this.setStatusBarVisibility(this.showStatusBar);
+      });
     });
   }
-
-  private setStatusBarVisibility = newVal => {
-    if (newVal == null) return;
-    this.options.setSetting('settings', 'status_bar_enabled', newVal);
-    if (newVal === 'true') {
-      this.showStatusBar = true;
-      this.statusBar.show();
-      this.logger.debug('Status bar icon enabled');
-    } else {
-      this.showStatusBar = false;
-      this.statusBar.hide();
-      this.logger.debug('Status bar icon disabled');
-    }
-  };
 
   public promptStatusBarCodingActivity(): void {
     this.options.getSetting('settings', 'status_bar_coding_activity', (_err, defaultVal) => {
@@ -207,7 +191,7 @@ export class WakaTime {
         ignoreFocusOut: true,
       };
       vscode.window.showQuickPick(items, promptOptions).then(newVal => {
-        if (newVal == null) return;
+        if (newVal !== 'true' && newVal !== 'false') return;
         this.options.setSetting('settings', 'status_bar_coding_activity', newVal);
         if (newVal === 'true') {
           this.logger.debug('Coding activity in status bar has been enabled');
@@ -267,6 +251,16 @@ export class WakaTime {
       });
   }
 
+  private setStatusBarVisibility(isVisible: boolean): void {
+    if (isVisible) {
+      this.statusBar.show();
+      this.logger.debug('Status bar icon enabled');
+    } else {
+      this.statusBar.hide();
+      this.logger.debug('Status bar icon disabled');
+    }
+  }
+
   private setupEventListeners(): void {
     // subscribe to selection change and editor activation events
     let subscriptions: vscode.Disposable[] = [];
@@ -287,25 +281,23 @@ export class WakaTime {
   }
 
   private onEvent(isWrite: boolean): void {
-    this.options.getSetting('settings', 'disabled', (_e, disabled) => {
-      if (disabled !== 'true') {
-        let editor = vscode.window.activeTextEditor;
-        if (editor) {
-          let doc = editor.document;
-          if (doc) {
-            let file: string = doc.fileName;
-            if (file) {
-              let time: number = Date.now();
-              if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
-                this.sendHeartbeat(file, isWrite);
-                this.lastFile = file;
-                this.lastHeartbeat = time;
-              }
-            }
+    if (this.disabled) return;
+
+    let editor = vscode.window.activeTextEditor;
+    if (editor) {
+      let doc = editor.document;
+      if (doc) {
+        let file: string = doc.fileName;
+        if (file) {
+          let time: number = Date.now();
+          if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
+            this.sendHeartbeat(file, isWrite);
+            this.lastFile = file;
+            this.lastHeartbeat = time;
           }
         }
       }
-    });
+    }
   }
 
   private sendHeartbeat(file: string, isWrite: boolean): void {
