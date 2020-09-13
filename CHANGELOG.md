@@ -1,9 +1,9 @@
 
 # Changelog
 
-## 4.0.4 (Unreleased)
+## 4.0.8 (2020-09-13)
 
-- Add config option to disable extension.
+- Config option to disable extension.
   [#141](https://github.com/wakatime/vscode-wakatime/issues/141)
 
 ## 4.0.7 (2020-08-25)
