@@ -16,12 +16,14 @@ export class Libs {
   }
 
   public static validateProxy(proxy: string): string {
-    const err =
-      'Invalid proxy. Valid formats are https://user:pass@host:port or socks5://user:pass@host:port or domain\\user:pass';
-    if (!proxy) return err;
-    let re = new RegExp('^((https?|socks5)://)?([^:@]+(:([^:@])+)?@)?[\\w\\.-]+(:\\d+)?$', 'i');
-    if (proxy.indexOf('\\') > -1) re = new RegExp('^.*\\\\.+$', 'i');
-    if (!re.test(proxy)) return err;
+    if (!proxy) return '';
+    let re;
+    if (proxy.indexOf('\\') === -1) {
+      re = new RegExp('^((https?|socks5)://)?([^:@]+(:([^:@])+)?@)?[\\w\\.-]+(:\\d+)?$', 'i');
+    } else {
+      re = new RegExp('^.*\\\\.+$', 'i');
+    }
+    if (!re.test(proxy)) return 'Invalid proxy. Valid formats are https://user:pass@host:port or socks5://user:pass@host:port or domain\\user:pass';
     return '';
   }
 }
