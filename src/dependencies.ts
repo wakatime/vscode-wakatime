@@ -127,8 +127,11 @@ export class Dependencies {
     this.logger.debug(`Looking for python at: ${binary}`);
 
     const args = ['--version'];
+    const options = {
+      windowsHide: true,
+    };
     try {
-      child_process.execFile(binary, args, (error, stdout, stderr) => {
+      child_process.execFile(binary, args, options, (error, stdout, stderr) => {
         const output: string = stdout.toString() + stderr.toString();
         if (!error && this.isSupportedPythonVersion(binary, output)) {
           this.cachedPythonLocation = binary;
@@ -154,7 +157,10 @@ export class Dependencies {
     this.getPythonLocation(pythonBinary => {
       if (pythonBinary) {
         let args = [this.getCliLocation(), '--version'];
-        child_process.execFile(pythonBinary, args, (error, _stdout, stderr) => {
+        const options = {
+          windowsHide: true,
+        };
+        child_process.execFile(pythonBinary, args, options, (error, _stdout, stderr) => {
           if (!(error != null)) {
             let currentVersion = _stdout.toString().trim() + stderr.toString().trim();
             this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
@@ -184,28 +190,36 @@ export class Dependencies {
 
   private isStandaloneCliLatest(callback: (arg0: boolean) => void): void {
     let args = ['--version'];
-    child_process.execFile(this.getStandaloneCliLocation(), args, (error, _stdout, stderr) => {
-      if (!(error != null)) {
-        let currentVersion = _stdout.toString().trim() + stderr.toString().trim();
-        this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
+    const options = {
+      windowsHide: true,
+    };
+    child_process.execFile(
+      this.getStandaloneCliLocation(),
+      args,
+      options,
+      (error, _stdout, stderr) => {
+        if (!(error != null)) {
+          let currentVersion = _stdout.toString().trim() + stderr.toString().trim();
+          this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
 
-        this.logger.debug('Checking for updates to wakatime-cli...');
-        this.getLatestStandaloneCliVersion(latestVersion => {
-          if (currentVersion === latestVersion) {
-            this.logger.debug('wakatime-cli is up to date');
-            callback(true);
-          } else if (latestVersion) {
-            this.logger.debug(`Found an updated wakatime-cli v${latestVersion}`);
-            callback(false);
-          } else {
-            this.logger.debug('Unable to find latest wakatime-cli version');
-            callback(false);
-          }
-        });
-      } else {
-        callback(false);
-      }
-    });
+          this.logger.debug('Checking for updates to wakatime-cli...');
+          this.getLatestStandaloneCliVersion(latestVersion => {
+            if (currentVersion === latestVersion) {
+              this.logger.debug('wakatime-cli is up to date');
+              callback(true);
+            } else if (latestVersion) {
+              this.logger.debug(`Found an updated wakatime-cli v${latestVersion}`);
+              callback(false);
+            } else {
+              this.logger.debug('Unable to find latest wakatime-cli version');
+              callback(false);
+            }
+          });
+        } else {
+          callback(false);
+        }
+      },
+    );
   }
 
   private getLatestCliVersion(callback: (arg0: string) => void): void {

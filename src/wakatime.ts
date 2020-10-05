@@ -355,7 +355,10 @@ export class WakaTime {
 
     const binary = this.standalone || !pythonBinary ? cli : pythonBinary;
     this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
-    let process = child_process.execFile(binary, args, (error, stdout, stderr) => {
+    const options = {
+      windowsHide: true,
+    };
+    let process = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
         if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
@@ -449,7 +452,10 @@ export class WakaTime {
     this.logger.debug(
       `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
     );
-    let process = child_process.execFile(binary, args, (error, stdout, stderr) => {
+    const options = {
+      windowsHide: true,
+    };
+    let process = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
         if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
