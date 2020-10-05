@@ -1,6 +1,13 @@
 
 # Changelog
 
+## 4.0.9 (2020-10-05)
+
+- Prevent opening cmd window when sending heartbeats on Windows platform.
+  [#166](https://github.com/wakatime/vscode-wakatime/issues/166)
+- Allow proxy config to be empty or removable.
+  [#164](https://github.com/wakatime/vscode-wakatime/issues/164)
+
 ## 4.0.8 (2020-09-13)
 
 - Config option to disable extension.
