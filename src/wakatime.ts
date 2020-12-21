@@ -11,7 +11,8 @@ export class WakaTime {
   private appNames = {
     'SQL Operations Studio': 'sqlops',
     'Visual Studio Code': 'vscode',
-    'Onivim 2': 'onivim2',
+    Onivim: 'onivim',
+    'Onivim 2': 'onivim',
   };
   private agentName: string;
   private extension;
