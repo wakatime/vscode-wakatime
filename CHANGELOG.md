@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 4.0.10 (2020-12-21)
+
+- Support for Onivim 2 editor app name.
+  [#173](https://github.com/wakatime/vscode-wakatime/issues/173)
+
 ## 4.0.9 (2020-10-05)
 
 - Prevent opening cmd window when sending heartbeats on Windows platform.
