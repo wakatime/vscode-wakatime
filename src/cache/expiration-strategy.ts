@@ -22,14 +22,14 @@ export class ExpirationStrategy {
         this.storage = storage;
     }
 
-    public async getItem<T>(key: string): Promise<T> {
-        return new Promise<T>(async (resolve, _) => {
+    public async getItem<T>(key: string): Promise<T|void> {
+        return new Promise<T|void>(async (resolve, _) => {
             const item = await this.storage.getItem<IExpiringCacheItem>(key);
             if (item && item.meta && item.meta.ttl && this.isItemExpired(item)) {
                 await this.storage.setItem(key, undefined);
-                resolve(undefined);
+                resolve();
             }
-            item ? resolve(item.content) : resolve(undefined);
+            item ? resolve(item.content) : resolve();
         });
     }
 
