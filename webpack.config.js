@@ -15,6 +15,7 @@ const config = {
   devtool: 'source-map',
   externals: {
     vscode: 'commonjs vscode',
+    azdata: 'commonjs azdata',
   },
   resolve: {
     extensions: ['.ts', '.js'],

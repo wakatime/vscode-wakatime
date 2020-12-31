@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+// import * as azdata from 'azdata';
 import * as child_process from 'child_process';
 
 import { Dependencies } from './dependencies';
@@ -9,6 +10,7 @@ import { Libs } from './libs';
 
 export class WakaTime {
   private appNames = {
+    'Azure Data Studio': 'azdata',
     'SQL Operations Studio': 'sqlops',
     'Visual Studio Code': 'vscode',
     Onivim: 'onivim',

@@ -92,5 +92,5 @@ export function activate(ctx: vscode.ExtensionContext) {
 
 export function deactivate() {
   wakatime.dispose();
-  logger.info('WakaTime has been disabled!');
+  logger.debug('WakaTime has been disabled.');
 }
