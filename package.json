@@ -7,8 +7,16 @@
   "author": {
     "name": "WakaTime"
   },
-  "categories": ["Other"],
-  "keywords": ["code", "productivity", "time", "tracking", "tracker"],
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "code",
+    "productivity",
+    "time",
+    "tracking",
+    "tracker"
+  ],
   "homepage": "https://wakatime.com/",
   "bugs": {
     "url": "https://github.com/wakatime/vscode-wakatime/issues",
@@ -20,8 +28,12 @@
     "color": "#AEC3D8",
     "theme": "light"
   },
-  "extensionKind": ["workspace"],
-  "activationEvents": ["*"],
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "*"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/wakatime/vscode-wakatime.git"
@@ -87,7 +99,7 @@
     "@types/request": "^2.48.5",
     "@types/rimraf": "^3.0.0",
     "@types/webpack": "^4.41.25",
-    "@types/vscode": "^1.52.0",
+    "@types/vscode": "^1.31.0",
     "adm-zip": "0.5.1",
     "azdata": "^1.0.0",
     "del-cli": "^3.0.1",
