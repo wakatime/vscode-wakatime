@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 5.0.0 (2020-12-31)
+
+- Support for Azure Data Studio editor app name.
+  [#179](https://github.com/wakatime/vscode-wakatime/issues/179)
+
 ## 4.0.10 (2020-12-21)
 
 - Support for Onivim 2 editor app name.
