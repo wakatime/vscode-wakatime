@@ -84,8 +84,14 @@ export function activate(ctx: vscode.ExtensionContext) {
     if (debug === 'true') {
       logger.setLevel(LogLevel.DEBUG);
     }
-    options.getSetting('settings', 'standalone', (_err, standalone) => {
-      wakatime.initialize(standalone !== 'false');
+    options.getSetting('settings', 'global', (_err, global) => {
+      const isGlobal = global === 'true';
+      if (isGlobal) wakatime.initialize(isGlobal, false);
+      else {
+        options.getSetting('settings', 'standalone', (_err, standalone) => {
+          wakatime.initialize(false, standalone !== 'false');
+        });
+      }
     });
   });
 }

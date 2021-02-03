@@ -112,5 +112,9 @@
     "typescript": "^4.1.3",
     "webpack": "^5.11.1",
     "webpack-cli": "^4.3.1"
+  },
+  "dependencies": {
+    "@types/which": "^1.3.2",
+    "which": "^2.0.2"
   }
 }

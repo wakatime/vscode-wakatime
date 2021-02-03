@@ -7,6 +7,7 @@ import * as process from 'process';
 import * as request from 'request';
 import * as rimraf from 'rimraf';
 import * as vscode from 'vscode';
+import * as which from 'which';
 
 import { Options } from './options';
 import { Logger } from './logger';
@@ -17,17 +18,27 @@ export class Dependencies {
   private logger: Logger;
   private extensionPath: string;
   private s3urlprefix = 'https://wakatime-cli.s3-us-west-2.amazonaws.com/';
+  private global: boolean;
   private standalone: boolean;
 
-  constructor(options: Options, extensionPath: string, logger: Logger, standalone: boolean) {
+  constructor(
+    options: Options,
+    extensionPath: string,
+    logger: Logger,
+    global: boolean,
+    standalone: boolean,
+  ) {
     this.options = options;
     this.logger = logger;
     this.extensionPath = extensionPath;
+    this.global = global;
     this.standalone = standalone;
   }
 
   public checkAndInstall(callback: () => void): void {
-    if (this.standalone) {
+    if (this.global) {
+      this.checkGlobalCli(callback);
+    } else if (this.standalone) {
       this.checkAndInstallStandaloneCli(callback);
     } else {
       this.isPythonInstalled(isInstalled => {
@@ -81,6 +92,16 @@ export class Dependencies {
     return path.join(this.extensionPath, 'wakatime-cli', 'wakatime-cli' + ext);
   }
 
+  public getGlobalCliLocation(): string {
+    const binaryName = `wakatime-cli${Dependencies.isWindows() ? '.exe' : ''}`;
+    const pathName =
+      which.sync(binaryName, { nothrow: true }) ??
+      which.sync(binaryName.replace('-cli', ''), { nothrow: true });
+    if (pathName) return pathName;
+    this.logger.error('Could not find global cli - is it installed?');
+    throw new Error('Could not find global cli - is it installed?');
+  }
+
   public static isWindows(): boolean {
     return os.platform() === 'win32';
   }
@@ -115,6 +136,20 @@ export class Dependencies {
         }
       });
     }
+  }
+
+  private checkGlobalCli(callback: () => void): void {
+    const binaryName = `wakatime-cli${Dependencies.isWindows() ? '.exe' : ''}`;
+    which(binaryName)
+      .then(() => callback())
+      .catch(() => {
+        which(binaryName.replace('-cli', ''))
+          .then(() => callback())
+          .catch(() => {
+            this.logger.error('Could not find global installation.');
+            throw new Error('Could not find global installation.');
+          });
+      });
   }
 
   private findPython(locations: string[], callback: (arg0: string) => void): void {
