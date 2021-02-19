@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 5.0.1 (2021-02-19)
+
+- Support global WakaTime installation.
+  [#178](https://github.com/wakatime/vscode-wakatime/pull/178)
+
 ## 5.0.0 (2020-12-31)
 
 - Support for Azure Data Studio editor app name.
