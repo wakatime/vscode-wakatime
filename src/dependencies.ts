@@ -83,16 +83,22 @@ export class Dependencies {
     });
   }
 
-  public getCliLocation(): string {
+  public getCliLocation(global: boolean, standalone: boolean): string {
+    if (global) return this.getCliLocationGlobal();
+    if (standalone) return this.getCliLocationStandalone();
+    return this.getCliLocationSource();
+  }
+
+  public getCliLocationSource(): string {
     return path.join(this.extensionPath, 'wakatime-master', 'wakatime', 'cli.py');
   }
 
-  public getStandaloneCliLocation(): string {
+  public getCliLocationStandalone(): string {
     const ext = Dependencies.isWindows() ? '.exe' : '';
     return path.join(this.extensionPath, 'wakatime-cli', 'wakatime-cli' + ext);
   }
 
-  public getGlobalCliLocation(): string {
+  public getCliLocationGlobal(): string {
     const binaryName = `wakatime-cli${Dependencies.isWindows() ? '.exe' : ''}`;
     const pathName =
       which.sync(binaryName, { nothrow: true }) ??
@@ -107,7 +113,7 @@ export class Dependencies {
   }
 
   public isStandaloneCliInstalled(): boolean {
-    return fs.existsSync(this.getStandaloneCliLocation());
+    return fs.existsSync(this.getCliLocationStandalone());
   }
 
   private checkAndInstallCli(callback: () => void): void {
@@ -185,13 +191,13 @@ export class Dependencies {
   }
 
   private isCliInstalled(): boolean {
-    return fs.existsSync(this.getCliLocation());
+    return fs.existsSync(this.getCliLocationSource());
   }
 
   private isCliLatest(callback: (arg0: boolean) => void): void {
     this.getPythonLocation(pythonBinary => {
       if (pythonBinary) {
-        let args = [this.getCliLocation(), '--version'];
+        let args = [this.getCliLocationSource(), '--version'];
         const options = {
           windowsHide: true,
         };
@@ -229,7 +235,7 @@ export class Dependencies {
       windowsHide: true,
     };
     child_process.execFile(
-      this.getStandaloneCliLocation(),
+      this.getCliLocationStandalone(),
       args,
       options,
       (error, _stdout, stderr) => {
@@ -342,7 +348,7 @@ export class Dependencies {
             if (!Dependencies.isWindows()) {
               try {
                 this.logger.debug('Chmod 755 wakatime-cli standalone...');
-                fs.chmodSync(this.getStandaloneCliLocation(), 0o755);
+                fs.chmodSync(this.getCliLocationStandalone(), 0o755);
               } catch (e) {
                 this.logger.warn(e);
               }

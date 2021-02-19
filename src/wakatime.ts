@@ -341,9 +341,7 @@ export class WakaTime {
 
   private _sendHeartbeat(file: string, isWrite: boolean, pythonBinary?: string): void {
     if (this.standalone && !this.dependencies.isStandaloneCliInstalled()) return;
-    let cli = this.global ? this.dependencies.getGlobalCliLocation() : (this.standalone
-      ? this.dependencies.getStandaloneCliLocation()
-      : this.dependencies.getCliLocation());
+    let cli = this.dependencies.getCliLocation(this.global, this.standalone);
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--file', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
@@ -439,9 +437,7 @@ export class WakaTime {
 
   private _getCodingActivity(pythonBinary?: string) {
     if (this.standalone && !this.dependencies.isStandaloneCliInstalled()) return;
-    let cli = this.standalone
-      ? this.dependencies.getStandaloneCliLocation()
-      : this.dependencies.getCliLocation();
+    let cli = this.dependencies.getCliLocation(this.global, this.standalone);
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Libs.quote(user_agent)];
