@@ -33,6 +33,7 @@ export class WakaTime {
   private lastFetchToday: number = 0;
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
+  private global: boolean;
   private standalone: boolean;
   private disabled: boolean = true;
 
@@ -42,12 +43,14 @@ export class WakaTime {
     this.options = options;
   }
 
-  public initialize(standalone: boolean): void {
+  public initialize(global: boolean, standalone: boolean): void {
+    this.global = global;
     this.standalone = standalone;
     this.dependencies = new Dependencies(
       this.options,
       this.extensionPath,
       this.logger,
+      this.global,
       this.standalone,
     );
     this.statusBar.command = COMMAND_DASHBOARD;
@@ -320,8 +323,8 @@ export class WakaTime {
   private sendHeartbeat(file: string, isWrite: boolean): void {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
-        if (this.standalone === undefined) return;
-        if (this.standalone) {
+        if (this.global === undefined || this.standalone === undefined) return;
+        if (this.global || this.standalone) {
           this._sendHeartbeat(file, isWrite);
         } else {
           this.dependencies.getPythonLocation(pythonBinary => {
@@ -338,13 +341,13 @@ export class WakaTime {
 
   private _sendHeartbeat(file: string, isWrite: boolean, pythonBinary?: string): void {
     if (this.standalone && !this.dependencies.isStandaloneCliInstalled()) return;
-    let cli = this.standalone
+    let cli = this.global ? this.dependencies.getGlobalCliLocation() : (this.standalone
       ? this.dependencies.getStandaloneCliLocation()
-      : this.dependencies.getCliLocation();
+      : this.dependencies.getCliLocation());
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--file', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
-    if (!this.standalone) args.unshift(cli);
+    if (!(this.global || this.standalone)) args.unshift(cli);
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Libs.quote(project));
     if (isWrite) args.push('--write');
