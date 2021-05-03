@@ -379,29 +379,29 @@ export class Dependencies {
     }
   }
 
-  private architecture(): string {
-    return os.arch().indexOf('32') > -1 ? '32' : '64';
-  }
-
   private s3BucketUrl(): string {
     switch (os.platform()) {
       case 'darwin':
         return this.s3urlprefix + 'mac-x86-64/';
       case 'win32':
-        return this.s3urlprefix + 'windows-x86-' + this.architecture() + '/';
+        const arch = os.arch().indexOf('32') > -1 ? '32' : '64';
+        return this.s3urlprefix + 'windows-x86-' + arch + '/';
       default:
         return this.s3urlprefix + 'linux-x86-64/';
     }
   }
 
+  private architecture(): string {
+    const arch = os.arch();
+    if (arch.indexOf('arm') > -1) return arch;
+    if (arch.indexOf('32') > -1) return '386';
+    return 'amd64';
+  }
+
   private cliDownloadUrl(version: string): string {
-    switch (os.platform()) {
-      case 'darwin':
-        return `${this.githubDownloadPrefix}/v${version}/wakatime-cli-darwin-amd64.zip`;
-      case 'win32':
-        return `${this.githubDownloadPrefix}/v${version}/wakatime-cli-windows-386.zip`;
-      default:
-        return `${this.githubDownloadPrefix}/v${version}/wakatime-cli-linux-amd64.zip`;
-    }
+    let platform = os.platform() as string;
+    if (platform == 'win32') platform = 'windows';
+    const arch = this.architecture();
+    return `${this.githubDownloadPrefix}/v${version}/wakatime-cli-${platform}-${arch}.zip`;
   }
 }
