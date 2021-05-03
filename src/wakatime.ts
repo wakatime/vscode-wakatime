@@ -324,28 +324,18 @@ export class WakaTime {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
         if (this.global === undefined || this.standalone === undefined) return;
-        if (this.global || this.standalone) {
-          this._sendHeartbeat(file, isWrite);
-        } else {
-          this.dependencies.getPythonLocation(pythonBinary => {
-            if (pythonBinary) {
-              this._sendHeartbeat(file, isWrite, pythonBinary);
-            }
-          });
-        }
+        this._sendHeartbeat(file, isWrite);
       } else {
         this.promptForApiKey();
       }
     });
   }
 
-  private _sendHeartbeat(file: string, isWrite: boolean, pythonBinary?: string): void {
+  private _sendHeartbeat(file: string, isWrite: boolean): void {
     if (this.standalone && !this.dependencies.isStandaloneCliInstalled()) return;
-    let cli = this.dependencies.getCliLocation(this.global, this.standalone);
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--file', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
-    if (!(this.global || this.standalone)) args.unshift(cli);
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Libs.quote(project));
     if (isWrite) args.push('--write');
@@ -358,7 +348,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.standalone || !pythonBinary ? cli : pythonBinary;
+    const binary = this.dependencies.getCliLocation(this.global);
     this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
     const options = {
       windowsHide: true,
@@ -422,26 +412,15 @@ export class WakaTime {
 
     this.hasApiKey(hasApiKey => {
       if (!hasApiKey) return;
-
-      if (this.standalone) {
-        this._getCodingActivity();
-      } else {
-        this.dependencies.getPythonLocation(pythonBinary => {
-          if (pythonBinary) {
-            this._getCodingActivity(pythonBinary);
-          }
-        });
-      }
+      this._getCodingActivity();
     });
   }
 
-  private _getCodingActivity(pythonBinary?: string) {
+  private _getCodingActivity() {
     if (this.standalone && !this.dependencies.isStandaloneCliInstalled()) return;
-    let cli = this.dependencies.getCliLocation(this.global, this.standalone);
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Libs.quote(user_agent)];
-    if (!this.standalone) args.unshift(cli);
     if (Dependencies.isWindows()) {
       args.push(
         '--config',
@@ -451,7 +430,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.standalone || !pythonBinary ? cli : pythonBinary;
+    const binary = this.dependencies.getCliLocation(this.global);
     this.logger.debug(
       `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
     );
