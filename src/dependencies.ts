@@ -192,7 +192,7 @@ export class Dependencies {
               url: alpha.value == 'true' ? this.githubReleasesAlphaUrl : this.githubReleasesStableUrl,
               json: true,
               headers: {
-                'User-Agent': 'WakaTime IDE Plugin/1.0',
+                'User-Agent': 'github.com/wakatime/vscode-wakatime',
               },
             };
             if (proxy.value) options['proxy'] = proxy.value;
@@ -263,7 +263,7 @@ export class Dependencies {
         callback();
         return;
       }
-      this.logger.debug(`Downloading wakatime-cli v${version}...`);
+      this.logger.debug(`Downloading wakatime-cli ${version}...`);
       let url = this.cliDownloadUrl(version);
       let zipFile = path.join(this.extensionPath, 'wakatime-cli.zip');
       this.downloadFile(

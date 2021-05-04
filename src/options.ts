@@ -146,7 +146,7 @@ export class Options {
           if (this.startsWith(line.trim(), '[') && this.endsWith(line.trim(), ']')) {
             if (currentSection === section) {
               settings.forEach(setting => {
-                if (!(setting.key in found)) {
+                if (!found[setting.key]) {
                   contents.push(setting.key + ' = ' + setting.value);
                   found[setting.key] = true;
                 }
@@ -160,23 +160,26 @@ export class Options {
           } else if (currentSection === section) {
             let parts = line.split('=');
             let currentKey = parts[0].trim();
+            let keepLineUnchanged = true;
             settings.forEach(setting => {
               if (currentKey === setting.key) {
-                if (!(setting.key in found)) {
+                keepLineUnchanged = false;
+                if (!found[setting.key]) {
                   contents.push(setting.key + ' = ' + setting.value);
                   found[setting.key] = true;
                 }
-              } else {
-                contents.push(line);
               }
             });
+            if (keepLineUnchanged) {
+              contents.push(line);
+            }
           } else {
             contents.push(line);
           }
         }
 
         settings.forEach(setting => {
-          if (!(setting.key in found)) {
+          if (!found[setting.key]) {
             if (currentSection !== section) {
               contents.push('[' + section + ']');
               currentSection = section;
