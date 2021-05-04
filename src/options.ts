@@ -5,6 +5,12 @@ import { Dependencies } from './dependencies';
 import { ExpirationStrategy } from './cache/expiration-strategy';
 import { MemoryStorage } from './cache/memory-storage';
 
+export interface Setting {
+  key: string;
+  value: string;
+  error?: string;
+}
+
 export class Options {
   private configFile: string;
   private logFile: string;
@@ -28,19 +34,19 @@ export class Options {
 
   public async getSettingAsync<T = any>(section: string, key: string): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      this.getSetting(section, key, (err, result) => {
-        err ? reject(err) : resolve(result);
+      this.getSetting(section, key, (setting) => {
+        setting.error ? reject(setting.error) : resolve(setting.value);
       });
     });
   }
 
-  public getSetting(section: string, key: string, callback: (string, any) => void): void {
+  public getSetting(section: string, key: string, callback: (Setting) => void): void {
     fs.readFile(
       this.getConfigFile(),
       'utf-8',
       (err: NodeJS.ErrnoException | null, content: string) => {
         if (err) {
-          if (callback) callback(new Error(`could not read ${this.getConfigFile()}`), null);
+          if (callback) callback({error: new Error(`could not read ${this.getConfigFile()}`), key: key, value: null});
         } else {
           let currentSection = '';
           let lines = content.split('\n');
@@ -55,13 +61,13 @@ export class Options {
               let parts = line.split('=');
               let currentKey = parts[0].trim();
               if (currentKey === key && parts.length > 1) {
-                callback(null, parts[1].trim());
+                callback({key: key, value: parts[1].trim()});
                 return;
               }
             }
           }
 
-          if (callback) callback(null, null);
+          if (callback) callback({key: key, value: null});
         }
       },
     );
@@ -114,6 +120,71 @@ export class Options {
           }
           contents.push(key + ' = ' + val);
         }
+
+        fs.writeFile(this.getConfigFile(), contents.join('\n'), err => {
+          if (err) throw err;
+        });
+      },
+    );
+  }
+
+  public setSettings(section: string, settings: Setting[]): void {
+    fs.readFile(
+      this.getConfigFile(),
+      'utf-8',
+      (err: NodeJS.ErrnoException | null, content: string) => {
+        // ignore errors because config file might not exist yet
+        if (err) content = '';
+
+        let contents: string[] = [];
+        let currentSection = '';
+
+        const found = {};
+        let lines = content.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+          let line = lines[i];
+          if (this.startsWith(line.trim(), '[') && this.endsWith(line.trim(), ']')) {
+            if (currentSection === section) {
+              settings.forEach(setting => {
+                if (!(setting.key in found)) {
+                  contents.push(setting.key + ' = ' + setting.value);
+                  found[setting.key] = true;
+                }
+              });
+            }
+            currentSection = line
+              .trim()
+              .substring(1, line.trim().length - 1)
+              .toLowerCase();
+            contents.push(line);
+          } else if (currentSection === section) {
+            let parts = line.split('=');
+            let currentKey = parts[0].trim();
+            settings.forEach(setting => {
+              if (currentKey === setting.key) {
+                if (!(setting.key in found)) {
+                  contents.push(setting.key + ' = ' + setting.value);
+                  found[setting.key] = true;
+                }
+              } else {
+                contents.push(line);
+              }
+            });
+          } else {
+            contents.push(line);
+          }
+        }
+
+        settings.forEach(setting => {
+          if (!(setting.key in found)) {
+            if (currentSection !== section) {
+              contents.push('[' + section + ']');
+              currentSection = section;
+            }
+            contents.push(setting.key + ' = ' + setting.value);
+            found[setting.key] = true;
+          }
+        });
 
         fs.writeFile(this.getConfigFile(), contents.join('\n'), err => {
           if (err) throw err;

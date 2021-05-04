@@ -13,7 +13,7 @@ import {
   LogLevel,
 } from './constants';
 import { Logger } from './logger';
-import { Options } from './options';
+import { Options, Setting } from './options';
 import { WakaTime } from './wakatime';
 
 var logger = new Logger(LogLevel.INFO);
@@ -80,16 +80,16 @@ export function activate(ctx: vscode.ExtensionContext) {
 
   ctx.subscriptions.push(wakatime);
 
-  options.getSetting('settings', 'debug', function (_error, debug) {
-    if (debug === 'true') {
+  options.getSetting('settings', 'debug', function (debug: Setting) {
+    if (debug.value === 'true') {
       logger.setLevel(LogLevel.DEBUG);
     }
-    options.getSetting('settings', 'global', (_err, global) => {
-      const isGlobal = global === 'true';
+    options.getSetting('settings', 'global', (global: Setting) => {
+      const isGlobal = global.value === 'true';
       if (isGlobal) wakatime.initialize(isGlobal, false);
       else {
-        options.getSetting('settings', 'standalone', (_err, standalone) => {
-          wakatime.initialize(false, standalone !== 'false');
+        options.getSetting('settings', 'standalone', (standalone: Setting) => {
+          wakatime.initialize(false, standalone.value !== 'false');
         });
       }
     });

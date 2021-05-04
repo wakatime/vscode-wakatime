@@ -7,7 +7,7 @@ import * as request from 'request';
 import * as rimraf from 'rimraf';
 import * as which from 'which';
 
-import { Options } from './options';
+import { Options, Setting } from './options';
 import { Logger } from './logger';
 
 export class Dependencies {
@@ -17,6 +17,7 @@ export class Dependencies {
   private s3urlprefix = 'https://wakatime-cli.s3-us-west-2.amazonaws.com/';
   private githubDownloadPrefix = 'https://github.com/wakatime/wakatime-cli/releases/download';
   private githubReleasesUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
+  private githubTagsUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/tags?per_page=1';
   private global: boolean;
   private standalone: boolean;
   private latestCliVersion: string = '';
@@ -45,10 +46,14 @@ export class Dependencies {
     }
   }
 
-  public getCliLocation(global: boolean = false): string {
-    if (global) return this.getCliLocationGlobal();
+  public getCliLocation(): string {
+    if (this.global) return this.getCliLocationGlobal();
     const ext = Dependencies.isWindows() ? '.exe' : '';
-    return path.join(this.extensionPath, 'wakatime-cli', 'wakatime-cli' + ext);
+    if (this.standalone) return path.join(this.extensionPath, 'wakatime-cli', 'wakatime-cli' + ext);
+    let platform = os.platform() as string;
+    if (platform == 'win32') platform = 'windows';
+    const arch = this.architecture();
+    return path.join(this.extensionPath, `wakatime-cli-${platform}-${arch}${ext}`);
   }
 
   public getCliLocationGlobal(): string {
@@ -61,12 +66,12 @@ export class Dependencies {
     throw new Error('Could not find global cli - is it installed?');
   }
 
-  public static isWindows(): boolean {
-    return os.platform() === 'win32';
+  public isCliInstalled(): boolean {
+    return fs.existsSync(this.getCliLocation());
   }
 
-  public isStandaloneCliInstalled(): boolean {
-    return fs.existsSync(this.getCliLocation());
+  public static isWindows(): boolean {
+    return os.platform() === 'win32';
   }
 
   private checkAndInstallCli(callback: () => void): void {
@@ -84,7 +89,7 @@ export class Dependencies {
   }
 
   private checkAndInstallStandaloneCli(callback: () => void): void {
-    if (!this.isStandaloneCliInstalled()) {
+    if (!this.isCliInstalled()) {
       this.installStandaloneCli(callback);
     } else {
       this.isStandaloneCliLatest(isLatest => {
@@ -109,10 +114,6 @@ export class Dependencies {
             throw new Error('Could not find global installation.');
           });
       });
-  }
-
-  private isCliInstalled(): boolean {
-    return fs.existsSync(this.getCliLocation());
   }
 
   private isCliLatest(callback: (arg0: boolean) => void): void {
@@ -183,37 +184,52 @@ export class Dependencies {
       callback(this.latestCliVersion);
       return;
     }
-    this.options.getSetting('settings', 'proxy', (proxy: string) => {
-      this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
-        this.options.getSetting('settings', 'cli_version_etag', (etag: string) => {
-          let options = {
-            url: this.githubReleasesUrl,
-            json: true,
-          };
-          if (proxy) options['proxy'] = proxy;
-          if (noSSLVerify === 'true') options['strictSSL'] = false;
-          if (etag) options['headers'] = { 'If-None-Match': etag };
-          try {
-            request.get(options, (error, response, json) => {
-              if (!error && (response.statusCode == 200 || response.statusCode == 304)) {
-                this.logger.warn(`GitHub API Response ${response.statusCode}`);
-                if (response.statusCode == 200 && response.headers['ETag']) this.options.setSetting('settings', 'cli_version_etag', response.headers['ETag'] as string);
-                let re = /^v?([0-9]+\.[0-9]+\.[0-9]+)/g;
-                let match = re.exec(json['tag_name']);
-                if (match) {
-                  this.latestCliVersion = match[0];
-                  callback(match[0]);
+    this.options.getSetting('settings', 'proxy', (proxy: Setting) => {
+      this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: Setting) => {
+        this.options.getSetting('internal', 'cli_version_etag', (etag: Setting) => {
+          this.options.getSetting('settings', 'alpha', (alpha: Setting) => {
+            let options = {
+              url: alpha.value == 'true' ? this.githubTagsUrl : this.githubReleasesUrl,
+              json: true,
+              headers: {
+                'User-Agent': 'WakaTime IDE Plugin/1.0',
+              },
+            };
+            if (proxy.value) options['proxy'] = proxy.value;
+            if (noSSLVerify.value === 'true') options['strictSSL'] = false;
+            if (etag.value) options['headers']['If-None-Match'] = etag.value;
+            try {
+              request.get(options, (error, response, json) => {
+                if (!error && (response.statusCode == 200 || response.statusCode == 304)) {
+                  this.logger.debug(`GitHub API Response ${response.statusCode}`);
+                  if (response.statusCode == 304) {
+                    this.options.getSetting('internal', 'cli_version', (version: Setting) => {
+                      this.latestCliVersion = version.value;
+                      callback(this.latestCliVersion);
+                    });
+                    return;
+                  }
+                  this.latestCliVersion = alpha.value == 'true' ? json[0]['name'] : json['tag_name'];
+                  this.logger.debug(`Latest wakatime-cli version from GitHub: ${this.latestCliVersion}`);
+                  if (response.headers.etag) {
+                    // TODO: write both settings at same time, to prevent overwriting the first setting
+                    this.options.setSettings('internal', [
+                      {key: 'cli_version', value: this.latestCliVersion},
+                      {key: 'cli_version_etag', value: response.headers.etag as string},
+                    ]);
+                  }
+                  callback(this.latestCliVersion);
                   return;
+                } else {
+                  this.logger.warn(`GitHub API Response ${response.statusCode}: ${error}`);
+                  callback('');
                 }
-              } else {
-                this.logger.warn(`GitHub API Response ${response.statusCode}: ${error}`);
-                callback('');
-              }
-            });
-          } catch (e) {
-            this.logger.warn(e);
-            callback('');
-          }
+              });
+            } catch (e) {
+              this.logger.warn(e);
+              callback('');
+            }
+          });
         });
       });
     });
@@ -221,11 +237,11 @@ export class Dependencies {
 
   private getLatestStandaloneCliVersion(callback: (arg0: string) => void): void {
     const url = this.s3BucketUrl() + 'current_version.txt';
-    this.options.getSetting('settings', 'proxy', (proxy: string) => {
-      this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
+    this.options.getSetting('settings', 'proxy', (proxy: Setting) => {
+      this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: Setting) => {
         let options = { url: url };
-        if (proxy) options['proxy'] = proxy;
-        if (noSSLVerify === 'true') options['strictSSL'] = false;
+        if (proxy.value) options['proxy'] = proxy.value;
+        if (noSSLVerify.value === 'true') options['strictSSL'] = false;
         try {
           request.get(options, (error, response, body) => {
             if (!error && response.statusCode == 200) {
@@ -251,7 +267,6 @@ export class Dependencies {
       this.logger.debug(`Downloading wakatime-cli v${version}...`);
       let url = this.cliDownloadUrl(version);
       let zipFile = path.join(this.extensionPath, 'wakatime-cli.zip');
-
       this.downloadFile(
         url,
         zipFile,
@@ -269,46 +284,33 @@ export class Dependencies {
     this.logger.debug('Downloading wakatime-cli standalone...');
     const url = this.s3BucketUrl() + 'wakatime-cli.zip';
     let zipFile = path.join(this.extensionPath, 'wakatime-cli.zip');
-    try {
-      this.downloadFile(
-        url,
-        zipFile,
-        () => {
-          this.extractStandaloneCli(zipFile, () => {
-            if (!Dependencies.isWindows()) {
-              try {
-                this.logger.debug('Chmod 755 wakatime-cli standalone...');
-                fs.chmodSync(this.getCliLocation(), 0o755);
-              } catch (e) {
-                this.logger.warn(e);
-              }
-            }
-            callback();
-          });
-        },
-        () => {
-          callback();
-        },
-      );
-    } catch (e) {
-      this.logger.warn(e);
-      callback();
-    }
+    this.downloadFile(
+      url,
+      zipFile,
+      () => {
+        this.extractCli(zipFile, callback);
+      },
+      () => {
+        callback();
+      },
+    );
   }
 
   private extractCli(zipFile: string, callback: () => void): void {
     this.logger.debug(`Extracting wakatime-cli into "${this.extensionPath}"...`);
     this.removeCli(() => {
-      this.unzip(zipFile, this.extensionPath, callback);
+      this.unzip(zipFile, this.extensionPath, () => {
+        if (!Dependencies.isWindows()) {
+          try {
+            this.logger.debug('Chmod 755 wakatime-cli...');
+            fs.chmodSync(this.getCliLocation(), 0o755);
+          } catch (e) {
+            this.logger.warn(e);
+          }
+        }
+        callback();
+      });
       this.logger.debug('Finished extracting wakatime-cli.');
-    });
-  }
-
-  private extractStandaloneCli(zipFile: string, callback: () => void): void {
-    this.logger.debug(`Extracting wakatime-cli into "${this.extensionPath}"...`);
-    this.removeCli(() => {
-      this.unzip(zipFile, this.extensionPath, callback);
-      this.logger.debug('Finished extracting wakatime-cli standalone.');
     });
   }
 
@@ -333,11 +335,11 @@ export class Dependencies {
     callback: () => void,
     error: () => void,
   ): void {
-    this.options.getSetting('settings', 'proxy', (_err, proxy) => {
-      this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: string) => {
+    this.options.getSetting('settings', 'proxy', (proxy: Setting) => {
+      this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: Setting) => {
         let options = { url: url };
-        if (proxy) options['proxy'] = proxy;
-        if (noSSLVerify === 'true') options['strictSSL'] = false;
+        if (proxy.value) options['proxy'] = proxy.value;
+        if (noSSLVerify.value === 'true') options['strictSSL'] = false;
         try {
           let r = request.get(options);
           r.on('error', e => {
@@ -402,6 +404,6 @@ export class Dependencies {
     let platform = os.platform() as string;
     if (platform == 'win32') platform = 'windows';
     const arch = this.architecture();
-    return `${this.githubDownloadPrefix}/v${version}/wakatime-cli-${platform}-${arch}.zip`;
+    return `${this.githubDownloadPrefix}/${version}/wakatime-cli-${platform}-${arch}.zip`;
   }
 }

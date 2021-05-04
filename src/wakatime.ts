@@ -4,7 +4,7 @@ import * as child_process from 'child_process';
 
 import { Dependencies } from './dependencies';
 import { COMMAND_DASHBOARD, LogLevel } from './constants';
-import { Options } from './options';
+import { Options, Setting } from './options';
 import { Logger } from './logger';
 import { Libs } from './libs';
 
@@ -64,8 +64,8 @@ export class WakaTime {
 
     this.setupEventListeners();
 
-    this.options.getSetting('settings', 'disabled', (_e, disabled) => {
-      this.disabled = disabled === 'true';
+    this.options.getSetting('settings', 'disabled', (disabled: Setting) => {
+      this.disabled = disabled.value === 'true';
       if (this.disabled) {
         this.setStatusBarVisibility(false);
         this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
@@ -83,12 +83,12 @@ export class WakaTime {
       this.logger.debug('WakaTime: Initialized');
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
-      this.options.getSetting('settings', 'status_bar_enabled', (_err, val) => {
-        this.showStatusBar = val === 'true';
+      this.options.getSetting('settings', 'status_bar_enabled', (setting: Setting) => {
+        this.showStatusBar = setting.value === 'true';
         this.setStatusBarVisibility(this.showStatusBar);
       });
-      this.options.getSetting('settings', 'status_bar_coding_activity', (_err, val) => {
-        if (val == 'false') {
+      this.options.getSetting('settings', 'status_bar_coding_activity', (setting: Setting) => {
+        if (setting.value == 'false') {
           this.showCodingActivity = false;
         } else {
           this.showCodingActivity = true;
@@ -99,7 +99,8 @@ export class WakaTime {
   }
 
   public promptForApiKey(): void {
-    this.options.getSetting('settings', 'api_key', (_err, defaultVal) => {
+    this.options.getSetting('settings', 'api_key', (setting: Setting) => {
+      let defaultVal = setting.value;
       if (Libs.validateKey(defaultVal) != '') defaultVal = '';
       let promptOptions = {
         prompt: 'WakaTime Api Key',
@@ -119,7 +120,8 @@ export class WakaTime {
   }
 
   public promptForProxy(): void {
-    this.options.getSetting('settings', 'proxy', (_err, defaultVal) => {
+    this.options.getSetting('settings', 'proxy', (proxy: Setting) => {
+      let defaultVal = proxy.value;
       if (!defaultVal) defaultVal = '';
       let promptOptions = {
         prompt: 'WakaTime Proxy',
@@ -135,7 +137,8 @@ export class WakaTime {
   }
 
   public promptForDebug(): void {
-    this.options.getSetting('settings', 'debug', (_err, defaultVal) => {
+    this.options.getSetting('settings', 'debug', (debug: Setting) => {
+      let defaultVal = debug.value;
       if (!defaultVal || defaultVal !== 'true') defaultVal = 'false';
       let items: string[] = ['true', 'false'];
       let promptOptions = {
@@ -157,7 +160,8 @@ export class WakaTime {
   }
 
   public promptToDisable(): void {
-    this.options.getSetting('settings', 'disabled', (_err, currentVal) => {
+    this.options.getSetting('settings', 'disabled', (setting: Setting) => {
+      let currentVal = setting.value;
       if (!currentVal || currentVal !== 'true') currentVal = 'false';
       let items: string[] = ['disable', 'enable'];
       const helperText = currentVal === 'true' ? 'disabled' : 'enabled';
@@ -184,7 +188,8 @@ export class WakaTime {
   }
 
   public promptStatusBarIcon(): void {
-    this.options.getSetting('settings', 'status_bar_enabled', (_err, defaultVal) => {
+    this.options.getSetting('settings', 'status_bar_enabled', (setting: Setting) => {
+      let defaultVal = setting.value;
       if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
       let items: string[] = ['true', 'false'];
       let promptOptions = {
@@ -202,7 +207,8 @@ export class WakaTime {
   }
 
   public promptStatusBarCodingActivity(): void {
-    this.options.getSetting('settings', 'status_bar_coding_activity', (_err, defaultVal) => {
+    this.options.getSetting('settings', 'status_bar_coding_activity', (setting: Setting) => {
+      let defaultVal = setting.value;
       if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
       let items: string[] = ['true', 'false'];
       let promptOptions = {
@@ -332,7 +338,7 @@ export class WakaTime {
   }
 
   private _sendHeartbeat(file: string, isWrite: boolean): void {
-    if (this.standalone && !this.dependencies.isStandaloneCliInstalled()) return;
+    if (this.standalone && !this.dependencies.isCliInstalled()) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--file', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
@@ -348,7 +354,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.dependencies.getCliLocation(this.global);
+    const binary = this.dependencies.getCliLocation();
     this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
     const options = {
       windowsHide: true,
@@ -417,7 +423,7 @@ export class WakaTime {
   }
 
   private _getCodingActivity() {
-    if (this.standalone && !this.dependencies.isStandaloneCliInstalled()) return;
+    if (this.standalone && !this.dependencies.isCliInstalled()) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Libs.quote(user_agent)];
@@ -430,7 +436,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.dependencies.getCliLocation(this.global);
+    const binary = this.dependencies.getCliLocation();
     this.logger.debug(
       `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
     );
