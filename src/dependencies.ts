@@ -16,8 +16,8 @@ export class Dependencies {
   private extensionPath: string;
   private s3urlprefix = 'https://wakatime-cli.s3-us-west-2.amazonaws.com/';
   private githubDownloadPrefix = 'https://github.com/wakatime/wakatime-cli/releases/download';
-  private githubReleasesUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
-  private githubTagsUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/tags?per_page=1';
+  private githubReleasesStableUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
+  private githubReleasesAlphaUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases?per_page=1';
   private global: boolean;
   private standalone: boolean;
   private latestCliVersion: string = '';
@@ -189,7 +189,7 @@ export class Dependencies {
         this.options.getSetting('internal', 'cli_version_etag', (etag: Setting) => {
           this.options.getSetting('settings', 'alpha', (alpha: Setting) => {
             let options = {
-              url: alpha.value == 'true' ? this.githubTagsUrl : this.githubReleasesUrl,
+              url: alpha.value == 'true' ? this.githubReleasesAlphaUrl : this.githubReleasesStableUrl,
               json: true,
               headers: {
                 'User-Agent': 'WakaTime IDE Plugin/1.0',
@@ -209,7 +209,7 @@ export class Dependencies {
                     });
                     return;
                   }
-                  this.latestCliVersion = alpha.value == 'true' ? json[0]['name'] : json['tag_name'];
+                  this.latestCliVersion = alpha.value == 'true' ? json[0]['tag_name'] : json['tag_name'];
                   this.logger.debug(`Latest wakatime-cli version from GitHub: ${this.latestCliVersion}`);
                   if (response.headers.etag) {
                     this.options.setSettings('internal', [
