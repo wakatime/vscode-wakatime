@@ -212,7 +212,6 @@ export class Dependencies {
                   this.latestCliVersion = alpha.value == 'true' ? json[0]['name'] : json['tag_name'];
                   this.logger.debug(`Latest wakatime-cli version from GitHub: ${this.latestCliVersion}`);
                   if (response.headers.etag) {
-                    // TODO: write both settings at same time, to prevent overwriting the first setting
                     this.options.setSettings('internal', [
                       {key: 'cli_version', value: this.latestCliVersion},
                       {key: 'cli_version_etag', value: response.headers.etag as string},
