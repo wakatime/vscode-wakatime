@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 6.0.2 (2021-05-04)
+
+- Fix bug when writing multiple config values at once.
+
 ## 6.0.1 (2021-05-03)
 
 - Use GitHub Releases api instead of Tags api for wakatime-cli alpha builds.
