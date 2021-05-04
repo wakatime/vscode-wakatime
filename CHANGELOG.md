@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 6.0.1 (2021-05-03)
+
+- Use GitHub Releases api instead of Tags api for wakatime-cli alpha builds.
+
 ## 6.0.0 (2021-05-03)
 
 - Support for Go wakatime-cli downloaded from GitHub Releases, when standalone false in cfg file.
