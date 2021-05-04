@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 6.0.0 (2021-05-03)
+
+- Support for Go wakatime-cli downloaded from GitHub Releases, when standalone false in cfg file.
+
 ## 5.0.1 (2021-02-19)
 
 - Support global WakaTime installation.
