@@ -1,6 +1,14 @@
 
 # Changelog
 
+## 6.0.5 (2021-05-05)
+
+- Create wakatime folder inside home folder before using.
+  [#169](https://github.com/wakatime/vscode-wakatime/issues/169)
+  [#188](https://github.com/wakatime/vscode-wakatime/issues/188)
+  [#189](https://github.com/wakatime/vscode-wakatime/issues/189)
+  [#190](https://github.com/wakatime/vscode-wakatime/issues/190)
+
 ## 6.0.4 (2021-05-05)
 
 - Use extension folder to store wakatime-cli, because of issues saving to home folder.
