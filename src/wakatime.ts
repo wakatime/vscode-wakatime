@@ -84,7 +84,7 @@ export class WakaTime {
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
       this.options.getSetting('settings', 'status_bar_enabled', (setting: Setting) => {
-        this.showStatusBar = setting.value === 'true';
+        this.showStatusBar = setting.value !== 'false';
         this.setStatusBarVisibility(this.showStatusBar);
       });
       this.options.getSetting('settings', 'status_bar_coding_activity', (setting: Setting) => {
