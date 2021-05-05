@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 7.0.0 (2021-05-05)
+
+- Use Go wakatime-cli downloaded from GitHub releases, with legacy_python_cli wakatime.cfg option.
+
 ## 6.0.5 (2021-05-05)
 
 - Create wakatime folder inside home folder before using.
