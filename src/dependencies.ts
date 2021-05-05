@@ -48,11 +48,15 @@ export class Dependencies {
   }
 
   private getResourcesLocation() {
-    if (this.extensionPath) return this.extensionPath;
     if (this.resourcesLocation) return this.resourcesLocation;
 
-    const homeDir = Dependencies.getHomeDirectory();
-    this.resourcesLocation = path.join(homeDir, '.wakatime');
+    const folder = path.join(Dependencies.getHomeDirectory(), '.wakatime');
+    try {
+      fs.mkdirSync(folder, { recursive: true });
+      this.resourcesLocation = folder;
+    } catch (e) {
+      this.resourcesLocation = this.extensionPath;
+    }
     return this.resourcesLocation;
   }
 
