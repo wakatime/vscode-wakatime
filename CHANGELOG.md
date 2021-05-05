@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 6.0.4 (2021-05-05)
+
+- Use extension folder to store wakatime-cli, because of issues saving to home folder.
+
 ## 6.0.3 (2021-05-04)
 
 - Use home folder to store wakatime-cli, to prevent re-downloading every extension update.
