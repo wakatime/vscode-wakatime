@@ -13,7 +13,7 @@ import { Logger } from './logger';
 export class Dependencies {
   private options: Options;
   private logger: Logger;
-  private extensionPath: string;
+  private resourcesLocation?: string = undefined;
   private s3urlprefix = 'https://wakatime-cli.s3-us-west-2.amazonaws.com/';
   private githubDownloadPrefix = 'https://github.com/wakatime/wakatime-cli/releases/download';
   private githubReleasesStableUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
@@ -24,14 +24,12 @@ export class Dependencies {
 
   constructor(
     options: Options,
-    extensionPath: string,
     logger: Logger,
     global: boolean,
     standalone: boolean,
   ) {
     this.options = options;
     this.logger = logger;
-    this.extensionPath = extensionPath;
     this.global = global;
     this.standalone = standalone;
   }
@@ -46,14 +44,29 @@ export class Dependencies {
     }
   }
 
+  private getResourcesLocation() {
+    if (this.resourcesLocation) return this.resourcesLocation;
+
+    const homeDir = Dependencies.getHomeDirectory();
+    this.resourcesLocation = path.join(homeDir, '.wakatime');
+    return this.resourcesLocation;
+  }
+
+  public static getHomeDirectory(): string {
+    let home = process.env.WAKATIME_HOME;
+    if (home && home.trim() && fs.existsSync(home.trim())) return home.trim();
+    if (Dependencies.isPortable()) return process.env['VSCODE_PORTABLE'] as string;
+    return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || '';
+  }
+
   public getCliLocation(): string {
     if (this.global) return this.getCliLocationGlobal();
     const ext = Dependencies.isWindows() ? '.exe' : '';
-    if (this.standalone) return path.join(this.extensionPath, 'wakatime-cli', 'wakatime-cli' + ext);
+    if (this.standalone) return path.join(this.getResourcesLocation(), 'wakatime-cli', 'wakatime-cli' + ext);
     let platform = os.platform() as string;
     if (platform == 'win32') platform = 'windows';
     const arch = this.architecture();
-    return path.join(this.extensionPath, `wakatime-cli-${platform}-${arch}${ext}`);
+    return path.join(this.getResourcesLocation(), `wakatime-cli-${platform}-${arch}${ext}`);
   }
 
   public getCliLocationGlobal(): string {
@@ -72,6 +85,10 @@ export class Dependencies {
 
   public static isWindows(): boolean {
     return os.platform() === 'win32';
+  }
+
+  public static isPortable(): boolean {
+    return !!process.env['VSCODE_PORTABLE'];
   }
 
   private checkAndInstallCli(callback: () => void): void {
@@ -121,28 +138,32 @@ export class Dependencies {
     const options = {
       windowsHide: true,
     };
-    child_process.execFile(this.getCliLocation(), args, options, (error, _stdout, stderr) => {
-      if (!(error != null)) {
-        let currentVersion = _stdout.toString().trim() + stderr.toString().trim();
-        this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
+    try {
+      child_process.execFile(this.getCliLocation(), args, options, (error, _stdout, stderr) => {
+        if (!(error != null)) {
+          let currentVersion = _stdout.toString().trim() + stderr.toString().trim();
+          this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
 
-        this.logger.debug('Checking for updates to wakatime-cli...');
-        this.getLatestCliVersion(latestVersion => {
-          if (currentVersion === latestVersion) {
-            this.logger.debug('wakatime-cli is up to date');
-            callback(true);
-          } else if (latestVersion) {
-            this.logger.debug(`Found an updated wakatime-cli v${latestVersion}`);
-            callback(false);
-          } else {
-            this.logger.debug('Unable to find latest wakatime-cli version');
-            callback(false);
-          }
-        });
-      } else {
-        callback(false);
-      }
-    });
+          this.logger.debug('Checking for updates to wakatime-cli...');
+          this.getLatestCliVersion(latestVersion => {
+            if (currentVersion === latestVersion) {
+              this.logger.debug('wakatime-cli is up to date');
+              callback(true);
+            } else if (latestVersion) {
+              this.logger.debug(`Found an updated wakatime-cli v${latestVersion}`);
+              callback(false);
+            } else {
+              this.logger.debug('Unable to find latest wakatime-cli version');
+              callback(false);
+            }
+          });
+        } else {
+          callback(false);
+        }
+      });
+    } catch (e) {
+      callback(false);
+    }
   }
 
   private isStandaloneCliLatest(callback: (arg0: boolean) => void): void {
@@ -265,7 +286,7 @@ export class Dependencies {
       }
       this.logger.debug(`Downloading wakatime-cli ${version}...`);
       let url = this.cliDownloadUrl(version);
-      let zipFile = path.join(this.extensionPath, 'wakatime-cli.zip');
+      let zipFile = path.join(this.getResourcesLocation(), 'wakatime-cli.zip');
       this.downloadFile(
         url,
         zipFile,
@@ -282,7 +303,7 @@ export class Dependencies {
   private installStandaloneCli(callback: () => void): void {
     this.logger.debug('Downloading wakatime-cli standalone...');
     const url = this.s3BucketUrl() + 'wakatime-cli.zip';
-    let zipFile = path.join(this.extensionPath, 'wakatime-cli.zip');
+    let zipFile = path.join(this.getResourcesLocation(), 'wakatime-cli.zip');
     this.downloadFile(
       url,
       zipFile,
@@ -296,9 +317,9 @@ export class Dependencies {
   }
 
   private extractCli(zipFile: string, callback: () => void): void {
-    this.logger.debug(`Extracting wakatime-cli into "${this.extensionPath}"...`);
+    this.logger.debug(`Extracting wakatime-cli into "${this.getResourcesLocation()}"...`);
     this.removeCli(() => {
-      this.unzip(zipFile, this.extensionPath, () => {
+      this.unzip(zipFile, this.getResourcesLocation(), () => {
         if (!Dependencies.isWindows()) {
           try {
             this.logger.debug('Chmod 755 wakatime-cli...');
@@ -314,17 +335,27 @@ export class Dependencies {
   }
 
   private removeCli(callback: () => void): void {
-    if (fs.existsSync(path.join(this.extensionPath, 'wakatime-cli'))) {
-      try {
-        rimraf(path.join(this.extensionPath, 'wakatime-cli'), () => {
+    if (this.standalone) {
+      if (fs.existsSync(path.join(this.getResourcesLocation(), 'wakatime-cli'))) {
+        try {
+          rimraf(path.join(this.getResourcesLocation(), 'wakatime-cli'), () => {
+            callback();
+          });
+        } catch (e) {
+          this.logger.warn(e);
           callback();
-        });
-      } catch (e) {
-        this.logger.warn(e);
+        }
+      } else {
         callback();
       }
     } else {
-      callback();
+      if (fs.existsSync(this.getCliLocation())) {
+        fs.unlink(this.getCliLocation(), () => {
+          callback();
+        });
+      } else {
+        callback();
+      }
     }
   }
 

@@ -24,7 +24,6 @@ export class WakaTime {
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
-  private extensionPath: string;
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
@@ -37,8 +36,7 @@ export class WakaTime {
   private standalone: boolean;
   private disabled: boolean = true;
 
-  constructor(extensionPath: string, logger: Logger, options: Options) {
-    this.extensionPath = extensionPath;
+  constructor(logger: Logger, options: Options) {
     this.logger = logger;
     this.options = options;
   }
@@ -48,7 +46,6 @@ export class WakaTime {
     this.standalone = standalone;
     this.dependencies = new Dependencies(
       this.options,
-      this.extensionPath,
       this.logger,
       this.global,
       this.standalone,
@@ -345,7 +342,7 @@ export class WakaTime {
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Libs.quote(project));
     if (isWrite) args.push('--write');
-    if (Dependencies.isWindows() || this.options.isPortable()) {
+    if (Dependencies.isWindows() || Dependencies.isPortable()) {
       args.push(
         '--config',
         Libs.quote(this.options.getConfigFile()),

@@ -18,18 +18,9 @@ export class Options {
 
   constructor() {
     this.cache = new ExpirationStrategy(new MemoryStorage());
-    let wakaHome = this.getWakaHome();
+    let wakaHome = Dependencies.getHomeDirectory();
     this.configFile = path.join(wakaHome, '.wakatime.cfg');
     this.logFile = path.join(wakaHome, '.wakatime.log');
-  }
-
-  private getWakaHome(): string {
-    let home = process.env.WAKATIME_HOME;
-    if (home) {
-      return home;
-    } else {
-      return this.getUserHomeDir();
-    }
   }
 
   public async getSettingAsync<T = any>(section: string, key: string): Promise<T> {
@@ -216,16 +207,6 @@ export class Options {
         })
         .catch(err => reject(err));
     });
-  }
-
-  public getUserHomeDir(): string {
-    if (this.isPortable()) return process.env['VSCODE_PORTABLE'] as string;
-
-    return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || '';
-  }
-
-  public isPortable(): boolean {
-    return !!process.env['VSCODE_PORTABLE'];
   }
 
   public startsWith(outer: string, inner: string): boolean {
