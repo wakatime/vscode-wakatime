@@ -88,8 +88,8 @@ export function activate(ctx: vscode.ExtensionContext) {
       const isGlobal = global.value === 'true';
       if (isGlobal) wakatime.initialize(isGlobal, false);
       else {
-        options.getSetting('settings', 'standalone', (standalone: Setting) => {
-          wakatime.initialize(false, standalone.value !== 'false');
+        options.getSetting('settings', 'legacy_python_cli', (legacy_python_cli: Setting) => {
+          wakatime.initialize(false, legacy_python_cli.value == 'true');
         });
       }
     });

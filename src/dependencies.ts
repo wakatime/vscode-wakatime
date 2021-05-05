@@ -20,7 +20,7 @@ export class Dependencies {
   private githubReleasesStableUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
   private githubReleasesAlphaUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases?per_page=1';
   private global: boolean;
-  private standalone: boolean;
+  private legacy_python_cli: boolean;
   private latestCliVersion: string = '';
 
   constructor(
@@ -28,20 +28,20 @@ export class Dependencies {
     logger: Logger,
     extensionPath: string,
     global: boolean,
-    standalone: boolean,
+    legacy_python_cli: boolean,
   ) {
     this.options = options;
     this.logger = logger;
     this.extensionPath = extensionPath;
     this.global = global;
-    this.standalone = standalone;
+    this.legacy_python_cli = legacy_python_cli;
   }
 
   public checkAndInstall(callback: () => void): void {
     if (this.global) {
       this.checkGlobalCli(callback);
-    } else if (this.standalone) {
-      this.checkAndInstallStandaloneCli(callback);
+    } else if (this.legacy_python_cli) {
+      this.checkAndInstallLegacyCli(callback);
     } else {
       this.checkAndInstallCli(callback);
     }
@@ -70,7 +70,7 @@ export class Dependencies {
   public getCliLocation(): string {
     if (this.global) return this.getCliLocationGlobal();
     const ext = Dependencies.isWindows() ? '.exe' : '';
-    if (this.standalone) return path.join(this.getResourcesLocation(), 'wakatime-cli', 'wakatime-cli' + ext);
+    if (this.legacy_python_cli) return path.join(this.getResourcesLocation(), 'wakatime-cli', 'wakatime-cli' + ext);
     let platform = os.platform() as string;
     if (platform == 'win32') platform = 'windows';
     const arch = this.architecture();
@@ -113,13 +113,13 @@ export class Dependencies {
     }
   }
 
-  private checkAndInstallStandaloneCli(callback: () => void): void {
+  private checkAndInstallLegacyCli(callback: () => void): void {
     if (!this.isCliInstalled()) {
-      this.installStandaloneCli(callback);
+      this.installLegacyCli(callback);
     } else {
-      this.isStandaloneCliLatest(isLatest => {
+      this.isLegacyCliLatest(isLatest => {
         if (!isLatest) {
-          this.installStandaloneCli(callback);
+          this.installLegacyCli(callback);
         } else {
           callback();
         }
@@ -174,7 +174,7 @@ export class Dependencies {
     }
   }
 
-  private isStandaloneCliLatest(callback: (arg0: boolean) => void): void {
+  private isLegacyCliLatest(callback: (arg0: boolean) => void): void {
     let args = ['--version'];
     const options = {
       windowsHide: true,
@@ -189,7 +189,7 @@ export class Dependencies {
           this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
 
           this.logger.debug('Checking for updates to wakatime-cli...');
-          this.getLatestStandaloneCliVersion(latestVersion => {
+          this.getLatestLegacyCliVersion(latestVersion => {
             if (currentVersion === latestVersion) {
               this.logger.debug('wakatime-cli is up to date');
               callback(true);
@@ -263,7 +263,7 @@ export class Dependencies {
     });
   }
 
-  private getLatestStandaloneCliVersion(callback: (arg0: string) => void): void {
+  private getLatestLegacyCliVersion(callback: (arg0: string) => void): void {
     const url = this.s3BucketUrl() + 'current_version.txt';
     this.options.getSetting('settings', 'proxy', (proxy: Setting) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: Setting) => {
@@ -308,8 +308,8 @@ export class Dependencies {
     });
   }
 
-  private installStandaloneCli(callback: () => void): void {
-    this.logger.debug('Downloading wakatime-cli standalone...');
+  private installLegacyCli(callback: () => void): void {
+    this.logger.debug('Downloading legacy python wakatime-cli...');
     const url = this.s3BucketUrl() + 'wakatime-cli.zip';
     let zipFile = path.join(this.getResourcesLocation(), 'wakatime-cli.zip');
     this.downloadFile(
@@ -343,7 +343,7 @@ export class Dependencies {
   }
 
   private removeCli(callback: () => void): void {
-    if (this.standalone) {
+    if (this.legacy_python_cli) {
       if (fs.existsSync(path.join(this.getResourcesLocation(), 'wakatime-cli'))) {
         try {
           rimraf(path.join(this.getResourcesLocation(), 'wakatime-cli'), () => {

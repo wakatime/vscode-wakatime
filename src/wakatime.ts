@@ -33,7 +33,7 @@ export class WakaTime {
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
   private global: boolean;
-  private standalone: boolean;
+  private legacy_python_cli: boolean;
   private disabled: boolean = true;
   private extensionPath: string;
 
@@ -43,15 +43,15 @@ export class WakaTime {
     this.options = options;
   }
 
-  public initialize(global: boolean, standalone: boolean): void {
+  public initialize(global: boolean, legacy_python_cli: boolean): void {
     this.global = global;
-    this.standalone = standalone;
+    this.legacy_python_cli = legacy_python_cli;
     this.dependencies = new Dependencies(
       this.options,
       this.logger,
       this.extensionPath,
       this.global,
-      this.standalone,
+      this.legacy_python_cli,
     );
     this.statusBar.command = COMMAND_DASHBOARD;
 
@@ -78,7 +78,7 @@ export class WakaTime {
   }
 
   public initializeDependencies(): void {
-    if (this.standalone) this.logger.debug('Using standalone wakatime-cli.');
+    if (this.legacy_python_cli) this.logger.debug('Using legacy python wakatime-cli.');
     this.dependencies.checkAndInstall(() => {
       this.logger.debug('WakaTime: Initialized');
       this.statusBar.text = '$(clock)';
@@ -329,7 +329,6 @@ export class WakaTime {
   private sendHeartbeat(file: string, isWrite: boolean): void {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
-        if (this.global === undefined || this.standalone === undefined) return;
         this._sendHeartbeat(file, isWrite);
       } else {
         this.promptForApiKey();
@@ -338,7 +337,7 @@ export class WakaTime {
   }
 
   private _sendHeartbeat(file: string, isWrite: boolean): void {
-    if (this.standalone && !this.dependencies.isCliInstalled()) return;
+    if (!this.dependencies.isCliInstalled()) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--file', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
@@ -423,7 +422,7 @@ export class WakaTime {
   }
 
   private _getCodingActivity() {
-    if (this.standalone && !this.dependencies.isCliInstalled()) return;
+    if (!this.dependencies.isCliInstalled()) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Libs.quote(user_agent)];
