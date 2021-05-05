@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 6.0.3 (2021-05-04)
+
+- Use home folder to store wakatime-cli, to prevent re-downloading every extension update.
+
 ## 6.0.2 (2021-05-04)
 
 - Fix bug when writing multiple config values at once.
