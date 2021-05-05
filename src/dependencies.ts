@@ -13,6 +13,7 @@ import { Logger } from './logger';
 export class Dependencies {
   private options: Options;
   private logger: Logger;
+  private extensionPath: string;
   private resourcesLocation?: string = undefined;
   private s3urlprefix = 'https://wakatime-cli.s3-us-west-2.amazonaws.com/';
   private githubDownloadPrefix = 'https://github.com/wakatime/wakatime-cli/releases/download';
@@ -25,11 +26,13 @@ export class Dependencies {
   constructor(
     options: Options,
     logger: Logger,
+    extensionPath: string,
     global: boolean,
     standalone: boolean,
   ) {
     this.options = options;
     this.logger = logger;
+    this.extensionPath = extensionPath;
     this.global = global;
     this.standalone = standalone;
   }
@@ -45,6 +48,7 @@ export class Dependencies {
   }
 
   private getResourcesLocation() {
+    if (this.extensionPath) return this.extensionPath;
     if (this.resourcesLocation) return this.resourcesLocation;
 
     const homeDir = Dependencies.getHomeDirectory();

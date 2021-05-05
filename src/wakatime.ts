@@ -35,8 +35,10 @@ export class WakaTime {
   private global: boolean;
   private standalone: boolean;
   private disabled: boolean = true;
+  private extensionPath: string;
 
-  constructor(logger: Logger, options: Options) {
+  constructor(extensionPath: string, logger: Logger, options: Options) {
+    this.extensionPath = extensionPath;
     this.logger = logger;
     this.options = options;
   }
@@ -47,6 +49,7 @@ export class WakaTime {
     this.dependencies = new Dependencies(
       this.options,
       this.logger,
+      this.extensionPath,
       this.global,
       this.standalone,
     );

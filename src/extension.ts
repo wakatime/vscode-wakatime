@@ -22,7 +22,7 @@ var wakatime: WakaTime;
 export function activate(ctx: vscode.ExtensionContext) {
   var options = new Options();
 
-  wakatime = new WakaTime(logger, options);
+  wakatime = new WakaTime(ctx.extensionPath, logger, options);
 
   ctx.subscriptions.push(
     vscode.commands.registerCommand(COMMAND_API_KEY, function () {
