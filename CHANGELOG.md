@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 7.0.2 (2021-05-05)
+
+- Use --entity when passing file to wakatime-cli.
+
 ## 7.0.1 (2021-05-05)
 
 - Show status bar icon by default, when not disabled in wakatime.cfg file.
