@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 8.0.0 (2021-05-05)
+
+- Disable new Go wakatime-cli.
+  [#191](https://github.com/wakatime/vscode-wakatime/issues/191)
+
 ## 7.0.2 (2021-05-05)
 
 - Use --entity when passing file to wakatime-cli.
