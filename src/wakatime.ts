@@ -340,7 +340,7 @@ export class WakaTime {
     if (!this.dependencies.isCliInstalled()) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-    let args = ['--file', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
+    let args = ['--entity', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Libs.quote(project));
     if (isWrite) args.push('--write');

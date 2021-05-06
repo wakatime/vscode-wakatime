@@ -158,7 +158,7 @@ export class Dependencies {
               this.logger.debug('wakatime-cli is up to date');
               callback(true);
             } else if (latestVersion) {
-              this.logger.debug(`Found an updated wakatime-cli v${latestVersion}`);
+              this.logger.debug(`Found an updated wakatime-cli ${latestVersion}`);
               callback(false);
             } else {
               this.logger.debug('Unable to find latest wakatime-cli version');
