@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 9.0.0 (2021-05-17)
+
+- Enable new Go wakatime-cli after Windows bugfixes.
+
 ## 8.0.0 (2021-05-05)
 
 - Disable new Go wakatime-cli.
