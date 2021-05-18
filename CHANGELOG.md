@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 9.0.3 (2021-05-18)
+
+- Include plugin name when reporting missing cli platforms to API.
+
 ## 9.0.2 (2021-05-18)
 
 - Use same User-Agent header for all plugins, to share GitHub API cache.
