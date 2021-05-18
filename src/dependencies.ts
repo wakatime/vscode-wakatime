@@ -217,7 +217,7 @@ export class Dependencies {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: Setting) => {
         this.options.getSetting('internal', 'cli_version_etag', (etag: Setting) => {
           this.options.getSetting('settings', 'alpha', (alpha: Setting) => {
-            let options = {
+            const options = {
               url: alpha.value == 'true' ? this.githubReleasesAlphaUrl : this.githubReleasesStableUrl,
               json: true,
               headers: {
@@ -293,7 +293,7 @@ export class Dependencies {
         return;
       }
       this.logger.debug(`Downloading wakatime-cli ${version}...`);
-      let url = this.cliDownloadUrl(version);
+      const url = this.cliDownloadUrl(version);
       let zipFile = path.join(this.getResourcesLocation(), 'wakatime-cli.zip');
       this.downloadFile(
         url,
