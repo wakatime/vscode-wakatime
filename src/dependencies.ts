@@ -215,18 +215,19 @@ export class Dependencies {
     }
     this.options.getSetting('settings', 'proxy', (proxy: Setting) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: Setting) => {
-        this.options.getSetting('internal', 'cli_version_etag', (etag: Setting) => {
+        this.options.getSetting('internal', 'cli_version_last_modified', (modified: Setting) => {
           this.options.getSetting('settings', 'alpha', (alpha: Setting) => {
-            const options = {
+            let options = {
               url: alpha.value == 'true' ? this.githubReleasesAlphaUrl : this.githubReleasesStableUrl,
               json: true,
               headers: {
                 'User-Agent': 'wakatime',
+                'Authorization': 'wakatime',
               },
             };
             if (proxy.value) options['proxy'] = proxy.value;
             if (noSSLVerify.value === 'true') options['strictSSL'] = false;
-            if (etag.value) options['headers']['If-None-Match'] = etag.value;
+            if (modified.value) options['headers']['If-Modified-Since'] = modified.value;
             try {
               request.get(options, (error, response, json) => {
                 if (!error && (response.statusCode == 200 || response.statusCode == 304)) {
@@ -240,10 +241,11 @@ export class Dependencies {
                   }
                   this.latestCliVersion = alpha.value == 'true' ? json[0]['tag_name'] : json['tag_name'];
                   this.logger.debug(`Latest wakatime-cli version from GitHub: ${this.latestCliVersion}`);
-                  if (response.headers.etag) {
+                  const lastModified = response.headers['last-modified'] as string;
+                  if (lastModified) {
                     this.options.setSettings('internal', [
                       {key: 'cli_version', value: this.latestCliVersion},
-                      {key: 'cli_version_etag', value: response.headers.etag as string},
+                      {key: 'cli_version_last_modified', value: lastModified},
                     ]);
                   }
                   callback(this.latestCliVersion);
