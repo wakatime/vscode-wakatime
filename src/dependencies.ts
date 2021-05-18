@@ -221,8 +221,7 @@ export class Dependencies {
               url: alpha.value == 'true' ? this.githubReleasesAlphaUrl : this.githubReleasesStableUrl,
               json: true,
               headers: {
-                'User-Agent': 'wakatime',
-                'Authorization': 'wakatime',
+                'User-Agent': 'github.com/wakatime/vscode-wakatime',
               },
             };
             if (proxy.value) options['proxy'] = proxy.value;
