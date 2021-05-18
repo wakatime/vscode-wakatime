@@ -469,7 +469,7 @@ export class Dependencies {
   }
 
   private reportMissingPlatformSupport(platform: string, architecture: string): void {
-    const url = `https://api.wakatime.com/api/v1/cli-missing?platform=${platform}&architecture=${architecture}`;
+    const url = `https://api.wakatime.com/api/v1/cli-missing?platform=${platform}&architecture=${architecture}&plugin=vscode`;
     this.options.getSetting('settings', 'proxy', (proxy: Setting) => {
       this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: Setting) => {
         let options = { url: url };
