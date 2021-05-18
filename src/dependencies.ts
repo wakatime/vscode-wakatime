@@ -442,6 +442,43 @@ export class Dependencies {
     let platform = os.platform() as string;
     if (platform == 'win32') platform = 'windows';
     const arch = this.architecture();
+
+    const validCombinations = [
+      'darwin-amd64',
+      'darwin-arm64',
+      'freebsd-386',
+      'freebsd-amd64',
+      'freebsd-arm',
+      'linux-386',
+      'linux-amd64',
+      'linux-arm',
+      'linux-arm64',
+      'netbsd-386',
+      'netbsd-amd64',
+      'netbsd-arm',
+      'openbsd-386',
+      'openbsd-amd64',
+      'openbsd-arm',
+      'openbsd-arm64',
+      'windows-386',
+      'windows-amd64',
+    ];
+    if (!validCombinations.includes(`${platform}-${arch}`)) this.reportMissingPlatformSupport(platform, arch);
+
     return `${this.githubDownloadPrefix}/${version}/wakatime-cli-${platform}-${arch}.zip`;
+  }
+
+  private reportMissingPlatformSupport(platform: string, architecture: string): void {
+    const url = `https://api.wakatime.com/api/v1/cli-missing?platform=${platform}&architecture=${architecture}`;
+    this.options.getSetting('settings', 'proxy', (proxy: Setting) => {
+      this.options.getSetting('settings', 'no_ssl_verify', (noSSLVerify: Setting) => {
+        let options = { url: url };
+        if (proxy.value) options['proxy'] = proxy.value;
+        if (noSSLVerify.value === 'true') options['strictSSL'] = false;
+        try {
+          request.get(options);
+        } catch (e) { }
+      });
+    });
   }
 }
