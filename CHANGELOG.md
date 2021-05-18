@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 9.0.2 (2021-05-18)
+
+- Use same User-Agent header for all plugins, to share GitHub API cache.
+
 ## 9.0.1 (2021-05-18)
 
 - Report missing wakatime-cli platform support to API.
