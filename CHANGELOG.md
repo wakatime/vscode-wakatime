@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 9.0.1 (2021-05-18)
+
+- Report missing wakatime-cli platform support to API.
+
 ## 9.0.0 (2021-05-17)
 
 - Enable new Go wakatime-cli after Windows bugfixes.
