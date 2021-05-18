@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 9.0.4 (2021-05-18)
+
+- GitHub ETag is not reliable, use Last-Modified-Since timestamp instead.
+
 ## 9.0.3 (2021-05-18)
 
 - Include plugin name when reporting missing cli platforms to API.
