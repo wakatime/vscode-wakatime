@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 9.0.5 (2021-05-18)
+
+- Use plugin name in GitHub API User-Agent header, now that ETag not used.
+
 ## 9.0.4 (2021-05-18)
 
 - GitHub ETag is not reliable, use Last-Modified-Since timestamp instead.
