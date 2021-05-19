@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 10.0.0 (2021-05-19)
+
+- Use legacy Python wakatime-cli to wait for bugfixes in Go wakatime-cli.
+  [#196](https://github.com/wakatime/vscode-wakatime/issues/196)
+
 ## 9.0.5 (2021-05-18)
 
 - Use plugin name in GitHub API User-Agent header, now that ETag not used.
