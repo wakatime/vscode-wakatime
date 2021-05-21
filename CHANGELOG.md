@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 10.0.1 (2021-05-21)
+
+- Fix bug using response variable when network error causes it to be undefined.
+  [#200](https://github.com/wakatime/vscode-wakatime/issues/200)
+
 ## 10.0.0 (2021-05-19)
 
 - Use legacy Python wakatime-cli to wait for bugfixes in Go wakatime-cli.
