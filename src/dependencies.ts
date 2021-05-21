@@ -229,7 +229,7 @@ export class Dependencies {
             if (modified.value) options['headers']['If-Modified-Since'] = modified.value;
             try {
               request.get(options, (error, response, json) => {
-                if (!error && (response.statusCode == 200 || response.statusCode == 304)) {
+                if (!error && response && (response.statusCode == 200 || response.statusCode == 304)) {
                   this.logger.debug(`GitHub API Response ${response.statusCode}`);
                   if (response.statusCode == 304) {
                     this.options.getSetting('internal', 'cli_version', (version: Setting) => {
@@ -250,7 +250,11 @@ export class Dependencies {
                   callback(this.latestCliVersion);
                   return;
                 } else {
-                  this.logger.warn(`GitHub API Response ${response.statusCode}: ${error}`);
+                  if (response) {
+                    this.logger.warn(`GitHub API Response ${response.statusCode}: ${error}`);
+                  } else {
+                    this.logger.warn(`GitHub API Response Error: ${error}`);
+                  }
                   callback('');
                 }
               });
@@ -273,7 +277,7 @@ export class Dependencies {
         if (noSSLVerify.value === 'true') options['strictSSL'] = false;
         try {
           request.get(options, (error, response, body) => {
-            if (!error && response.statusCode == 200) {
+            if (!error && response && response.statusCode == 200) {
               callback(body.trim());
             } else {
               callback('');
