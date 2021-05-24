@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 11.0.0 (2021-05-24)
+
+- Enable new Go wakatime-cli by default.
+
 ## 10.0.1 (2021-05-21)
 
 - Fix bug using response variable when network error causes it to be undefined.
