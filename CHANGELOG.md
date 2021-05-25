@@ -1,6 +1,12 @@
 
 # Changelog
 
+## 12.0.0 (2021-05-25)
+
+- Rollback Go wakatime-cli launch.
+  [#202](https://github.com/wakatime/vscode-wakatime/issues/202)
+  [#203](https://github.com/wakatime/vscode-wakatime/issues/203)
+
 ## 11.0.0 (2021-05-24)
 
 - Enable new Go wakatime-cli by default.
