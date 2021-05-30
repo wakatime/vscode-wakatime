@@ -20,7 +20,6 @@ export class Dependencies {
   private githubReleasesStableUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
   private githubReleasesAlphaUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases?per_page=1';
   private global: boolean;
-  private legacy_python_cli: boolean;
   private latestCliVersion: string = '';
 
   constructor(
@@ -28,22 +27,20 @@ export class Dependencies {
     logger: Logger,
     extensionPath: string,
     global: boolean,
-    legacy_python_cli: boolean,
   ) {
     this.options = options;
     this.logger = logger;
     this.extensionPath = extensionPath;
     this.global = global;
-    this.legacy_python_cli = legacy_python_cli;
   }
 
   public checkAndInstall(callback: () => void): void {
     if (this.global) {
       this.checkGlobalCli(callback);
-    } else if (this.legacy_python_cli) {
-      this.checkAndInstallLegacyCli(callback);
     } else {
-      this.checkAndInstallCli(callback);
+      this.checkAndInstallLegacyCli(() => {
+        this.checkAndInstallCli(callback);
+      });
     }
   }
 
@@ -67,10 +64,10 @@ export class Dependencies {
     return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || '';
   }
 
-  public getCliLocation(): string {
+  public getCliLocation(new_go_cli: boolean): string {
     if (this.global) return this.getCliLocationGlobal();
     const ext = Dependencies.isWindows() ? '.exe' : '';
-    if (this.legacy_python_cli) return path.join(this.getResourcesLocation(), 'wakatime-cli', 'wakatime-cli' + ext);
+    if (!new_go_cli) return path.join(this.getResourcesLocation(), 'wakatime-cli', 'wakatime-cli' + ext);
     let platform = os.platform() as string;
     if (platform == 'win32') platform = 'windows';
     const arch = this.architecture();
@@ -87,8 +84,8 @@ export class Dependencies {
     throw new Error('Could not find global cli - is it installed?');
   }
 
-  public isCliInstalled(): boolean {
-    return fs.existsSync(this.getCliLocation());
+  public isCliInstalled(new_go_cli: boolean): boolean {
+    return fs.existsSync(this.getCliLocation(new_go_cli));
   }
 
   public static isWindows(): boolean {
@@ -100,7 +97,7 @@ export class Dependencies {
   }
 
   private checkAndInstallCli(callback: () => void): void {
-    if (!this.isCliInstalled()) {
+    if (!this.isCliInstalled(true)) {
       this.installCli(callback);
     } else {
       this.isCliLatest(isLatest => {
@@ -114,7 +111,7 @@ export class Dependencies {
   }
 
   private checkAndInstallLegacyCli(callback: () => void): void {
-    if (!this.isCliInstalled()) {
+    if (!this.isCliInstalled(false)) {
       this.installLegacyCli(callback);
     } else {
       this.isLegacyCliLatest(isLatest => {
@@ -147,7 +144,7 @@ export class Dependencies {
       windowsHide: true,
     };
     try {
-      child_process.execFile(this.getCliLocation(), args, options, (error, _stdout, stderr) => {
+      child_process.execFile(this.getCliLocation(true), args, options, (error, _stdout, stderr) => {
         if (!(error != null)) {
           let currentVersion = _stdout.toString().trim() + stderr.toString().trim();
           this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
@@ -180,7 +177,7 @@ export class Dependencies {
       windowsHide: true,
     };
     child_process.execFile(
-      this.getCliLocation(),
+      this.getCliLocation(false),
       args,
       options,
       (error, _stdout, stderr) => {
@@ -304,7 +301,7 @@ export class Dependencies {
         url,
         zipFile,
         () => {
-          this.extractCli(zipFile, callback);
+          this.extractCli(true, zipFile, callback);
         },
         () => {
           callback();
@@ -321,7 +318,7 @@ export class Dependencies {
       url,
       zipFile,
       () => {
-        this.extractCli(zipFile, callback);
+        this.extractCli(false, zipFile, callback);
       },
       () => {
         callback();
@@ -329,14 +326,14 @@ export class Dependencies {
     );
   }
 
-  private extractCli(zipFile: string, callback: () => void): void {
+  private extractCli(new_go_cli: boolean, zipFile: string, callback: () => void): void {
     this.logger.debug(`Extracting wakatime-cli into "${this.getResourcesLocation()}"...`);
-    this.removeCli(() => {
+    this.removeCli(new_go_cli, () => {
       this.unzip(zipFile, this.getResourcesLocation(), () => {
         if (!Dependencies.isWindows()) {
           try {
             this.logger.debug('Chmod 755 wakatime-cli...');
-            fs.chmodSync(this.getCliLocation(), 0o755);
+            fs.chmodSync(this.getCliLocation(new_go_cli), 0o755);
           } catch (e) {
             this.logger.warn(e);
           }
@@ -347,8 +344,8 @@ export class Dependencies {
     });
   }
 
-  private removeCli(callback: () => void): void {
-    if (this.legacy_python_cli) {
+  private removeCli(new_go_cli: boolean, callback: () => void): void {
+    if (!new_go_cli) {
       if (fs.existsSync(path.join(this.getResourcesLocation(), 'wakatime-cli'))) {
         try {
           rimraf(path.join(this.getResourcesLocation(), 'wakatime-cli'), () => {
@@ -362,8 +359,8 @@ export class Dependencies {
         callback();
       }
     } else {
-      if (fs.existsSync(this.getCliLocation())) {
-        fs.unlink(this.getCliLocation(), () => {
+      if (fs.existsSync(this.getCliLocation(new_go_cli))) {
+        fs.unlink(this.getCliLocation(new_go_cli), () => {
           callback();
         });
       } else {

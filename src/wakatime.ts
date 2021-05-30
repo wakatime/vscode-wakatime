@@ -33,7 +33,6 @@ export class WakaTime {
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
   private global: boolean;
-  private legacy_python_cli: boolean;
   private disabled: boolean = true;
   private extensionPath: string;
 
@@ -43,15 +42,13 @@ export class WakaTime {
     this.options = options;
   }
 
-  public initialize(global: boolean, legacy_python_cli: boolean): void {
+  public initialize(global: boolean): void {
     this.global = global;
-    this.legacy_python_cli = legacy_python_cli;
     this.dependencies = new Dependencies(
       this.options,
       this.logger,
       this.extensionPath,
       this.global,
-      this.legacy_python_cli,
     );
     this.statusBar.command = COMMAND_DASHBOARD;
 
@@ -78,7 +75,6 @@ export class WakaTime {
   }
 
   public initializeDependencies(): void {
-    if (this.legacy_python_cli) this.logger.debug('Using legacy python wakatime-cli.');
     this.dependencies.checkAndInstall(() => {
       this.logger.debug('WakaTime: Initialized');
       this.statusBar.text = '$(clock)';
@@ -336,8 +332,8 @@ export class WakaTime {
     });
   }
 
-  private _sendHeartbeat(file: string, isWrite: boolean): void {
-    if (!this.dependencies.isCliInstalled()) return;
+  private _sendHeartbeat(file: string, isWrite: boolean, new_go_cli: boolean = true): void {
+    if (!this.dependencies.isCliInstalled(new_go_cli)) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--entity', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
@@ -353,7 +349,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.dependencies.getCliLocation();
+    const binary = this.dependencies.getCliLocation(new_go_cli);
     this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
     const options = {
       windowsHide: true,
@@ -374,6 +370,10 @@ export class WakaTime {
         let today = new Date();
         this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
       } else if (code == 102) {
+        if (new_go_cli) {
+          this._sendHeartbeat(file, isWrite, false);
+          return;
+        }
         if (this.showStatusBar) {
           if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
           this.statusBar.tooltip =
@@ -383,6 +383,10 @@ export class WakaTime {
           `Api eror (102); Check your ${this.options.getLogFile()} file for more details`,
         );
       } else if (code == 103) {
+        if (new_go_cli) {
+          this._sendHeartbeat(file, isWrite, false);
+          return;
+        }
         let error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
           this.statusBar.text = '$(clock) WakaTime Error';
@@ -397,6 +401,10 @@ export class WakaTime {
         }
         this.logger.error(error_msg);
       } else {
+        if (new_go_cli) {
+          this._sendHeartbeat(file, isWrite, false);
+          return;
+        }
         let error_msg = `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
           this.statusBar.text = '$(clock) WakaTime Error';
@@ -421,8 +429,8 @@ export class WakaTime {
     });
   }
 
-  private _getCodingActivity() {
-    if (!this.dependencies.isCliInstalled()) return;
+  private _getCodingActivity(new_go_cli: boolean = true) {
+    if (!this.dependencies.isCliInstalled(new_go_cli)) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Libs.quote(user_agent)];
@@ -435,7 +443,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.dependencies.getCliLocation();
+    const binary = this.dependencies.getCliLocation(new_go_cli);
     this.logger.debug(
       `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
     );
@@ -462,8 +470,16 @@ export class WakaTime {
           this.statusBar.tooltip = `WakaTime: You coded ${output.trim()} today.`;
         }
       } else if (code == 102) {
+        if (new_go_cli) {
+          this._getCodingActivity(false);
+          return;
+        }
         // noop, working offline
       } else {
+        if (new_go_cli) {
+          this._getCodingActivity(false);
+          return;
+        }
         let error_msg = `Error fetching today coding activity (${code}); Check your ${this.options.getLogFile()} file for more details`;
         this.logger.debug(error_msg);
       }
