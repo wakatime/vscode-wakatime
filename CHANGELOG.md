@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 13.0.0 (2021-07-01)
+
+- Use new Go wakatime-cli and fallback to legacy Python wakatime-cli on errors.
+
 ## 12.0.0 (2021-05-25)
 
 - Rollback Go wakatime-cli launch.
