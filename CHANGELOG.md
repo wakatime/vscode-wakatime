@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 14.0.0 (2021-07-06)
+
+- Rollback Go wakatime-cli launch until random project names bug is fixed.
+
 ## 13.0.0 (2021-07-01)
 
 - Use new Go wakatime-cli and fallback to legacy Python wakatime-cli on errors.
