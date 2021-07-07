@@ -325,7 +325,7 @@ export class WakaTime {
   private sendHeartbeat(file: string, isWrite: boolean): void {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
-        this._sendHeartbeat(file, isWrite);
+        this._sendHeartbeat(file, isWrite, false);
       } else {
         this.promptForApiKey();
       }
