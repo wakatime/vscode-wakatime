@@ -467,7 +467,7 @@ export class WakaTime {
       if (code == 0) {
         if (output && this.showStatusBar && this.showCodingActivity) {
           this.statusBar.text = `$(clock) ${output}`;
-          this.statusBar.tooltip = `WakaTime: You coded ${output.trim()} today.`;
+          this.statusBar.tooltip = `WakaTime: Today you have spent ${output.trim()}.`;
         }
       } else if (code == 102) {
         if (new_go_cli) {
