@@ -435,9 +435,9 @@ export class Dependencies {
 
   private architecture(): string {
     const arch = os.arch();
-    if (arch.indexOf('arm') > -1) return arch;
     if (arch.indexOf('32') > -1) return '386';
-    return 'amd64';
+    if (arch.indexOf('x64') > -1) return 'amd64';
+    return arch;
   }
 
   private cliDownloadUrl(version: string): string {
