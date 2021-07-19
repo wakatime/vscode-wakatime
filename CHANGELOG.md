@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 14.0.1 (2021-07-19)
+
+- Fallback to raw value of os.arch when unable to detect architecture for wakatime-cli.
+  [#216](https://github.com/wakatime/vscode-wakatime/issues/216)
+
 ## 14.0.0 (2021-07-06)
 
 - Rollback Go wakatime-cli launch until random project names bug is fixed.
