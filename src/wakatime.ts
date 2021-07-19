@@ -425,7 +425,7 @@ export class WakaTime {
 
     this.hasApiKey(hasApiKey => {
       if (!hasApiKey) return;
-      this._getCodingActivity();
+      this._getCodingActivity(false);
     });
   }
 
