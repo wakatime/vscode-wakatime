@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 // import * as azdata from 'azdata';
 import * as child_process from 'child_process';
+import * as fs from 'fs';
 
 import { Dependencies } from './dependencies';
 import { COMMAND_DASHBOARD, LogLevel } from './constants';
@@ -60,6 +61,14 @@ export class WakaTime {
     this.statusBar.show();
 
     this.setupEventListeners();
+
+    // enable auto config for online IDE like gitpods
+    if (process.env.WAKA_TOKEN) {
+      if (!fs.readFileSync(this.options.getConfigFile()).toString().includes("api_key")) {
+        // not using this.options.setSetting, because it's async
+        fs.writeFileSync(this.options.getConfigFile(), `[settings]\napi_key = ${process.env.WAKA_TOKEN}`)
+      }
+    }
 
     this.options.getSetting('settings', 'disabled', (disabled: Setting) => {
       this.disabled = disabled.value === 'true';

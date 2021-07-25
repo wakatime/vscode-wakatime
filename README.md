@@ -44,6 +44,8 @@ Extension settings are stored in the INI file at `$WAKATIME_HOME/.wakatime.cfg`.
 
 More information can be found from [wakatime core](https://github.com/wakatime/wakatime#configuring).
 
+If you are using online IDE like [gitpods](https://gitpod.io/), you can config your global ENV key `WAKA_TOKEN`.
+
 Notes:
 1. `$WAKATIME_HOME` defaults to `$HOME`
 1. To disable the extension at startup add `disabled=true` to your config, this operation can also be performed by pressing `⌘ + Shift + P` and selecting `WakaTime: Disable`.
