@@ -32,9 +32,9 @@ export class WakaTime {
   private lastFetchToday: number = 0;
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
-  private global: boolean;
   private disabled: boolean = true;
   private extensionPath: string;
+  private newBetaCli: boolean;
 
   constructor(extensionPath: string, logger: Logger, options: Options) {
     this.extensionPath = extensionPath;
@@ -42,13 +42,14 @@ export class WakaTime {
     this.options = options;
   }
 
-  public initialize(global: boolean): void {
-    this.global = global;
+  public initialize(global: boolean, newBetaCli: boolean): void {
+    this.newBetaCli = newBetaCli;
     this.dependencies = new Dependencies(
       this.options,
       this.logger,
       this.extensionPath,
-      this.global,
+      global,
+      newBetaCli,
     );
     this.statusBar.command = COMMAND_DASHBOARD;
 
@@ -325,15 +326,15 @@ export class WakaTime {
   private sendHeartbeat(file: string, isWrite: boolean): void {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
-        this._sendHeartbeat(file, isWrite, false);
+        this._sendHeartbeat(file, isWrite, this.newBetaCli);
       } else {
         this.promptForApiKey();
       }
     });
   }
 
-  private _sendHeartbeat(file: string, isWrite: boolean, new_go_cli: boolean = true): void {
-    if (!this.dependencies.isCliInstalled(new_go_cli)) return;
+  private _sendHeartbeat(file: string, isWrite: boolean, newBetaCli: boolean = true): void {
+    if (!this.dependencies.isCliInstalled(newBetaCli)) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--entity', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
@@ -349,7 +350,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.dependencies.getCliLocation(new_go_cli);
+    const binary = this.dependencies.getCliLocation(newBetaCli);
     this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
     const options = {
       windowsHide: true,
@@ -370,7 +371,7 @@ export class WakaTime {
         let today = new Date();
         this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
       } else if (code == 102) {
-        if (new_go_cli) {
+        if (newBetaCli) {
           this._sendHeartbeat(file, isWrite, false);
           return;
         }
@@ -383,7 +384,7 @@ export class WakaTime {
           `Api eror (102); Check your ${this.options.getLogFile()} file for more details`,
         );
       } else if (code == 103) {
-        if (new_go_cli) {
+        if (newBetaCli) {
           this._sendHeartbeat(file, isWrite, false);
           return;
         }
@@ -401,7 +402,7 @@ export class WakaTime {
         }
         this.logger.error(error_msg);
       } else {
-        if (new_go_cli) {
+        if (newBetaCli) {
           this._sendHeartbeat(file, isWrite, false);
           return;
         }
@@ -425,12 +426,12 @@ export class WakaTime {
 
     this.hasApiKey(hasApiKey => {
       if (!hasApiKey) return;
-      this._getCodingActivity(false);
+      this._getCodingActivity(this.newBetaCli);
     });
   }
 
-  private _getCodingActivity(new_go_cli: boolean = true) {
-    if (!this.dependencies.isCliInstalled(new_go_cli)) return;
+  private _getCodingActivity(newBetaCli: boolean = true) {
+    if (!this.dependencies.isCliInstalled(newBetaCli)) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Libs.quote(user_agent)];
@@ -443,7 +444,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.dependencies.getCliLocation(new_go_cli);
+    const binary = this.dependencies.getCliLocation(newBetaCli);
     this.logger.debug(
       `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
     );
@@ -470,13 +471,13 @@ export class WakaTime {
           this.statusBar.tooltip = `WakaTime: You coded ${output.trim()} today.`;
         }
       } else if (code == 102) {
-        if (new_go_cli) {
+        if (newBetaCli) {
           this._getCodingActivity(false);
           return;
         }
         // noop, working offline
       } else {
-        if (new_go_cli) {
+        if (newBetaCli) {
           this._getCodingActivity(false);
           return;
         }

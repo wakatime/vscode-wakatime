@@ -20,6 +20,7 @@ export class Dependencies {
   private githubReleasesStableUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
   private githubReleasesAlphaUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases?per_page=1';
   private global: boolean;
+  private newBetaCli: boolean;
   private latestCliVersion: string = '';
 
   constructor(
@@ -27,16 +28,20 @@ export class Dependencies {
     logger: Logger,
     extensionPath: string,
     global: boolean,
+    newBetaCli: boolean,
   ) {
     this.options = options;
     this.logger = logger;
     this.extensionPath = extensionPath;
     this.global = global;
+    this.newBetaCli = newBetaCli;
   }
 
   public checkAndInstall(callback: () => void): void {
     if (this.global) {
       this.checkGlobalCli(callback);
+    } else if (this.newBetaCli) {
+      this.checkAndInstallCli(callback);
     } else {
       this.checkAndInstallLegacyCli(() => {
         this.checkAndInstallCli(callback);
