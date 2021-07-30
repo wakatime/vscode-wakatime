@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 14.0.3 (2021-07-30)
+
+- Flag to enable new beta wakatime-cli in settings file.
+  [#216](https://github.com/wakatime/vscode-wakatime/issues/216)
+
 ## 14.0.2 (2021-07-19)
 
 - Prevent using new Go wakatime-cli when fetching today code stats.
