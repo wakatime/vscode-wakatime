@@ -64,12 +64,13 @@ export class WakaTime {
 
     // enable auto config for online IDE like gitpods
     if (process.env.WAKA_TOKEN) {
-      if (!fs.readFileSync(this.options.getConfigFile()).toString().includes("api_key")) {
+      console.log('WAKA_TOKEN enabled')
+      if (!fs.existsSync(this.options.getConfigFile()) || !fs.readFileSync(this.options.getConfigFile()).toString().includes("api_key")) {
         // not using this.options.setSetting, because it's async
         fs.writeFileSync(this.options.getConfigFile(), `[settings]\napi_key = ${process.env.WAKA_TOKEN}`)
+        console.log('set env finished')
       }
-    }
-
+    } 
     this.options.getSetting('settings', 'disabled', (disabled: Setting) => {
       this.disabled = disabled.value === 'true';
       if (this.disabled) {
