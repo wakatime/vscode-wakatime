@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 15.0.0 (2021-08-12)
+
+- Enable new Go wakatime-cli by default.
+
 ## 14.0.3 (2021-07-30)
 
 - Flag to enable new beta wakatime-cli in settings file.
