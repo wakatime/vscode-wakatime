@@ -426,12 +426,12 @@ export class WakaTime {
 
     this.hasApiKey(hasApiKey => {
       if (!hasApiKey) return;
-      this._getCodingActivity(this.newBetaCli);
+      this._getCodingActivity();
     });
   }
 
-  private _getCodingActivity(newBetaCli: boolean = true) {
-    if (!this.dependencies.isCliInstalled(newBetaCli)) return;
+  private _getCodingActivity() {
+    if (!this.dependencies.isCliInstalled(true)) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Libs.quote(user_agent)];
@@ -444,7 +444,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.dependencies.getCliLocation(newBetaCli);
+    const binary = this.dependencies.getCliLocation(true);
     this.logger.debug(
       `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
     );
@@ -471,16 +471,8 @@ export class WakaTime {
           this.statusBar.tooltip = `WakaTime: You coded ${output.trim()} today.`;
         }
       } else if (code == 102) {
-        if (newBetaCli) {
-          this._getCodingActivity(false);
-          return;
-        }
         // noop, working offline
       } else {
-        if (newBetaCli) {
-          this._getCodingActivity(false);
-          return;
-        }
         let error_msg = `Error fetching today coding activity (${code}); Check your ${this.options.getLogFile()} file for more details`;
         this.logger.debug(error_msg);
       }
