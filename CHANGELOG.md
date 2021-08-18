@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 15.0.1 (2021-08-18)
+
+- Only use new beta Go wakatime-cli when fetching today code stats for status bar.
+
 ## 15.0.0 (2021-08-12)
 
 - Enable new Go wakatime-cli by default.
