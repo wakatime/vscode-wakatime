@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 15.0.2 (2021-08-23)
+
+- Prevent fallback to legacy wakatime-cli when working offline.
+
 ## 15.0.1 (2021-08-18)
 
 - Only use new beta Go wakatime-cli when fetching today code stats for status bar.
