@@ -371,10 +371,6 @@ export class WakaTime {
         let today = new Date();
         this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
       } else if (code == 102) {
-        if (newBetaCli) {
-          this._sendHeartbeat(file, isWrite, false);
-          return;
-        }
         if (this.showStatusBar) {
           if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
           this.statusBar.tooltip =
