@@ -227,9 +227,7 @@ export class Dependencies {
         () => {
           this.extractCli(zipFile, callback);
         },
-        () => {
-          callback();
-        },
+        callback,
       );
     });
   }
