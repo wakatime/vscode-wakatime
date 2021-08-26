@@ -34,7 +34,6 @@ export class WakaTime {
   private showCodingActivity: boolean;
   private disabled: boolean = true;
   private extensionPath: string;
-  private newBetaCli: boolean;
 
   constructor(extensionPath: string, logger: Logger, options: Options) {
     this.extensionPath = extensionPath;
@@ -42,14 +41,12 @@ export class WakaTime {
     this.options = options;
   }
 
-  public initialize(global: boolean, newBetaCli: boolean): void {
-    this.newBetaCli = newBetaCli;
+  public initialize(global: boolean): void {
     this.dependencies = new Dependencies(
       this.options,
       this.logger,
       this.extensionPath,
       global,
-      newBetaCli,
     );
     this.statusBar.command = COMMAND_DASHBOARD;
 
@@ -326,15 +323,15 @@ export class WakaTime {
   private sendHeartbeat(file: string, isWrite: boolean): void {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
-        this._sendHeartbeat(file, isWrite, this.newBetaCli);
+        this._sendHeartbeat(file, isWrite);
       } else {
         this.promptForApiKey();
       }
     });
   }
 
-  private _sendHeartbeat(file: string, isWrite: boolean, newBetaCli: boolean = true): void {
-    if (!this.dependencies.isCliInstalled(newBetaCli)) return;
+  private _sendHeartbeat(file: string, isWrite: boolean): void {
+    if (!this.dependencies.isCliInstalled()) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--entity', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
@@ -350,7 +347,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.dependencies.getCliLocation(newBetaCli);
+    const binary = this.dependencies.getCliLocation();
     this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
     const options = {
       windowsHide: true,
@@ -380,10 +377,6 @@ export class WakaTime {
           `Api eror (102); Check your ${this.options.getLogFile()} file for more details`,
         );
       } else if (code == 103) {
-        if (newBetaCli) {
-          this._sendHeartbeat(file, isWrite, false);
-          return;
-        }
         let error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
           this.statusBar.text = '$(clock) WakaTime Error';
@@ -398,10 +391,6 @@ export class WakaTime {
         }
         this.logger.error(error_msg);
       } else {
-        if (newBetaCli) {
-          this._sendHeartbeat(file, isWrite, false);
-          return;
-        }
         let error_msg = `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
           this.statusBar.text = '$(clock) WakaTime Error';
@@ -427,7 +416,7 @@ export class WakaTime {
   }
 
   private _getCodingActivity() {
-    if (!this.dependencies.isCliInstalled(true)) return;
+    if (!this.dependencies.isCliInstalled()) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Libs.quote(user_agent)];
@@ -440,7 +429,7 @@ export class WakaTime {
       );
     }
 
-    const binary = this.dependencies.getCliLocation(true);
+    const binary = this.dependencies.getCliLocation();
     this.logger.debug(
       `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
     );
