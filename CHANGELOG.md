@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 16.0.0 (2021-08-30)
+
+- Default to legacy Python wakatime-cli.
+
 ## 15.0.2 (2021-08-23)
 
 - Prevent fallback to legacy wakatime-cli when working offline.
