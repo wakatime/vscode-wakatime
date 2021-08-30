@@ -87,7 +87,7 @@ export function activate(ctx: vscode.ExtensionContext) {
     options.getSetting('settings', 'global', (global: Setting) => {
       const isGlobal = global.value === 'true';
       options.getSetting('settings', 'new_beta_cli', (newBetaCli: Setting) => {
-        wakatime.initialize(isGlobal, newBetaCli.value !== 'false');
+        wakatime.initialize(isGlobal, newBetaCli.value == 'true');
       });
     });
   });
