@@ -74,7 +74,7 @@ export class WakaTime {
 
   public initializeDependencies(): void {
     this.dependencies.checkAndInstall(() => {
-      this.logger.debug('WakaTime: Initialized');
+      this.logger.debug('WakaTime initialized.');
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
       this.options.getSetting('settings', 'status_bar_enabled', (setting: Setting) => {
