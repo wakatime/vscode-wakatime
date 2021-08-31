@@ -380,10 +380,6 @@ export class WakaTime {
           `Api eror (102); Check your ${this.options.getLogFile()} file for more details`,
         );
       } else if (code == 103) {
-        if (newBetaCli) {
-          this._sendHeartbeat(file, isWrite, false);
-          return;
-        }
         let error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
           this.statusBar.text = '$(clock) WakaTime Error';
@@ -398,10 +394,6 @@ export class WakaTime {
         }
         this.logger.error(error_msg);
       } else {
-        if (newBetaCli) {
-          this._sendHeartbeat(file, isWrite, false);
-          return;
-        }
         let error_msg = `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
           this.statusBar.text = '$(clock) WakaTime Error';
