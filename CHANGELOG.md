@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 17.0.0 (2021-08-30)
+
+- Default to new beta wakatime-cli, without fallback to legacy Python.
+
 ## 16.0.0 (2021-08-30)
 
 - Default to legacy Python wakatime-cli.
