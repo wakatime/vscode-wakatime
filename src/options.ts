@@ -197,6 +197,8 @@ export class Options {
 
   public async getApiKeyAsync(): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
+      if (process.env.WAKATIME_API_KEY) return resolve(process.env.WAKATIME_API_KEY);
+
       const cachedApiKey = await this.cache.getItem<string>('api_key');
       if (cachedApiKey) return resolve(cachedApiKey);
 

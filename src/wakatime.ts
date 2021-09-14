@@ -341,6 +341,7 @@ export class WakaTime {
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Libs.quote(project));
     if (isWrite) args.push('--write');
+    if (process.env.WAKATIME_API_KEY) args.push('--key', Libs.quote(process.env.WAKATIME_API_KEY))
     if (Dependencies.isWindows() || Dependencies.isPortable()) {
       args.push(
         '--config',
@@ -355,14 +356,14 @@ export class WakaTime {
     const options = {
       windowsHide: true,
     };
-    let process = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
+    let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
         if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
         this.logger.error(error.toString());
       }
     });
-    process.on('close', (code, _signal) => {
+    proc.on('close', (code, _signal) => {
       if (code == 0) {
         if (this.showStatusBar) {
           if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
@@ -423,6 +424,7 @@ export class WakaTime {
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Libs.quote(user_agent)];
+    if (process.env.WAKATIME_API_KEY) args.push('--key', Libs.quote(process.env.WAKATIME_API_KEY))
     if (Dependencies.isWindows()) {
       args.push(
         '--config',
@@ -439,7 +441,7 @@ export class WakaTime {
     const options = {
       windowsHide: true,
     };
-    let process = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
+    let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
         if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
@@ -447,12 +449,12 @@ export class WakaTime {
       }
     });
     let output = '';
-    if (process.stdout) {
-      process.stdout.on('data', (data: string | null) => {
+    if (proc.stdout) {
+      proc.stdout.on('data', (data: string | null) => {
         if (data) output += data;
       });
     }
-    process.on('close', (code, _signal) => {
+    proc.on('close', (code, _signal) => {
       if (code == 0) {
         if (output && this.showStatusBar && this.showCodingActivity) {
           this.statusBar.text = `$(clock) ${output}`;

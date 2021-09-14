@@ -18,7 +18,7 @@
 
 3. Restart Visual Studio Code.
 
-4. Enter your [api key](https://wakatime.com/settings?apikey=true), then press `enter`.
+4. Enter your [api key][api key], then press `enter`.
 
     > (If you’re not prompted, press `F1` or `⌘ + Shift + P` then type `WakaTime API Key`.)
 
@@ -43,6 +43,8 @@ Press `⌘ + Shift + P` then set `WakaTime: Status Bar Coding Activity` to `fals
 Extension settings are stored in the INI file at `$WAKATIME_HOME/.wakatime.cfg`.
 
 More information can be found from [wakatime core](https://github.com/wakatime/wakatime#configuring).
+
+If using an online IDE like [gitpods](https://gitpod.io/), add your [api key][api key] to global ENV key `WAKATIME_API_KEY`.
 
 Notes:
 1. `$WAKATIME_HOME` defaults to `$HOME`
@@ -70,6 +72,7 @@ Press `Ctrl + Shift + X`, search for `win-ca`, press `Install`.
 For more general troubleshooting info, see the [wakatime-cli Troubleshooting Section][wakatime-cli-help].
 
 [wakatime]: https://wakatime.com/vs-code
+[api key]: https://wakatime.com/api-key
 [wakatime-cli-help]: https://github.com/wakatime/wakatime#troubleshooting
 [how to debug]: https://wakatime.com/faq#debug-plugins
 [plugins status page]: https://wakatime.com/plugin-status
