@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 17.0.3 (2021-09-15)
+
+- Fix tests badge image in readme.
+
 ## 17.0.2 (2021-09-15)
 
 - Improve status bar tooltip text.
