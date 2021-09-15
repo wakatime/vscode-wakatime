@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 17.0.2 (2021-09-15)
+
+- Improve status bar tooltip text.
+  [#215](https://github.com/wakatime/vscode-wakatime/issues/215)
+
 ## 17.0.1 (2021-09-14)
 
 - Use api key from WAKATIME_API_KEY env var if defined.
