@@ -456,9 +456,14 @@ export class WakaTime {
     }
     proc.on('close', (code, _signal) => {
       if (code == 0) {
-        if (output && this.showStatusBar && this.showCodingActivity) {
-          this.statusBar.text = `$(clock) ${output}`;
-          this.statusBar.tooltip = `WakaTime: Today you’ve spent ${output.trim()}.`;
+        if (this.showStatusBar && this.showCodingActivity) {
+          if (output && output.trim()) {
+            this.statusBar.text = `$(clock) ${output.trim()}`;
+            this.statusBar.tooltip = `WakaTime: Today you’ve spent ${output.trim()}.`;
+          } else {
+            this.statusBar.text = `$(clock)`;
+            this.statusBar.tooltip = `WakaTime: Calculating time spent today in background...`;
+          }
         }
       } else if (code == 102) {
         // noop, working offline
