@@ -8,6 +8,15 @@ import { Options, Setting } from './options';
 import { Logger } from './logger';
 import { Libs } from './libs';
 
+interface FileSelection {
+  selection: vscode.Position
+  lastHeartbeatAt: number
+}
+
+interface FileSelectionMap {
+  [key: string]: FileSelection;
+}
+
 export class WakaTime {
   private appNames = {
     'Azure Data Studio': 'azdata',
@@ -24,6 +33,7 @@ export class WakaTime {
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
+  private dedupe: FileSelectionMap = {};
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
@@ -314,7 +324,7 @@ export class WakaTime {
         if (file) {
           let time: number = Date.now();
           if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
-            this.sendHeartbeat(file, editor.selection.start.line + 1, editor.selection.start.character + 1, isWrite);
+            this.sendHeartbeat(file, time, editor.selection.start, isWrite);
             this.lastFile = file;
             this.lastHeartbeat = time;
           }
@@ -323,27 +333,30 @@ export class WakaTime {
     }
   }
 
-  private sendHeartbeat(file: string, lineno: number, cursorpos: number, isWrite: boolean): void {
+  private sendHeartbeat(file: string, time: number, selection: vscode.Position, isWrite: boolean): void {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
-        this._sendHeartbeat(file, lineno, cursorpos, isWrite, this.newBetaCli);
+        this._sendHeartbeat(file, time, selection, isWrite, this.newBetaCli);
       } else {
         this.promptForApiKey();
       }
     });
   }
 
-  private _sendHeartbeat(file: string, lineno: number, cursorpos: number, isWrite: boolean, newBetaCli: boolean = true): void {
-    console.log(`lineno: ${lineno} cursorpos: ${cursorpos}`);
+  private _sendHeartbeat(file: string, time: number, selection: vscode.Position, isWrite: boolean, newBetaCli: boolean = true): void {
     if (!this.dependencies.isCliInstalled(newBetaCli)) return;
+
+    // prevent sending the same heartbeat (https://github.com/wakatime/vscode-wakatime/issues/163)
+    if (isWrite && this.isDuplicateHeartbeat(file, time, selection)) return;
+
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--entity', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
+    args.push('--lineno', String(selection.line + 1));
+    args.push('--cursorpos', String(selection.character + 1));
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Libs.quote(project));
     if (isWrite) args.push('--write');
-    if (lineno) args.push('--lineno', String(lineno));
-    if (cursorpos) args.push('--cursorpos', String(cursorpos));
     if (process.env.WAKATIME_API_KEY) args.push('--key', Libs.quote(process.env.WAKATIME_API_KEY))
     if (Dependencies.isWindows() || Dependencies.isPortable()) {
       args.push(
@@ -509,6 +522,20 @@ export class WakaTime {
 
   private enoughTimePassed(time: number): boolean {
     return this.lastHeartbeat + 120000 < time;
+  }
+
+  private isDuplicateHeartbeat(file: string, time: number, selection: vscode.Position): boolean {
+    let duplicate = false;
+    let minutes = 30;
+    let milliseconds = minutes * 60000;
+    if (this.dedupe[file] && this.dedupe[file].lastHeartbeatAt + milliseconds < time && this.dedupe[file].selection.line == selection.line && this.dedupe[file].selection.character == selection.character) {
+      duplicate = true;
+    }
+    this.dedupe[file] = {
+      selection: selection,
+      lastHeartbeatAt: time,
+    }
+    return duplicate;
   }
 
   private getProjectName(file: string): string {
