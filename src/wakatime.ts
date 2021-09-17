@@ -324,7 +324,7 @@ export class WakaTime {
         if (file) {
           let time: number = Date.now();
           if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
-            this.sendHeartbeat(file, time, editor.selection.start, isWrite);
+            this.sendHeartbeat(file, time, editor.selection.start, doc.lineCount, isWrite);
             this.lastFile = file;
             this.lastHeartbeat = time;
           }
@@ -333,17 +333,17 @@ export class WakaTime {
     }
   }
 
-  private sendHeartbeat(file: string, time: number, selection: vscode.Position, isWrite: boolean): void {
+  private sendHeartbeat(file: string, time: number, selection: vscode.Position, lines: number, isWrite: boolean): void {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
-        this._sendHeartbeat(file, time, selection, isWrite, this.newBetaCli);
+        this._sendHeartbeat(file, time, selection, lines, isWrite, this.newBetaCli);
       } else {
         this.promptForApiKey();
       }
     });
   }
 
-  private _sendHeartbeat(file: string, time: number, selection: vscode.Position, isWrite: boolean, newBetaCli: boolean = true): void {
+  private _sendHeartbeat(file: string, time: number, selection: vscode.Position, lines: number, isWrite: boolean, newBetaCli: boolean = true): void {
     if (!this.dependencies.isCliInstalled(newBetaCli)) return;
 
     // prevent sending the same heartbeat (https://github.com/wakatime/vscode-wakatime/issues/163)
@@ -354,6 +354,7 @@ export class WakaTime {
     let args = ['--entity', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
     args.push('--lineno', String(selection.line + 1));
     args.push('--cursorpos', String(selection.character + 1));
+    args.push('--lines-in-file', String(lines));
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Libs.quote(project));
     if (isWrite) args.push('--write');
