@@ -352,6 +352,9 @@ export class WakaTime {
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--entity', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
+    let options = {
+      windowsHide: true,
+    };
     args.push('--lineno', String(selection.line + 1));
     args.push('--cursorpos', String(selection.character + 1));
     args.push('--lines-in-file', String(lines));
@@ -367,12 +370,10 @@ export class WakaTime {
         Libs.quote(this.options.getLogFile()),
       );
     }
+    if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) options['env'] = { ...process.env, 'WAKATIME_HOME': '/' };
 
     const binary = this.dependencies.getCliLocation(newBetaCli);
     this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
-    const options = {
-      windowsHide: true,
-    };
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
@@ -441,6 +442,9 @@ export class WakaTime {
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Libs.quote(user_agent)];
+    let options = {
+      windowsHide: true,
+    };
     if (process.env.WAKATIME_API_KEY) args.push('--key', Libs.quote(process.env.WAKATIME_API_KEY))
     if (Dependencies.isWindows()) {
       args.push(
@@ -450,14 +454,12 @@ export class WakaTime {
         Libs.quote(this.options.getLogFile()),
       );
     }
+    if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) options['env'] = { ...process.env, 'WAKATIME_HOME': '/' };
 
     const binary = this.dependencies.getCliLocation(true);
     this.logger.debug(
       `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
     );
-    const options = {
-      windowsHide: true,
-    };
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
