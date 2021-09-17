@@ -314,7 +314,7 @@ export class WakaTime {
         if (file) {
           let time: number = Date.now();
           if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
-            this.sendHeartbeat(file, isWrite);
+            this.sendHeartbeat(file, editor.selection.start.line + 1, editor.selection.start.character + 1, isWrite);
             this.lastFile = file;
             this.lastHeartbeat = time;
           }
@@ -323,17 +323,18 @@ export class WakaTime {
     }
   }
 
-  private sendHeartbeat(file: string, isWrite: boolean): void {
+  private sendHeartbeat(file: string, lineno: number, cursorpos: number, isWrite: boolean): void {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
-        this._sendHeartbeat(file, isWrite, this.newBetaCli);
+        this._sendHeartbeat(file, lineno, cursorpos, isWrite, this.newBetaCli);
       } else {
         this.promptForApiKey();
       }
     });
   }
 
-  private _sendHeartbeat(file: string, isWrite: boolean, newBetaCli: boolean = true): void {
+  private _sendHeartbeat(file: string, lineno: number, cursorpos: number, isWrite: boolean, newBetaCli: boolean = true): void {
+    console.log(`lineno: ${lineno} cursorpos: ${cursorpos}`);
     if (!this.dependencies.isCliInstalled(newBetaCli)) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
@@ -341,6 +342,8 @@ export class WakaTime {
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Libs.quote(project));
     if (isWrite) args.push('--write');
+    if (lineno) args.push('--lineno', String(lineno));
+    if (cursorpos) args.push('--cursorpos', String(cursorpos));
     if (process.env.WAKATIME_API_KEY) args.push('--key', Libs.quote(process.env.WAKATIME_API_KEY))
     if (Dependencies.isWindows() || Dependencies.isPortable()) {
       args.push(
