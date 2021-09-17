@@ -370,7 +370,7 @@ export class WakaTime {
         Libs.quote(this.options.getLogFile()),
       );
     }
-    if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) options['env'] = { ...process.env, 'WAKATIME_HOME': Dependencies.getHomeDirectory() || '/' };
+    if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) options['env'] = { ...process.env, 'WAKATIME_HOME': Dependencies.getHomeDirectory() || process.cwd() };
 
     const binary = this.dependencies.getCliLocation(newBetaCli);
     this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
@@ -454,7 +454,7 @@ export class WakaTime {
         Libs.quote(this.options.getLogFile()),
       );
     }
-    if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) options['env'] = { ...process.env, 'WAKATIME_HOME': Dependencies.getHomeDirectory() || '/' };
+    if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) options['env'] = { ...process.env, 'WAKATIME_HOME': Dependencies.getHomeDirectory() || process.cwd() };
 
     const binary = this.dependencies.getCliLocation(true);
     this.logger.debug(
