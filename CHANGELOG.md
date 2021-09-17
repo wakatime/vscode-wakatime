@@ -1,6 +1,14 @@
 
 # Changelog
 
+## 17.0.4 (2021-09-16)
+
+- Add lineno and cursorpos when sending heartbeat.
+- Prevent sending duplicate heartbeats from malfunctioning plugins.
+  [#163](https://github.com/wakatime/vscode-wakatime/issues/163)
+  [#193](https://github.com/wakatime/vscode-wakatime/issues/193)
+  [#198](https://github.com/wakatime/vscode-wakatime/issues/198)
+
 ## 17.0.3 (2021-09-15)
 
 - Fix tests badge image in readme.
