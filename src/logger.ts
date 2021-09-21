@@ -37,7 +37,19 @@ export class Logger {
     this.log(LogLevel.WARN, msg);
   }
 
+  public warnException(msg: unknown): void {
+    if ((msg as Error).message !== undefined) {
+      this.log(LogLevel.WARN, (msg as Error).message);
+    }
+  }
+
   public error(msg: string): void {
     this.log(LogLevel.ERROR, msg);
+  }
+
+  public errorException(msg: unknown): void {
+    if ((msg as Error).message !== undefined) {
+      this.log(LogLevel.ERROR, (msg as Error).message);
+    }
   }
 }

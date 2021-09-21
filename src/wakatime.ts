@@ -370,9 +370,7 @@ export class WakaTime {
 
     const binary = this.dependencies.getCliLocation(newBetaCli);
     this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
-    const options = {
-      windowsHide: true,
-    };
+    const options = this.buildOptions();
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
@@ -455,9 +453,7 @@ export class WakaTime {
     this.logger.debug(
       `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
     );
-    const options = {
-      windowsHide: true,
-    };
+    const options = this.buildOptions();
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
@@ -489,6 +485,16 @@ export class WakaTime {
         this.logger.debug(error_msg);
       }
     });
+  }
+  
+  private buildOptions(): Object {
+    const options = {
+      windowsHide: true,
+    };
+    if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) {
+      options['env'] = { ...process.env, 'WAKATIME_HOME': Dependencies.getHomeDirectory() || process.cwd() };
+    }
+    return options;
   }
 
   private formatDate(date: Date): String {

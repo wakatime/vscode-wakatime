@@ -261,7 +261,7 @@ export class Dependencies {
                 }
               });
             } catch (e) {
-              this.logger.warn(e);
+              this.logger.warnException(e);
               callback('');
             }
           });
@@ -286,7 +286,7 @@ export class Dependencies {
             }
           });
         } catch (e) {
-          this.logger.warn(e);
+          this.logger.warnException(e);
           callback('');
         }
       });
@@ -338,7 +338,7 @@ export class Dependencies {
             this.logger.debug('Chmod 755 wakatime-cli...');
             fs.chmodSync(this.getCliLocation(new_go_cli), 0o755);
           } catch (e) {
-            this.logger.warn(e);
+            this.logger.warnException(e);
           }
         }
         callback();
@@ -355,7 +355,7 @@ export class Dependencies {
             callback();
           });
         } catch (e) {
-          this.logger.warn(e);
+          this.logger.warnException(e);
           callback();
         }
       } else {
@@ -398,7 +398,7 @@ export class Dependencies {
             });
           });
         } catch (e) {
-          this.logger.warn(e);
+          this.logger.warnException(e);
           callback();
         }
       });
@@ -411,7 +411,7 @@ export class Dependencies {
         let zip = new adm_zip(file);
         zip.extractAllTo(outputDir, true);
       } catch (e) {
-        this.logger.error(e);
+        this.logger.errorException(e);
       } finally {
         try {
           fs.unlink(file, () => {
