@@ -66,7 +66,7 @@ export class Dependencies {
     let home = process.env.WAKATIME_HOME;
     if (home && home.trim() && fs.existsSync(home.trim())) return home.trim();
     if (Dependencies.isPortable()) return process.env['VSCODE_PORTABLE'] as string;
-    return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || '';
+    return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || process.cwd();
   }
 
   public getCliLocation(new_go_cli: boolean): string {
@@ -106,7 +106,7 @@ export class Dependencies {
       windowsHide: true,
     };
     if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) {
-      options['env'] = { ...process.env, 'WAKATIME_HOME': Dependencies.getHomeDirectory() || process.cwd() };
+      options['env'] = { ...process.env, 'WAKATIME_HOME': Dependencies.getHomeDirectory() };
     }
     return options;
   }
