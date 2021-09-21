@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 17.0.7 (2021-09-21)
+
+- Default to CWD when HOME env var not set.
+  [#238](https://github.com/wakatime/vscode-wakatime/issues/238)
+
 ## 17.0.6 (2021-09-21)
 
 - Support when HOME env var not set.
