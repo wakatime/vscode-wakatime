@@ -100,6 +100,16 @@ export class Dependencies {
   public static isPortable(): boolean {
     return !!process.env['VSCODE_PORTABLE'];
   }
+  
+  public buildOptions(): Object {
+    const options = {
+      windowsHide: true,
+    };
+    if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) {
+      options['env'] = { ...process.env, 'WAKATIME_HOME': Dependencies.getHomeDirectory() || process.cwd() };
+    }
+    return options;
+  }
 
   private checkAndInstallCli(callback: () => void): void {
     if (!this.isCliInstalled(true)) {
@@ -145,9 +155,7 @@ export class Dependencies {
 
   private isCliLatest(callback: (arg0: boolean) => void): void {
     let args = ['--version'];
-    const options = {
-      windowsHide: true,
-    };
+    const options = this.buildOptions();
     try {
       child_process.execFile(this.getCliLocation(true), args, options, (error, _stdout, stderr) => {
         if (!(error != null)) {
@@ -178,9 +186,7 @@ export class Dependencies {
 
   private isLegacyCliLatest(callback: (arg0: boolean) => void): void {
     let args = ['--version'];
-    const options = {
-      windowsHide: true,
-    };
+    const options = this.buildOptions();
     child_process.execFile(
       this.getCliLocation(false),
       args,
