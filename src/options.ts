@@ -13,6 +13,7 @@ export interface Setting {
 
 export class Options {
   private configFile: string;
+  private internalConfigFile: string;
   private logFile: string;
   private readonly cache: ExpirationStrategy;
 
@@ -20,24 +21,25 @@ export class Options {
     this.cache = new ExpirationStrategy(new MemoryStorage());
     let wakaHome = Dependencies.getHomeDirectory();
     this.configFile = path.join(wakaHome, '.wakatime.cfg');
+    this.internalConfigFile = path.join(wakaHome, '.wakatime-internal.cfg');
     this.logFile = path.join(wakaHome, '.wakatime.log');
   }
 
   public async getSettingAsync<T = any>(section: string, key: string): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      this.getSetting(section, key, (setting) => {
+      this.getSetting(section, key, this.configFile, (setting) => {
         setting.error ? reject(setting.error) : resolve(setting.value);
       });
     });
   }
 
-  public getSetting(section: string, key: string, callback: (Setting) => void): void {
+  public getSetting(section: string, key: string, configFile: string, callback: (Setting) => void): void {
     fs.readFile(
-      this.getConfigFile(),
+      configFile,
       'utf-8',
       (err: NodeJS.ErrnoException | null, content: string) => {
         if (err) {
-          if (callback) callback({error: new Error(`could not read ${this.getConfigFile()}`), key: key, value: null});
+          if (callback) callback({error: new Error(`could not read ${this.configFile}`), key: key, value: null});
         } else {
           let currentSection = '';
           let lines = content.split('\n');
@@ -64,9 +66,10 @@ export class Options {
     );
   }
 
-  public setSetting(section: string, key: string, val: string): void {
+  public setSetting(section: string, key: string, val: string, configFile?: string): void {
+    if (!configFile) configFile = this.configFile;
     fs.readFile(
-      this.getConfigFile(),
+      configFile,
       'utf-8',
       (err: NodeJS.ErrnoException | null, content: string) => {
         // ignore errors because config file might not exist yet
@@ -112,16 +115,17 @@ export class Options {
           contents.push(key + ' = ' + val);
         }
 
-        fs.writeFile(this.getConfigFile(), contents.join('\n'), err => {
+        fs.writeFile(configFile as string, contents.join('\n'), err => {
           if (err) throw err;
         });
       },
     );
   }
 
-  public setSettings(section: string, settings: Setting[]): void {
+  public setSettings(section: string, settings: Setting[], configFile?: string): void {
+    if (!configFile) configFile = this.configFile;
     fs.readFile(
-      this.getConfigFile(),
+      configFile,
       'utf-8',
       (err: NodeJS.ErrnoException | null, content: string) => {
         // ignore errors because config file might not exist yet
@@ -180,15 +184,15 @@ export class Options {
           }
         });
 
-        fs.writeFile(this.getConfigFile(), contents.join('\n'), err => {
+        fs.writeFile(configFile as string, contents.join('\n'), err => {
           if (err) throw err;
         });
       },
     );
   }
 
-  public getConfigFile(): string {
-    return this.configFile;
+  public getConfigFile(internal?: boolean): string {
+    return !internal ? this.configFile : this.internalConfigFile;
   }
 
   public getLogFile(): string {

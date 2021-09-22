@@ -72,7 +72,7 @@ export class WakaTime {
 
     this.setupEventListeners();
 
-    this.options.getSetting('settings', 'disabled', (disabled: Setting) => {
+    this.options.getSetting('settings', 'disabled', this.options.getConfigFile(), (disabled: Setting) => {
       this.disabled = disabled.value === 'true';
       if (this.disabled) {
         this.setStatusBarVisibility(false);
@@ -90,11 +90,11 @@ export class WakaTime {
       this.logger.debug('WakaTime initialized.');
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
-      this.options.getSetting('settings', 'status_bar_enabled', (setting: Setting) => {
+      this.options.getSetting('settings', 'status_bar_enabled', this.options.getConfigFile(), (setting: Setting) => {
         this.showStatusBar = setting.value !== 'false';
         this.setStatusBarVisibility(this.showStatusBar);
       });
-      this.options.getSetting('settings', 'status_bar_coding_activity', (setting: Setting) => {
+      this.options.getSetting('settings', 'status_bar_coding_activity', this.options.getConfigFile(), (setting: Setting) => {
         if (setting.value == 'false') {
           this.showCodingActivity = false;
         } else {
@@ -106,7 +106,7 @@ export class WakaTime {
   }
 
   public promptForApiKey(): void {
-    this.options.getSetting('settings', 'api_key', (setting: Setting) => {
+    this.options.getSetting('settings', 'api_key', this.options.getConfigFile(), (setting: Setting) => {
       let defaultVal = setting.value;
       if (Libs.validateKey(defaultVal) != '') defaultVal = '';
       let promptOptions = {
@@ -127,7 +127,7 @@ export class WakaTime {
   }
 
   public promptForProxy(): void {
-    this.options.getSetting('settings', 'proxy', (proxy: Setting) => {
+    this.options.getSetting('settings', 'proxy', this.options.getConfigFile(), (proxy: Setting) => {
       let defaultVal = proxy.value;
       if (!defaultVal) defaultVal = '';
       let promptOptions = {
@@ -144,7 +144,7 @@ export class WakaTime {
   }
 
   public promptForDebug(): void {
-    this.options.getSetting('settings', 'debug', (debug: Setting) => {
+    this.options.getSetting('settings', 'debug', this.options.getConfigFile(), (debug: Setting) => {
       let defaultVal = debug.value;
       if (!defaultVal || defaultVal !== 'true') defaultVal = 'false';
       let items: string[] = ['true', 'false'];
@@ -167,7 +167,7 @@ export class WakaTime {
   }
 
   public promptToDisable(): void {
-    this.options.getSetting('settings', 'disabled', (setting: Setting) => {
+    this.options.getSetting('settings', 'disabled', this.options.getConfigFile(), (setting: Setting) => {
       let currentVal = setting.value;
       if (!currentVal || currentVal !== 'true') currentVal = 'false';
       let items: string[] = ['disable', 'enable'];
@@ -195,7 +195,7 @@ export class WakaTime {
   }
 
   public promptStatusBarIcon(): void {
-    this.options.getSetting('settings', 'status_bar_enabled', (setting: Setting) => {
+    this.options.getSetting('settings', 'status_bar_enabled', this.options.getConfigFile(), (setting: Setting) => {
       let defaultVal = setting.value;
       if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
       let items: string[] = ['true', 'false'];
@@ -214,7 +214,7 @@ export class WakaTime {
   }
 
   public promptStatusBarCodingActivity(): void {
-    this.options.getSetting('settings', 'status_bar_coding_activity', (setting: Setting) => {
+    this.options.getSetting('settings', 'status_bar_coding_activity', this.options.getConfigFile(), (setting: Setting) => {
       let defaultVal = setting.value;
       if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
       let items: string[] = ['true', 'false'];

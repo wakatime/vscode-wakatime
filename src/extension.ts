@@ -80,13 +80,13 @@ export function activate(ctx: vscode.ExtensionContext) {
 
   ctx.subscriptions.push(wakatime);
 
-  options.getSetting('settings', 'debug', function (debug: Setting) {
+  options.getSetting('settings', 'debug', options.getConfigFile(), (debug: Setting) => {
     if (debug.value === 'true') {
       logger.setLevel(LogLevel.DEBUG);
     }
-    options.getSetting('settings', 'global', (global: Setting) => {
+    options.getSetting('settings', 'global', options.getConfigFile(), (global: Setting) => {
       const isGlobal = global.value === 'true';
-      options.getSetting('settings', 'new_beta_cli', (newBetaCli: Setting) => {
+      options.getSetting('settings', 'new_beta_cli', options.getConfigFile(), (newBetaCli: Setting) => {
         wakatime.initialize(isGlobal, newBetaCli.value !== 'false');
       });
     });
