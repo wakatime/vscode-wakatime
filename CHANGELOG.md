@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 17.0.8 (2021-09-21)
+
+- Separate INI file for internal configs.
+  [#535](https://github.com/wakatime/wakatime-cli/issues/535)
+
 ## 17.0.7 (2021-09-21)
 
 - Default to CWD when HOME env var not set.
