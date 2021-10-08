@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 17.1.0 (2021-10-08)
+
+- Remove legacy python wakatime-cli.
+
 ## 17.0.8 (2021-09-21)
 
 - Separate INI file for internal configs.
