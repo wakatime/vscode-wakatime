@@ -64,10 +64,10 @@ export class Dependencies {
     if (this.global) return this.getCliLocationGlobal();
 
     const ext = Dependencies.isWindows() ? '.exe' : '';
-    let platform = os.platform() as string;
-    if (platform == 'win32') platform = 'windows';
+    let osname = os.platform() as string;
+    if (osname == 'win32') osname = 'windows';
     const arch = this.architecture();
-    return path.join(this.getResourcesLocation(), `wakatime-cli-${platform}-${arch}${ext}`);
+    return path.join(this.getResourcesLocation(), `wakatime-cli-${osname}-${arch}${ext}`);
   }
 
   public getCliLocationGlobal(): string {
@@ -329,8 +329,8 @@ export class Dependencies {
   }
 
   private cliDownloadUrl(version: string): string {
-    let platform = os.platform() as string;
-    if (platform == 'win32') platform = 'windows';
+    let osname = os.platform() as string;
+    if (osname == 'win32') osname = 'windows';
     const arch = this.architecture();
 
     const validCombinations = [
@@ -354,13 +354,13 @@ export class Dependencies {
       'windows-amd64',
       'windows-arm64',
     ];
-    if (!validCombinations.includes(`${platform}-${arch}`)) this.reportMissingPlatformSupport(platform, arch);
+    if (!validCombinations.includes(`${osname}-${arch}`)) this.reportMissingPlatformSupport(osname, arch);
 
-    return `${this.githubDownloadPrefix}/${version}/wakatime-cli-${platform}-${arch}.zip`;
+    return `${this.githubDownloadPrefix}/${version}/wakatime-cli-${osname}-${arch}.zip`;
   }
 
-  private reportMissingPlatformSupport(platform: string, architecture: string): void {
-    const url = `https://api.wakatime.com/api/v1/cli-missing?platform=${platform}&architecture=${architecture}&plugin=vscode`;
+  private reportMissingPlatformSupport(osname: string, architecture: string): void {
+    const url = `https://api.wakatime.com/api/v1/cli-missing?osname=${osname}&architecture=${architecture}&plugin=vscode`;
     this.options.getSetting('settings', 'proxy', this.options.getConfigFile(), (proxy: Setting) => {
       this.options.getSetting('settings', 'no_ssl_verify', this.options.getConfigFile(), (noSSLVerify: Setting) => {
         let options = { url: url };
