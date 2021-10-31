@@ -91,7 +91,7 @@ export class Dependencies {
   public static isPortable(): boolean {
     return !!process.env['VSCODE_PORTABLE'];
   }
-  
+
   public buildOptions(): Object {
     const options = {
       windowsHide: true,
@@ -352,6 +352,7 @@ export class Dependencies {
       'openbsd-arm64',
       'windows-386',
       'windows-amd64',
+      'windows-arm64',
     ];
     if (!validCombinations.includes(`${platform}-${arch}`)) this.reportMissingPlatformSupport(platform, arch);
 
