@@ -54,7 +54,7 @@ export class Options {
               let parts = line.split('=');
               let currentKey = parts[0].trim();
               if (currentKey === key && parts.length > 1) {
-                callback({key: key, value: parts[1].trim()});
+                callback({key: key, value: this.removeNulls(parts[1].trim())});
                 return;
               }
             }
@@ -84,27 +84,27 @@ export class Options {
           let line = lines[i];
           if (this.startsWith(line.trim(), '[') && this.endsWith(line.trim(), ']')) {
             if (currentSection === section && !found) {
-              contents.push(key + ' = ' + val);
+              contents.push(this.removeNulls(key + ' = ' + val));
               found = true;
             }
             currentSection = line
               .trim()
               .substring(1, line.trim().length - 1)
               .toLowerCase();
-            contents.push(line);
+            contents.push(this.removeNulls(line));
           } else if (currentSection === section) {
             let parts = line.split('=');
             let currentKey = parts[0].trim();
             if (currentKey === key) {
               if (!found) {
-                contents.push(key + ' = ' + val);
+                contents.push(this.removeNulls(key + ' = ' + val));
                 found = true;
               }
             } else {
-              contents.push(line);
+              contents.push(this.removeNulls(line));
             }
           } else {
-            contents.push(line);
+            contents.push(this.removeNulls(line));
           }
         }
 
@@ -112,7 +112,7 @@ export class Options {
           if (currentSection !== section) {
             contents.push('[' + section + ']');
           }
-          contents.push(key + ' = ' + val);
+          contents.push(this.removeNulls(key + ' = ' + val));
         }
 
         fs.writeFile(configFile as string, contents.join('\n'), err => {
@@ -142,7 +142,7 @@ export class Options {
             if (currentSection === section) {
               settings.forEach(setting => {
                 if (!found[setting.key]) {
-                  contents.push(setting.key + ' = ' + setting.value);
+                  contents.push(this.removeNulls(setting.key + ' = ' + setting.value));
                   found[setting.key] = true;
                 }
               });
@@ -151,7 +151,7 @@ export class Options {
               .trim()
               .substring(1, line.trim().length - 1)
               .toLowerCase();
-            contents.push(line);
+            contents.push(this.removeNulls(line));
           } else if (currentSection === section) {
             let parts = line.split('=');
             let currentKey = parts[0].trim();
@@ -160,16 +160,16 @@ export class Options {
               if (currentKey === setting.key) {
                 keepLineUnchanged = false;
                 if (!found[setting.key]) {
-                  contents.push(setting.key + ' = ' + setting.value);
+                  contents.push(this.removeNulls(setting.key + ' = ' + setting.value));
                   found[setting.key] = true;
                 }
               }
             });
             if (keepLineUnchanged) {
-              contents.push(line);
+              contents.push(this.removeNulls(line));
             }
           } else {
-            contents.push(line);
+            contents.push(this.removeNulls(line));
           }
         }
 
@@ -179,7 +179,7 @@ export class Options {
               contents.push('[' + section + ']');
               currentSection = section;
             }
-            contents.push(setting.key + ' = ' + setting.value);
+            contents.push(this.removeNulls(setting.key + ' = ' + setting.value));
             found[setting.key] = true;
           }
         });
@@ -215,11 +215,15 @@ export class Options {
     });
   }
 
-  public startsWith(outer: string, inner: string): boolean {
+  private startsWith(outer: string, inner: string): boolean {
     return outer.slice(0, inner.length) === inner;
   }
 
-  public endsWith(outer: string, inner: string): boolean {
+  private endsWith(outer: string, inner: string): boolean {
     return inner === '' || outer.slice(-inner.length) === inner;
+  }
+
+  private removeNulls(s: string): string {
+    return s.replace(/\0/g, '');
   }
 }
