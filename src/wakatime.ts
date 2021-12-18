@@ -6,7 +6,7 @@ import { Dependencies } from './dependencies';
 import { COMMAND_DASHBOARD, LogLevel } from './constants';
 import { Options, Setting } from './options';
 import { Logger } from './logger';
-import { Libs } from './libs';
+import { Utils } from './utils';
 
 interface FileSelection {
   selection: vscode.Position
@@ -105,17 +105,17 @@ export class WakaTime {
   public promptForApiKey(): void {
     this.options.getSetting('settings', 'api_key', this.options.getConfigFile(), (setting: Setting) => {
       let defaultVal = setting.value;
-      if (Libs.validateKey(defaultVal) != '') defaultVal = '';
+      if (Utils.validateKey(defaultVal) != '') defaultVal = '';
       let promptOptions = {
         prompt: 'WakaTime Api Key',
         placeHolder: 'Enter your api key from https://wakatime.com/settings',
         value: defaultVal,
         ignoreFocusOut: true,
-        validateInput: Libs.validateKey.bind(this),
+        validateInput: Utils.validateKey.bind(this),
       };
       vscode.window.showInputBox(promptOptions).then(val => {
         if (val != undefined) {
-          let validation = Libs.validateKey(val);
+          let validation = Utils.validateKey(val);
           if (validation === '') this.options.setSetting('settings', 'api_key', val);
           else vscode.window.setStatusBarMessage(validation);
         } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
@@ -132,7 +132,7 @@ export class WakaTime {
         placeHolder: `Proxy format is https://user:pass@host:port (current value \"${defaultVal}\")`,
         value: defaultVal,
         ignoreFocusOut: true,
-        validateInput: Libs.validateProxy.bind(this),
+        validateInput: Utils.validateProxy.bind(this),
       };
       vscode.window.showInputBox(promptOptions).then(val => {
         if (val || val === '') this.options.setSetting('settings', 'proxy', val);
@@ -274,7 +274,7 @@ export class WakaTime {
   private hasApiKey(callback: (arg0: boolean) => void): void {
     this.options
       .getApiKeyAsync()
-      .then(apiKey => callback(Libs.validateKey(apiKey) === ''))
+      .then(apiKey => callback(Utils.validateKey(apiKey) === ''))
       .catch(err => {
         this.logger.error(`Error reading api key: ${err}`);
         callback(false);
@@ -348,20 +348,20 @@ export class WakaTime {
 
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-    let args = ['--entity', Libs.quote(file), '--plugin', Libs.quote(user_agent)];
+    let args = ['--entity', Utils.quote(file), '--plugin', Utils.quote(user_agent)];
     args.push('--lineno', String(selection.line + 1));
     args.push('--cursorpos', String(selection.character + 1));
     args.push('--lines-in-file', String(lines));
     let project = this.getProjectName(file);
-    if (project) args.push('--alternate-project', Libs.quote(project));
+    if (project) args.push('--alternate-project', Utils.quote(project));
     if (isWrite) args.push('--write');
-    if (process.env.WAKATIME_API_KEY) args.push('--key', Libs.quote(process.env.WAKATIME_API_KEY))
+    if (process.env.WAKATIME_API_KEY) args.push('--key', Utils.quote(process.env.WAKATIME_API_KEY))
     if (Dependencies.isWindows() || Dependencies.isPortable()) {
       args.push(
         '--config',
-        Libs.quote(this.options.getConfigFile()),
+        Utils.quote(this.options.getConfigFile()),
         '--log-file',
-        Libs.quote(this.options.getLogFile()),
+        Utils.quote(this.options.getLogFile()),
       );
     }
 
@@ -435,14 +435,14 @@ export class WakaTime {
     if (!this.dependencies.isCliInstalled()) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-    let args = ['--today', '--plugin', Libs.quote(user_agent)];
-    if (process.env.WAKATIME_API_KEY) args.push('--key', Libs.quote(process.env.WAKATIME_API_KEY))
+    let args = ['--today', '--plugin', Utils.quote(user_agent)];
+    if (process.env.WAKATIME_API_KEY) args.push('--key', Utils.quote(process.env.WAKATIME_API_KEY))
     if (Dependencies.isWindows()) {
       args.push(
         '--config',
-        Libs.quote(this.options.getConfigFile()),
+        Utils.quote(this.options.getConfigFile()),
         '--logfile',
-        Libs.quote(this.options.getLogFile()),
+        Utils.quote(this.options.getLogFile()),
       );
     }
 
