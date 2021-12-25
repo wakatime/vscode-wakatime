@@ -1,6 +1,13 @@
 
 # Changelog
 
+## 18.0.0 (2021-12-24)
+
+- Add support for Windows arm64.
+- Web extension.
+  [#237](https://github.com/wakatime/vscode-wakatime/issues/237)
+
+
 ## 17.1.0 (2021-10-08)
 
 - Remove legacy python wakatime-cli.
@@ -8,7 +15,7 @@
 ## 17.0.8 (2021-09-21)
 
 - Separate INI file for internal configs.
-  [#535](https://github.com/wakatime/wakatime-cli/issues/535)
+  [wakatime-cli#535](https://github.com/wakatime/wakatime-cli/issues/535)
 
 ## 17.0.7 (2021-09-21)
 
