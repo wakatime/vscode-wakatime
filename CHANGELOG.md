@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 18.0.2 (2021-12-24)
+
+- Fix project and language detection on Web.
+
 ## 18.0.1 (2021-12-24)
 
 - Update logo.
