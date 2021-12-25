@@ -16,13 +16,7 @@ var logger = new Logger(LogLevel.INFO);
 var wakatime: WakaTime;
 
 export function activate(ctx: vscode.ExtensionContext) {
-  const folders = vscode.workspace.workspaceFolders;
-  if (folders === undefined) return;
-
-  // TODO: use persistent storage (globalState gone when browser closes)
-  const config = ctx.globalState;
-
-  wakatime = new WakaTime(logger, config);
+  wakatime = new WakaTime(logger, ctx.globalState);
 
   ctx.subscriptions.push(
     vscode.commands.registerCommand(COMMAND_API_KEY, function () {
