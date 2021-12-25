@@ -9,8 +9,8 @@ import { Logger } from './logger';
 import { Utils } from './utils';
 
 interface FileSelection {
-  selection: vscode.Position
-  lastHeartbeatAt: number
+  selection: vscode.Position;
+  lastHeartbeatAt: number;
 }
 
 interface FileSelectionMap {
@@ -37,7 +37,7 @@ export class WakaTime {
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
-  private getCodingActivityTimeout: NodeJS.Timer;
+  private getCodingActivityTimeout: number;
   private fetchTodayInterval: number = 60000;
   private lastFetchToday: number = 0;
   private showStatusBar: boolean;
@@ -52,12 +52,7 @@ export class WakaTime {
   }
 
   public initialize(global: boolean): void {
-    this.dependencies = new Dependencies(
-      this.options,
-      this.logger,
-      this.extensionPath,
-      global,
-    );
+    this.dependencies = new Dependencies(this.options, this.logger, this.extensionPath, global);
     this.statusBar.command = COMMAND_DASHBOARD;
 
     let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
@@ -69,17 +64,22 @@ export class WakaTime {
 
     this.setupEventListeners();
 
-    this.options.getSetting('settings', 'disabled', this.options.getConfigFile(), (disabled: Setting) => {
-      this.disabled = disabled.value === 'true';
-      if (this.disabled) {
-        this.setStatusBarVisibility(false);
-        this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
-        return;
-      }
+    this.options.getSetting(
+      'settings',
+      'disabled',
+      this.options.getConfigFile(),
+      (disabled: Setting) => {
+        this.disabled = disabled.value === 'true';
+        if (this.disabled) {
+          this.setStatusBarVisibility(false);
+          this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
+          return;
+        }
 
-      this.checkApiKey();
-      this.initializeDependencies();
-    });
+        this.checkApiKey();
+        this.initializeDependencies();
+      },
+    );
   }
 
   public initializeDependencies(): void {
@@ -87,40 +87,55 @@ export class WakaTime {
       this.logger.debug('WakaTime initialized.');
       this.statusBar.text = '$(clock)';
       this.statusBar.tooltip = 'WakaTime: Initialized';
-      this.options.getSetting('settings', 'status_bar_enabled', this.options.getConfigFile(), (setting: Setting) => {
-        this.showStatusBar = setting.value !== 'false';
-        this.setStatusBarVisibility(this.showStatusBar);
-      });
-      this.options.getSetting('settings', 'status_bar_coding_activity', this.options.getConfigFile(), (setting: Setting) => {
-        if (setting.value == 'false') {
-          this.showCodingActivity = false;
-        } else {
-          this.showCodingActivity = true;
-          this.getCodingActivity();
-        }
-      });
+      this.options.getSetting(
+        'settings',
+        'status_bar_enabled',
+        this.options.getConfigFile(),
+        (setting: Setting) => {
+          this.showStatusBar = setting.value !== 'false';
+          this.setStatusBarVisibility(this.showStatusBar);
+        },
+      );
+      this.options.getSetting(
+        'settings',
+        'status_bar_coding_activity',
+        this.options.getConfigFile(),
+        (setting: Setting) => {
+          if (setting.value == 'false') {
+            this.showCodingActivity = false;
+          } else {
+            this.showCodingActivity = true;
+            this.getCodingActivity();
+          }
+        },
+      );
     });
   }
 
   public promptForApiKey(): void {
-    this.options.getSetting('settings', 'api_key', this.options.getConfigFile(), (setting: Setting) => {
-      let defaultVal = setting.value;
-      if (Utils.validateKey(defaultVal) != '') defaultVal = '';
-      let promptOptions = {
-        prompt: 'WakaTime Api Key',
-        placeHolder: 'Enter your api key from https://wakatime.com/settings',
-        value: defaultVal,
-        ignoreFocusOut: true,
-        validateInput: Utils.validateKey.bind(this),
-      };
-      vscode.window.showInputBox(promptOptions).then(val => {
-        if (val != undefined) {
-          let validation = Utils.validateKey(val);
-          if (validation === '') this.options.setSetting('settings', 'api_key', val);
-          else vscode.window.setStatusBarMessage(validation);
-        } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
-      });
-    });
+    this.options.getSetting(
+      'settings',
+      'api_key',
+      this.options.getConfigFile(),
+      (setting: Setting) => {
+        let defaultVal = setting.value;
+        if (Utils.validateKey(defaultVal) != '') defaultVal = '';
+        let promptOptions = {
+          prompt: 'WakaTime Api Key',
+          placeHolder: 'Enter your api key from https://wakatime.com/settings',
+          value: defaultVal,
+          ignoreFocusOut: true,
+          validateInput: Utils.validateKey.bind(this),
+        };
+        vscode.window.showInputBox(promptOptions).then(val => {
+          if (val != undefined) {
+            let validation = Utils.validateKey(val);
+            if (validation === '') this.options.setSetting('settings', 'api_key', val);
+            else vscode.window.setStatusBarMessage(validation);
+          } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
+        });
+      },
+    );
   }
 
   public promptForProxy(): void {
@@ -164,78 +179,93 @@ export class WakaTime {
   }
 
   public promptToDisable(): void {
-    this.options.getSetting('settings', 'disabled', this.options.getConfigFile(), (setting: Setting) => {
-      let currentVal = setting.value;
-      if (!currentVal || currentVal !== 'true') currentVal = 'false';
-      let items: string[] = ['disable', 'enable'];
-      const helperText = currentVal === 'true' ? 'disabled' : 'enabled';
-      let promptOptions = {
-        placeHolder: `disable or enable (extension is currently "${helperText}")`,
-        ignoreFocusOut: true,
-      };
-      vscode.window.showQuickPick(items, promptOptions).then(newVal => {
-        if (newVal !== 'enable' && newVal !== 'disable') return;
-        this.disabled = newVal === 'disable';
-        if (this.disabled) {
-          this.options.setSetting('settings', 'disabled', 'true');
-          this.setStatusBarVisibility(false);
-          this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
-        } else {
-          this.options.setSetting('settings', 'disabled', 'false');
-          this.checkApiKey();
-          this.initializeDependencies();
-          if (this.showStatusBar) this.setStatusBarVisibility(true);
-          this.logger.debug('Extension enabled and reporting coding stats to dashboard.');
-        }
-      });
-    });
+    this.options.getSetting(
+      'settings',
+      'disabled',
+      this.options.getConfigFile(),
+      (setting: Setting) => {
+        let currentVal = setting.value;
+        if (!currentVal || currentVal !== 'true') currentVal = 'false';
+        let items: string[] = ['disable', 'enable'];
+        const helperText = currentVal === 'true' ? 'disabled' : 'enabled';
+        let promptOptions = {
+          placeHolder: `disable or enable (extension is currently "${helperText}")`,
+          ignoreFocusOut: true,
+        };
+        vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+          if (newVal !== 'enable' && newVal !== 'disable') return;
+          this.disabled = newVal === 'disable';
+          if (this.disabled) {
+            this.options.setSetting('settings', 'disabled', 'true');
+            this.setStatusBarVisibility(false);
+            this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
+          } else {
+            this.options.setSetting('settings', 'disabled', 'false');
+            this.checkApiKey();
+            this.initializeDependencies();
+            if (this.showStatusBar) this.setStatusBarVisibility(true);
+            this.logger.debug('Extension enabled and reporting coding stats to dashboard.');
+          }
+        });
+      },
+    );
   }
 
   public promptStatusBarIcon(): void {
-    this.options.getSetting('settings', 'status_bar_enabled', this.options.getConfigFile(), (setting: Setting) => {
-      let defaultVal = setting.value;
-      if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
-      let items: string[] = ['true', 'false'];
-      let promptOptions = {
-        placeHolder: `true or false (current value \"${defaultVal}\")`,
-        value: defaultVal,
-        ignoreFocusOut: true,
-      };
-      vscode.window.showQuickPick(items, promptOptions).then(newVal => {
-        if (newVal !== 'true' && newVal !== 'false') return;
-        this.options.setSetting('settings', 'status_bar_enabled', newVal);
-        this.showStatusBar = newVal === 'true'; // cache setting to prevent reading from disc too often
-        this.setStatusBarVisibility(this.showStatusBar);
-      });
-    });
+    this.options.getSetting(
+      'settings',
+      'status_bar_enabled',
+      this.options.getConfigFile(),
+      (setting: Setting) => {
+        let defaultVal = setting.value;
+        if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
+        let items: string[] = ['true', 'false'];
+        let promptOptions = {
+          placeHolder: `true or false (current value \"${defaultVal}\")`,
+          value: defaultVal,
+          ignoreFocusOut: true,
+        };
+        vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+          if (newVal !== 'true' && newVal !== 'false') return;
+          this.options.setSetting('settings', 'status_bar_enabled', newVal);
+          this.showStatusBar = newVal === 'true'; // cache setting to prevent reading from disc too often
+          this.setStatusBarVisibility(this.showStatusBar);
+        });
+      },
+    );
   }
 
   public promptStatusBarCodingActivity(): void {
-    this.options.getSetting('settings', 'status_bar_coding_activity', this.options.getConfigFile(), (setting: Setting) => {
-      let defaultVal = setting.value;
-      if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
-      let items: string[] = ['true', 'false'];
-      let promptOptions = {
-        placeHolder: `true or false (current value \"${defaultVal}\")`,
-        value: defaultVal,
-        ignoreFocusOut: true,
-      };
-      vscode.window.showQuickPick(items, promptOptions).then(newVal => {
-        if (newVal !== 'true' && newVal !== 'false') return;
-        this.options.setSetting('settings', 'status_bar_coding_activity', newVal);
-        if (newVal === 'true') {
-          this.logger.debug('Coding activity in status bar has been enabled');
-          this.showCodingActivity = true;
-          this.getCodingActivity(true);
-        } else {
-          this.logger.debug('Coding activity in status bar has been disabled');
-          this.showCodingActivity = false;
-          if (this.statusBar.text.indexOf('Error') == -1) {
-            this.statusBar.text = '$(clock)';
+    this.options.getSetting(
+      'settings',
+      'status_bar_coding_activity',
+      this.options.getConfigFile(),
+      (setting: Setting) => {
+        let defaultVal = setting.value;
+        if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
+        let items: string[] = ['true', 'false'];
+        let promptOptions = {
+          placeHolder: `true or false (current value \"${defaultVal}\")`,
+          value: defaultVal,
+          ignoreFocusOut: true,
+        };
+        vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+          if (newVal !== 'true' && newVal !== 'false') return;
+          this.options.setSetting('settings', 'status_bar_coding_activity', newVal);
+          if (newVal === 'true') {
+            this.logger.debug('Coding activity in status bar has been enabled');
+            this.showCodingActivity = true;
+            this.getCodingActivity(true);
+          } else {
+            this.logger.debug('Coding activity in status bar has been disabled');
+            this.showCodingActivity = false;
+            if (this.statusBar.text.indexOf('Error') == -1) {
+              this.statusBar.text = '$(clock)';
+            }
           }
-        }
-      });
-    });
+        });
+      },
+    );
   }
 
   public openDashboardWebsite(): void {
@@ -330,7 +360,13 @@ export class WakaTime {
     }
   }
 
-  private sendHeartbeat(file: string, time: number, selection: vscode.Position, lines: number, isWrite: boolean): void {
+  private sendHeartbeat(
+    file: string,
+    time: number,
+    selection: vscode.Position,
+    lines: number,
+    isWrite: boolean,
+  ): void {
     this.hasApiKey(hasApiKey => {
       if (hasApiKey) {
         this._sendHeartbeat(file, time, selection, lines, isWrite);
@@ -340,7 +376,13 @@ export class WakaTime {
     });
   }
 
-  private _sendHeartbeat(file: string, time: number, selection: vscode.Position, lines: number, isWrite: boolean): void {
+  private _sendHeartbeat(
+    file: string,
+    time: number,
+    selection: vscode.Position,
+    lines: number,
+    isWrite: boolean,
+  ): void {
     if (!this.dependencies.isCliInstalled()) return;
 
     // prevent sending the same heartbeat (https://github.com/wakatime/vscode-wakatime/issues/163)
@@ -352,10 +394,10 @@ export class WakaTime {
     args.push('--lineno', String(selection.line + 1));
     args.push('--cursorpos', String(selection.character + 1));
     args.push('--lines-in-file', String(lines));
-    let project = this.getProjectName(file);
+    let project = Utils.getProjectName(file);
     if (project) args.push('--alternate-project', Utils.quote(project));
     if (isWrite) args.push('--write');
-    if (process.env.WAKATIME_API_KEY) args.push('--key', Utils.quote(process.env.WAKATIME_API_KEY))
+    if (process.env.WAKATIME_API_KEY) args.push('--key', Utils.quote(process.env.WAKATIME_API_KEY));
     if (Dependencies.isWindows() || Dependencies.isPortable()) {
       args.push(
         '--config',
@@ -366,7 +408,7 @@ export class WakaTime {
     }
 
     const binary = this.dependencies.getCliLocation();
-    this.logger.debug(`Sending heartbeat: ${this.formatArguments(binary, args)}`);
+    this.logger.debug(`Sending heartbeat: ${Utils.formatArguments(binary, args)}`);
     const options = this.dependencies.buildOptions();
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
@@ -381,8 +423,7 @@ export class WakaTime {
           if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
           this.getCodingActivity();
         }
-        let today = new Date();
-        this.logger.debug(`last heartbeat sent ${this.formatDate(today)}`);
+        this.logger.debug(`last heartbeat sent ${Utils.formatDate(new Date())}`);
       } else if (code == 102) {
         if (this.showStatusBar) {
           if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
@@ -436,7 +477,7 @@ export class WakaTime {
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Utils.quote(user_agent)];
-    if (process.env.WAKATIME_API_KEY) args.push('--key', Utils.quote(process.env.WAKATIME_API_KEY))
+    if (process.env.WAKATIME_API_KEY) args.push('--key', Utils.quote(process.env.WAKATIME_API_KEY));
     if (Dependencies.isWindows()) {
       args.push(
         '--config',
@@ -448,7 +489,7 @@ export class WakaTime {
 
     const binary = this.dependencies.getCliLocation();
     this.logger.debug(
-      `Fetching coding activity for Today from api: ${this.formatArguments(binary, args)}`,
+      `Fetching coding activity for Today from api: ${Utils.formatArguments(binary, args)}`,
     );
     const options = this.dependencies.buildOptions();
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
@@ -484,36 +525,6 @@ export class WakaTime {
     });
   }
 
-  private formatDate(date: Date): String {
-    let months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    let ampm = 'AM';
-    let hour = date.getHours();
-    if (hour > 11) {
-      ampm = 'PM';
-      hour = hour - 12;
-    }
-    if (hour == 0) {
-      hour = 12;
-    }
-    let minute = date.getMinutes();
-    return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} ${hour}:${
-      minute < 10 ? `0${minute}` : minute
-    } ${ampm}`;
-  }
-
   private enoughTimePassed(time: number): boolean {
     return this.lastHeartbeat + 120000 < time;
   }
@@ -522,52 +533,18 @@ export class WakaTime {
     let duplicate = false;
     let minutes = 30;
     let milliseconds = minutes * 60000;
-    if (this.dedupe[file] && this.dedupe[file].lastHeartbeatAt + milliseconds < time && this.dedupe[file].selection.line == selection.line && this.dedupe[file].selection.character == selection.character) {
+    if (
+      this.dedupe[file] &&
+      this.dedupe[file].lastHeartbeatAt + milliseconds < time &&
+      this.dedupe[file].selection.line == selection.line &&
+      this.dedupe[file].selection.character == selection.character
+    ) {
       duplicate = true;
     }
     this.dedupe[file] = {
       selection: selection,
       lastHeartbeatAt: time,
-    }
+    };
     return duplicate;
-  }
-
-  private getProjectName(file: string): string {
-    let uri = vscode.Uri.file(file);
-    let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-    if (vscode.workspace && workspaceFolder) {
-      try {
-        return workspaceFolder.name;
-      } catch (e) {}
-    }
-    return '';
-  }
-
-  private obfuscateKey(key: string): string {
-    let newKey = '';
-    if (key) {
-      newKey = key;
-      if (key.length > 4)
-        newKey = 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX' + key.substring(key.length - 4);
-    }
-    return newKey;
-  }
-
-  private wrapArg(arg: string): string {
-    if (arg.indexOf(' ') > -1) return '"' + arg.replace(/"/g, '\\"') + '"';
-    return arg;
-  }
-
-  private formatArguments(binary: string, args: string[]): string {
-    let clone = args.slice(0);
-    clone.unshift(this.wrapArg(binary));
-    let newCmds: string[] = [];
-    let lastCmd = '';
-    for (let i = 0; i < clone.length; i++) {
-      if (lastCmd == '--key') newCmds.push(this.wrapArg(this.obfuscateKey(clone[i])));
-      else newCmds.push(this.wrapArg(clone[i]));
-      lastCmd = clone[i];
-    }
-    return newCmds.join(' ');
   }
 }

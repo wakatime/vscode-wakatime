@@ -1,8 +1,69 @@
 import * as vscode from 'vscode';
 
-export function activate(_: vscode.ExtensionContext) {
-  console.log('Loaded the extension.');
+import {
+  COMMAND_API_KEY,
+  COMMAND_DASHBOARD,
+  COMMAND_DEBUG,
+  COMMAND_DISABLE,
+  COMMAND_STATUS_BAR_CODING_ACTIVITY,
+  COMMAND_STATUS_BAR_ENABLED,
+  LogLevel,
+} from '../constants';
+import { Logger } from './logger';
+import { WakaTime } from './wakatime';
+
+var logger = new Logger(LogLevel.INFO);
+var wakatime: WakaTime;
+
+export function activate(ctx: vscode.ExtensionContext) {
+  const folders = vscode.workspace.workspaceFolders;
+  if (folders === undefined) return;
+
+  // TODO: use persistent storage (globalState gone when browser closes)
+  const config = ctx.globalState;
+
+  wakatime = new WakaTime(logger, config);
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND_API_KEY, function () {
+      wakatime.promptForApiKey();
+    }),
+  );
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND_DEBUG, function () {
+      wakatime.promptForDebug();
+    }),
+  );
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND_DISABLE, function () {
+      wakatime.promptToDisable();
+    }),
+  );
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND_STATUS_BAR_ENABLED, function () {
+      wakatime.promptStatusBarIcon();
+    }),
+  );
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND_STATUS_BAR_CODING_ACTIVITY, function () {
+      wakatime.promptStatusBarCodingActivity();
+    }),
+  );
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND_DASHBOARD, function () {
+      wakatime.openDashboardWebsite();
+    }),
+  );
+
+  ctx.subscriptions.push(wakatime);
+  wakatime.initialize();
 }
 
 export function deactivate() {
+  wakatime.dispose();
 }
