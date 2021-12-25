@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 18.0.1 (2021-12-24)
+
+- Update logo.
+
 ## 18.0.0 (2021-12-24)
 
 - Add support for Windows arm64.
