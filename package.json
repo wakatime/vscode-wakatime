@@ -113,7 +113,6 @@
     "adm-zip": "0.5.1",
     "azdata": "^1.0.0",
     "del-cli": "^3.0.1",
-    "highlight.js": "^11.3.1",
     "original-fs": "^1.1.0",
     "prettier": "2.2.1",
     "request": "2.88.2",

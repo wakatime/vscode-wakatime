@@ -4,7 +4,6 @@ import { COMMAND_DASHBOARD, LogLevel } from '../constants';
 import { Logger } from './logger';
 import { Utils } from '../utils';
 import { Memento } from 'vscode';
-import highlight, { AutoHighlightResult } from 'highlight.js';
 
 interface FileSelection {
   selection: vscode.Position;
@@ -311,7 +310,7 @@ export class WakaTime {
       lines: String(lines),
       is_write: isWrite,
     };
-    let project = Utils.getProjectName(file);
+    let project = this.getProjectName();
     if (project) payload['project'] = project;
     if (language) payload['language'] = language;
 
@@ -452,11 +451,10 @@ export class WakaTime {
   }
 
   private getLanguage(doc: vscode.TextDocument): string {
-    if (doc.languageId) {
-      const langName = vscode.languages.getLanguages()[doc.languageId];
-      if (langName) return langName;
-    }
-    const result: AutoHighlightResult = highlight.highlightAuto(doc.getText());
-    return result.language || '';
+    return doc.languageId || '';
+  }
+
+  private getProjectName(): string {
+    return vscode.workspace.name || '';
   }
 }

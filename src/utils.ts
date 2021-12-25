@@ -1,5 +1,3 @@
-import * as vscode from 'vscode';
-
 export class Utils {
   public static quote(str: string): string {
     if (str.includes(' ')) return `"${str.replace('"', '\\"')}"`;
@@ -58,17 +56,6 @@ export class Utils {
     return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} ${hour}:${
       minute < 10 ? `0${minute}` : minute
     } ${ampm}`;
-  }
-
-  public static getProjectName(file: string): string {
-    let uri = vscode.Uri.file(file);
-    let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-    if (vscode.workspace && workspaceFolder) {
-      try {
-        return workspaceFolder.name;
-      } catch (e) {}
-    }
-    return '';
   }
 
   public static obfuscateKey(key: string): string {

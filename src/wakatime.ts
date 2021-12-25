@@ -394,7 +394,7 @@ export class WakaTime {
     args.push('--lineno', String(selection.line + 1));
     args.push('--cursorpos', String(selection.character + 1));
     args.push('--lines-in-file', String(lines));
-    let project = Utils.getProjectName(file);
+    let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Utils.quote(project));
     if (isWrite) args.push('--write');
     if (process.env.WAKATIME_API_KEY) args.push('--key', Utils.quote(process.env.WAKATIME_API_KEY));
@@ -547,4 +547,16 @@ export class WakaTime {
     };
     return duplicate;
   }
+
+  private getProjectName(file: string): string {
+    let uri = vscode.Uri.file(file);
+    let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+    if (vscode.workspace && workspaceFolder) {
+      try {
+        return workspaceFolder.name;
+      } catch (e) {}
+    }
+    return '';
+  }
+
 }
