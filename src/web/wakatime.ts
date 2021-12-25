@@ -402,7 +402,7 @@ export class WakaTime {
           }
           if (output && output.trim()) {
             this.statusBar.text = `$(clock) ${output.trim()}`;
-            this.statusBar.tooltip = `WakaTime: Today you’ve spent ${output.trim()}.`;
+            this.statusBar.tooltip = 'WakaTime: Today’s coding time. Click to visit dashboard.';
           } else {
             this.statusBar.text = `$(clock)`;
             this.statusBar.tooltip = `WakaTime: Calculating time spent today in background...`;
