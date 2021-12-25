@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 18.0.3 (2021-12-25)
+
+- Improve status bar tooltip text.
+
 ## 18.0.2 (2021-12-24)
 
 - Fix project and language detection on Web.
