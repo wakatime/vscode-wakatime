@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.0.4 (2022-01-05)
+
+- Prevent using empty cached wakatime-cli version.
+  [sublime-wakatime#108](https://github.com/wakatime/sublime-wakatime/issues/108)
+
 ## 18.0.3 (2021-12-25)
 
 - Improve status bar tooltip text.
