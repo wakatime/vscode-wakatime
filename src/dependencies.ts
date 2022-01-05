@@ -169,52 +169,51 @@ export class Dependencies {
     this.options.getSetting('settings', 'proxy', this.options.getConfigFile(), (proxy: Setting) => {
       this.options.getSetting('settings', 'no_ssl_verify', this.options.getConfigFile(), (noSSLVerify: Setting) => {
         this.options.getSetting('internal', 'cli_version_last_modified', this.options.getConfigFile(true), (modified: Setting) => {
-          this.options.getSetting('settings', 'alpha', this.options.getConfigFile(), (alpha: Setting) => {
-            let options = {
-              url: alpha.value == 'true' ? this.githubReleasesAlphaUrl : this.githubReleasesStableUrl,
-              json: true,
-              headers: {
-                'User-Agent': 'github.com/wakatime/vscode-wakatime',
-              },
-            };
-            if (proxy.value) options['proxy'] = proxy.value;
-            if (noSSLVerify.value === 'true') options['strictSSL'] = false;
-            if (modified.value) options['headers']['If-Modified-Since'] = modified.value;
-            try {
-              request.get(options, (error, response, json) => {
-                if (!error && response && (response.statusCode == 200 || response.statusCode == 304)) {
-                  this.logger.debug(`GitHub API Response ${response.statusCode}`);
-                  if (response.statusCode == 304) {
-                    this.options.getSetting('internal', 'cli_version', this.options.getConfigFile(true), (version: Setting) => {
+          this.options.getSetting('internal', 'cli_version', this.options.getConfigFile(true), (version: Setting) => {
+            this.options.getSetting('settings', 'alpha', this.options.getConfigFile(), (alpha: Setting) => {
+              let options = {
+                url: alpha.value == 'true' ? this.githubReleasesAlphaUrl : this.githubReleasesStableUrl,
+                json: true,
+                headers: {
+                  'User-Agent': 'github.com/wakatime/vscode-wakatime',
+                },
+              };
+              if (proxy.value) options['proxy'] = proxy.value;
+              if (noSSLVerify.value === 'true') options['strictSSL'] = false;
+              if (modified.value && version.value) options['headers']['If-Modified-Since'] = modified.value;
+              try {
+                request.get(options, (error, response, json) => {
+                  if (!error && response && (response.statusCode == 200 || response.statusCode == 304)) {
+                    this.logger.debug(`GitHub API Response ${response.statusCode}`);
+                    if (response.statusCode == 304) {
                       this.latestCliVersion = version.value;
                       callback(this.latestCliVersion);
-                    });
-                    return;
-                  }
-                  this.latestCliVersion = alpha.value == 'true' ? json[0]['tag_name'] : json['tag_name'];
-                  this.logger.debug(`Latest wakatime-cli version from GitHub: ${this.latestCliVersion}`);
-                  const lastModified = response.headers['last-modified'] as string;
-                  if (lastModified) {
-                    this.options.setSettings('internal', [
-                      {key: 'cli_version', value: this.latestCliVersion},
-                      {key: 'cli_version_last_modified', value: lastModified},
-                    ], this.options.getConfigFile(true));
-                  }
-                  callback(this.latestCliVersion);
-                  return;
-                } else {
-                  if (response) {
-                    this.logger.warn(`GitHub API Response ${response.statusCode}: ${error}`);
+                      return;
+                    }
+                    this.latestCliVersion = alpha.value == 'true' ? json[0]['tag_name'] : json['tag_name'];
+                    this.logger.debug(`Latest wakatime-cli version from GitHub: ${this.latestCliVersion}`);
+                    const lastModified = response.headers['last-modified'] as string;
+                    if (lastModified && this.latestCliVersion) {
+                      this.options.setSettings('internal', [
+                        {key: 'cli_version', value: this.latestCliVersion},
+                        {key: 'cli_version_last_modified', value: lastModified},
+                      ], this.options.getConfigFile(true));
+                    }
+                    callback(this.latestCliVersion);
                   } else {
-                    this.logger.warn(`GitHub API Response Error: ${error}`);
+                    if (response) {
+                      this.logger.warn(`GitHub API Response ${response.statusCode}: ${error}`);
+                    } else {
+                      this.logger.warn(`GitHub API Response Error: ${error}`);
+                    }
+                    callback('');
                   }
-                  callback('');
-                }
-              });
-            } catch (e) {
-              this.logger.warnException(e);
-              callback('');
-            }
+                });
+              } catch (e) {
+                this.logger.warnException(e);
+                callback('');
+              }
+            });
           });
         });
       });
