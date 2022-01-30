@@ -67,7 +67,7 @@ export class WakaTime {
     this.options.getSetting(
       'settings',
       'disabled',
-      this.options.getConfigFile(),
+      false,
       (disabled: Setting) => {
         this.disabled = disabled.value === 'true';
         if (this.disabled) {
@@ -90,7 +90,7 @@ export class WakaTime {
       this.options.getSetting(
         'settings',
         'status_bar_enabled',
-        this.options.getConfigFile(),
+        false,
         (setting: Setting) => {
           this.showStatusBar = setting.value !== 'false';
           this.setStatusBarVisibility(this.showStatusBar);
@@ -99,7 +99,7 @@ export class WakaTime {
       this.options.getSetting(
         'settings',
         'status_bar_coding_activity',
-        this.options.getConfigFile(),
+        false,
         (setting: Setting) => {
           if (setting.value == 'false') {
             this.showCodingActivity = false;
@@ -116,7 +116,7 @@ export class WakaTime {
     this.options.getSetting(
       'settings',
       'api_key',
-      this.options.getConfigFile(),
+      false,
       (setting: Setting) => {
         let defaultVal = setting.value;
         if (Utils.validateKey(defaultVal) != '') defaultVal = '';
@@ -130,7 +130,7 @@ export class WakaTime {
         vscode.window.showInputBox(promptOptions).then(val => {
           if (val != undefined) {
             let validation = Utils.validateKey(val);
-            if (validation === '') this.options.setSetting('settings', 'api_key', val);
+            if (validation === '') this.options.setSetting('settings', 'api_key', val, false);
             else vscode.window.setStatusBarMessage(validation);
           } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
         });
@@ -139,7 +139,7 @@ export class WakaTime {
   }
 
   public promptForProxy(): void {
-    this.options.getSetting('settings', 'proxy', this.options.getConfigFile(), (proxy: Setting) => {
+    this.options.getSetting('settings', 'proxy', false, (proxy: Setting) => {
       let defaultVal = proxy.value;
       if (!defaultVal) defaultVal = '';
       let promptOptions = {
@@ -150,13 +150,13 @@ export class WakaTime {
         validateInput: Utils.validateProxy.bind(this),
       };
       vscode.window.showInputBox(promptOptions).then(val => {
-        if (val || val === '') this.options.setSetting('settings', 'proxy', val);
+        if (val || val === '') this.options.setSetting('settings', 'proxy', val, false);
       });
     });
   }
 
   public promptForDebug(): void {
-    this.options.getSetting('settings', 'debug', this.options.getConfigFile(), (debug: Setting) => {
+    this.options.getSetting('settings', 'debug', false, (debug: Setting) => {
       let defaultVal = debug.value;
       if (!defaultVal || defaultVal !== 'true') defaultVal = 'false';
       let items: string[] = ['true', 'false'];
@@ -167,7 +167,7 @@ export class WakaTime {
       };
       vscode.window.showQuickPick(items, promptOptions).then(newVal => {
         if (newVal == null) return;
-        this.options.setSetting('settings', 'debug', newVal);
+        this.options.setSetting('settings', 'debug', newVal, false);
         if (newVal === 'true') {
           this.logger.setLevel(LogLevel.DEBUG);
           this.logger.debug('Debug enabled');
@@ -182,7 +182,7 @@ export class WakaTime {
     this.options.getSetting(
       'settings',
       'disabled',
-      this.options.getConfigFile(),
+      false,
       (setting: Setting) => {
         let currentVal = setting.value;
         if (!currentVal || currentVal !== 'true') currentVal = 'false';
@@ -196,11 +196,11 @@ export class WakaTime {
           if (newVal !== 'enable' && newVal !== 'disable') return;
           this.disabled = newVal === 'disable';
           if (this.disabled) {
-            this.options.setSetting('settings', 'disabled', 'true');
+            this.options.setSetting('settings', 'disabled', 'true', false);
             this.setStatusBarVisibility(false);
             this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
           } else {
-            this.options.setSetting('settings', 'disabled', 'false');
+            this.options.setSetting('settings', 'disabled', 'false', false);
             this.checkApiKey();
             this.initializeDependencies();
             if (this.showStatusBar) this.setStatusBarVisibility(true);
@@ -215,7 +215,7 @@ export class WakaTime {
     this.options.getSetting(
       'settings',
       'status_bar_enabled',
-      this.options.getConfigFile(),
+      false,
       (setting: Setting) => {
         let defaultVal = setting.value;
         if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
@@ -227,7 +227,7 @@ export class WakaTime {
         };
         vscode.window.showQuickPick(items, promptOptions).then(newVal => {
           if (newVal !== 'true' && newVal !== 'false') return;
-          this.options.setSetting('settings', 'status_bar_enabled', newVal);
+          this.options.setSetting('settings', 'status_bar_enabled', newVal, false);
           this.showStatusBar = newVal === 'true'; // cache setting to prevent reading from disc too often
           this.setStatusBarVisibility(this.showStatusBar);
         });
@@ -239,7 +239,7 @@ export class WakaTime {
     this.options.getSetting(
       'settings',
       'status_bar_coding_activity',
-      this.options.getConfigFile(),
+      false,
       (setting: Setting) => {
         let defaultVal = setting.value;
         if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
@@ -251,7 +251,7 @@ export class WakaTime {
         };
         vscode.window.showQuickPick(items, promptOptions).then(newVal => {
           if (newVal !== 'true' && newVal !== 'false') return;
-          this.options.setSetting('settings', 'status_bar_coding_activity', newVal);
+          this.options.setSetting('settings', 'status_bar_coding_activity', newVal, false);
           if (newVal === 'true') {
             this.logger.debug('Coding activity in status bar has been enabled');
             this.showCodingActivity = true;
@@ -274,7 +274,7 @@ export class WakaTime {
   }
 
   public openConfigFile(): void {
-    let path = this.options.getConfigFile();
+    let path = this.options.getConfigFile(false);
     if (path) {
       let uri = vscode.Uri.file(path);
       vscode.window.showTextDocument(uri);
@@ -401,7 +401,7 @@ export class WakaTime {
     if (Dependencies.isWindows() || Dependencies.isPortable()) {
       args.push(
         '--config',
-        Utils.quote(this.options.getConfigFile()),
+        Utils.quote(this.options.getConfigFile(false)),
         '--log-file',
         Utils.quote(this.options.getLogFile()),
       );
@@ -481,7 +481,7 @@ export class WakaTime {
     if (Dependencies.isWindows()) {
       args.push(
         '--config',
-        Utils.quote(this.options.getConfigFile()),
+        Utils.quote(this.options.getConfigFile(false)),
         '--logfile',
         Utils.quote(this.options.getLogFile()),
       );

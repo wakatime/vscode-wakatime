@@ -25,21 +25,21 @@ export class Options {
     this.logFile = path.join(wakaHome, '.wakatime.log');
   }
 
-  public async getSettingAsync<T = any>(section: string, key: string): Promise<T> {
+  public async getSettingAsync<T = any>(section: string, key: string, internal: boolean): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      this.getSetting(section, key, this.configFile, (setting) => {
+      this.getSetting(section, key, internal, (setting) => {
         setting.error ? reject(setting.error) : resolve(setting.value);
       });
     });
   }
 
-  public getSetting(section: string, key: string, configFile: string, callback: (Setting) => void): void {
+  public getSetting(section: string, key: string, internal: boolean, callback: (Setting) => void): void {
     fs.readFile(
-      configFile,
+      this.getConfigFile(internal),
       'utf-8',
       (err: NodeJS.ErrnoException | null, content: string) => {
         if (err) {
-          if (callback) callback({error: new Error(`could not read ${this.configFile}`), key: key, value: null});
+          if (callback) callback({error: new Error(`could not read ${this.getConfigFile(internal)}`), key: key, value: null});
         } else {
           let currentSection = '';
           let lines = content.split('\n');
@@ -66,8 +66,8 @@ export class Options {
     );
   }
 
-  public setSetting(section: string, key: string, val: string, configFile?: string): void {
-    if (!configFile) configFile = this.configFile;
+  public setSetting(section: string, key: string, val: string, internal: boolean): void {
+    const configFile = this.getConfigFile(internal);
     fs.readFile(
       configFile,
       'utf-8',
@@ -122,8 +122,8 @@ export class Options {
     );
   }
 
-  public setSettings(section: string, settings: Setting[], configFile?: string): void {
-    if (!configFile) configFile = this.configFile;
+  public setSettings(section: string, settings: Setting[], internal: boolean): void {
+    const configFile = this.getConfigFile(internal);
     fs.readFile(
       configFile,
       'utf-8',
@@ -191,8 +191,8 @@ export class Options {
     );
   }
 
-  public getConfigFile(internal?: boolean): string {
-    return !internal ? this.configFile : this.internalConfigFile;
+  public getConfigFile(internal: boolean): string {
+    return internal ? this.internalConfigFile : this.configFile;
   }
 
   public getLogFile(): string {
@@ -206,7 +206,7 @@ export class Options {
       const cachedApiKey = await this.cache.getItem<string>('api_key');
       if (cachedApiKey) return resolve(cachedApiKey);
 
-      await this.getSettingAsync<string>('settings', 'api_key')
+      await this.getSettingAsync<string>('settings', 'api_key', false)
         .then(apiKey => {
           this.cache.setItem('api_key', apiKey, { ttl: 300 });
           resolve(apiKey);

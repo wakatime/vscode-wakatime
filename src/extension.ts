@@ -80,11 +80,11 @@ export function activate(ctx: vscode.ExtensionContext) {
 
   ctx.subscriptions.push(wakatime);
 
-  options.getSetting('settings', 'debug', options.getConfigFile(), (debug: Setting) => {
+  options.getSetting('settings', 'debug', false, (debug: Setting) => {
     if (debug.value === 'true') {
       logger.setLevel(LogLevel.DEBUG);
     }
-    options.getSetting('settings', 'global', options.getConfigFile(), (global: Setting) => {
+    options.getSetting('settings', 'global', false, (global: Setting) => {
       const isGlobal = global.value === 'true';
       wakatime.initialize(isGlobal);
     });

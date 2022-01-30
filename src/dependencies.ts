@@ -166,11 +166,11 @@ export class Dependencies {
       callback(this.latestCliVersion);
       return;
     }
-    this.options.getSetting('settings', 'proxy', this.options.getConfigFile(), (proxy: Setting) => {
-      this.options.getSetting('settings', 'no_ssl_verify', this.options.getConfigFile(), (noSSLVerify: Setting) => {
-        this.options.getSetting('internal', 'cli_version_last_modified', this.options.getConfigFile(true), (modified: Setting) => {
-          this.options.getSetting('internal', 'cli_version', this.options.getConfigFile(true), (version: Setting) => {
-            this.options.getSetting('settings', 'alpha', this.options.getConfigFile(), (alpha: Setting) => {
+    this.options.getSetting('settings', 'proxy', false, (proxy: Setting) => {
+      this.options.getSetting('settings', 'no_ssl_verify', false, (noSSLVerify: Setting) => {
+        this.options.getSetting('internal', 'cli_version_last_modified', true, (modified: Setting) => {
+          this.options.getSetting('internal', 'cli_version', true, (version: Setting) => {
+            this.options.getSetting('settings', 'alpha', false, (alpha: Setting) => {
               let options = {
                 url: alpha.value == 'true' ? this.githubReleasesAlphaUrl : this.githubReleasesStableUrl,
                 json: true,
@@ -197,7 +197,7 @@ export class Dependencies {
                       this.options.setSettings('internal', [
                         {key: 'cli_version', value: this.latestCliVersion},
                         {key: 'cli_version_last_modified', value: lastModified},
-                      ], this.options.getConfigFile(true));
+                      ], true);
                     }
                     callback(this.latestCliVersion);
                   } else {
@@ -274,8 +274,8 @@ export class Dependencies {
     callback: () => void,
     error: () => void,
   ): void {
-    this.options.getSetting('settings', 'proxy', this.options.getConfigFile(), (proxy: Setting) => {
-      this.options.getSetting('settings', 'no_ssl_verify', this.options.getConfigFile(), (noSSLVerify: Setting) => {
+    this.options.getSetting('settings', 'proxy', false, (proxy: Setting) => {
+      this.options.getSetting('settings', 'no_ssl_verify', false, (noSSLVerify: Setting) => {
         let options = { url: url };
         if (proxy.value) options['proxy'] = proxy.value;
         if (noSSLVerify.value === 'true') options['strictSSL'] = false;
@@ -360,8 +360,8 @@ export class Dependencies {
 
   private reportMissingPlatformSupport(osname: string, architecture: string): void {
     const url = `https://api.wakatime.com/api/v1/cli-missing?osname=${osname}&architecture=${architecture}&plugin=vscode`;
-    this.options.getSetting('settings', 'proxy', this.options.getConfigFile(), (proxy: Setting) => {
-      this.options.getSetting('settings', 'no_ssl_verify', this.options.getConfigFile(), (noSSLVerify: Setting) => {
+    this.options.getSetting('settings', 'proxy', false, (proxy: Setting) => {
+      this.options.getSetting('settings', 'no_ssl_verify', false, (noSSLVerify: Setting) => {
         let options = { url: url };
         if (proxy.value) options['proxy'] = proxy.value;
         if (noSSLVerify.value === 'true') options['strictSSL'] = false;
