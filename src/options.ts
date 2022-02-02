@@ -208,6 +208,7 @@ export class Options {
         return;
       }
 
+      // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
       if (process.env.WAKATIME_API_KEY && !Utils.apiKeyInvalid(process.env.WAKATIME_API_KEY)) {
         resolve(process.env.WAKATIME_API_KEY);
         return;
