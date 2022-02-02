@@ -4,7 +4,7 @@ export class Utils {
     return str;
   }
 
-  public static validateKey(key: string): string {
+  public static apiKeyInvalid(key?: string): string {
     const err = 'Invalid api key... check https://wakatime.com/settings for your key';
     if (!key) return err;
     const re = new RegExp(

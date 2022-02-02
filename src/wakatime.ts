@@ -119,19 +119,19 @@ export class WakaTime {
       false,
       (setting: Setting) => {
         let defaultVal = setting.value;
-        if (Utils.validateKey(defaultVal) != '') defaultVal = '';
+        if (Utils.apiKeyInvalid(defaultVal)) defaultVal = '';
         let promptOptions = {
           prompt: 'WakaTime Api Key',
           placeHolder: 'Enter your api key from https://wakatime.com/settings',
           value: defaultVal,
           ignoreFocusOut: true,
-          validateInput: Utils.validateKey.bind(this),
+          validateInput: Utils.apiKeyInvalid.bind(this),
         };
         vscode.window.showInputBox(promptOptions).then(val => {
           if (val != undefined) {
-            let validation = Utils.validateKey(val);
-            if (validation === '') this.options.setSetting('settings', 'api_key', val, false);
-            else vscode.window.setStatusBarMessage(validation);
+            let invalid = Utils.apiKeyInvalid(val);
+            if (!invalid) this.options.setSetting('settings', 'api_key', val, false);
+            else vscode.window.setStatusBarMessage(invalid);
           } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
         });
       },
@@ -304,7 +304,7 @@ export class WakaTime {
   private hasApiKey(callback: (arg0: boolean) => void): void {
     this.options
       .getApiKeyAsync()
-      .then(apiKey => callback(Utils.validateKey(apiKey) === ''))
+      .then(apiKey => callback(!Utils.apiKeyInvalid(apiKey)))
       .catch(err => {
         this.logger.error(`Error reading api key: ${err}`);
         callback(false);

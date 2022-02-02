@@ -2,8 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { Dependencies } from './dependencies';
-import { ExpirationStrategy } from './cache/expiration-strategy';
-import { MemoryStorage } from './cache/memory-storage';
+import { Utils } from './utils';
 
 export interface Setting {
   key: string;
@@ -15,19 +14,18 @@ export class Options {
   private configFile: string;
   private internalConfigFile: string;
   private logFile: string;
-  private readonly cache: ExpirationStrategy;
+  private cache: any = {};
 
   constructor() {
-    this.cache = new ExpirationStrategy(new MemoryStorage());
     let wakaHome = Dependencies.getHomeDirectory();
     this.configFile = path.join(wakaHome, '.wakatime.cfg');
     this.internalConfigFile = path.join(wakaHome, '.wakatime-internal.cfg');
     this.logFile = path.join(wakaHome, '.wakatime.log');
   }
 
-  public async getSettingAsync<T = any>(section: string, key: string, internal: boolean): Promise<T> {
+  public async getSettingAsync<T = any>(section: string, key: string): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      this.getSetting(section, key, internal, (setting) => {
+      this.getSetting(section, key, false, (setting) => {
         setting.error ? reject(setting.error) : resolve(setting.value);
       });
     });
@@ -39,7 +37,7 @@ export class Options {
       'utf-8',
       (err: NodeJS.ErrnoException | null, content: string) => {
         if (err) {
-          if (callback) callback({error: new Error(`could not read ${this.getConfigFile(internal)}`), key: key, value: null});
+          callback({error: new Error(`could not read ${this.getConfigFile(internal)}`), key: key, value: null});
         } else {
           let currentSection = '';
           let lines = content.split('\n');
@@ -60,7 +58,7 @@ export class Options {
             }
           }
 
-          if (callback) callback({key: key, value: null});
+          callback({key: key, value: null});
         }
       },
     );
@@ -201,17 +199,24 @@ export class Options {
 
   public async getApiKeyAsync(): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
-      if (process.env.WAKATIME_API_KEY) return resolve(process.env.WAKATIME_API_KEY);
+      const cachedApiKey = this.cache.api_key;
+      if (!Utils.apiKeyInvalid(cachedApiKey)) {
+        resolve(cachedApiKey);
+        return;
+      }
 
-      const cachedApiKey = await this.cache.getItem<string>('api_key');
-      if (cachedApiKey) return resolve(cachedApiKey);
+      if (process.env.WAKATIME_API_KEY && !Utils.apiKeyInvalid(process.env.WAKATIME_API_KEY)) {
+        resolve(process.env.WAKATIME_API_KEY);
+        return;
+      }
 
-      await this.getSettingAsync<string>('settings', 'api_key', false)
-        .then(apiKey => {
-          this.cache.setItem('api_key', apiKey, { ttl: 300 });
-          resolve(apiKey);
-        })
-        .catch(err => reject(err));
+      try {
+        const apiKey = await this.getSettingAsync<string>('settings', 'api_key');
+        this.cache.api_key = apiKey;
+        resolve(apiKey);
+      } catch(e) {
+        reject(e);
+      }
     });
   }
 
