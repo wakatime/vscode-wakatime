@@ -45,41 +45,49 @@ export class WakaTime {
   private disabled: boolean = true;
   private extensionPath: string;
 
-  constructor(extensionPath: string, logger: Logger, options: Options) {
+  constructor(extensionPath: string, logger: Logger) {
     this.extensionPath = extensionPath;
     this.logger = logger;
-    this.options = options;
+    this.options = new Options(logger);
   }
 
-  public initialize(global: boolean): void {
-    this.dependencies = new Dependencies(this.options, this.logger, this.extensionPath, global);
-    this.statusBar.command = COMMAND_DASHBOARD;
+  public initialize(): void {
+    this.options.getSetting('settings', 'debug', false, (setting: Setting) => {
+      if (setting.value === 'true') {
+        this.logger.setLevel(LogLevel.DEBUG);
+      }
+      this.options.getSetting('settings', 'global', false, (setting: Setting) => {
+        const global = setting.value === 'true';
+        this.dependencies = new Dependencies(this.options, this.logger, this.extensionPath, global);
+        this.statusBar.command = COMMAND_DASHBOARD;
 
-    let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
-    this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
-    this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
-    this.agentName = this.appNames[vscode.env.appName] || 'vscode';
-    this.statusBar.text = '$(clock) WakaTime Initializing...';
-    this.statusBar.show();
+        let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
+        this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
+        this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
+        this.agentName = this.appNames[vscode.env.appName] || 'vscode';
+        this.statusBar.text = '$(clock) WakaTime Initializing...';
+        this.statusBar.show();
 
-    this.setupEventListeners();
+        this.setupEventListeners();
 
-    this.options.getSetting(
-      'settings',
-      'disabled',
-      false,
-      (disabled: Setting) => {
-        this.disabled = disabled.value === 'true';
-        if (this.disabled) {
-          this.setStatusBarVisibility(false);
-          this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
-          return;
-        }
+        this.options.getSetting(
+          'settings',
+          'disabled',
+          false,
+          (disabled: Setting) => {
+            this.disabled = disabled.value === 'true';
+            if (this.disabled) {
+              this.setStatusBarVisibility(false);
+              this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
+              return;
+            }
 
-        this.checkApiKey();
-        this.initializeDependencies();
-      },
-    );
+            this.checkApiKey();
+            this.initializeDependencies();
+          },
+        );
+      });
+    });
   }
 
   public initializeDependencies(): void {
@@ -296,19 +304,9 @@ export class WakaTime {
   }
 
   private checkApiKey(): void {
-    this.hasApiKey(hasApiKey => {
+    this.options.hasApiKey(hasApiKey => {
       if (!hasApiKey) this.promptForApiKey();
     });
-  }
-
-  private hasApiKey(callback: (arg0: boolean) => void): void {
-    this.options
-      .getApiKeyAsync()
-      .then(apiKey => callback(!Utils.apiKeyInvalid(apiKey)))
-      .catch(err => {
-        this.logger.error(`Error reading api key: ${err}`);
-        callback(false);
-      });
   }
 
   private setStatusBarVisibility(isVisible: boolean): void {
@@ -367,9 +365,9 @@ export class WakaTime {
     lines: number,
     isWrite: boolean,
   ): void {
-    this.hasApiKey(hasApiKey => {
-      if (hasApiKey) {
-        this._sendHeartbeat(file, time, selection, lines, isWrite);
+    this.options.getApiKey(apiKey => {
+      if (apiKey) {
+        this._sendHeartbeat(apiKey, file, time, selection, lines, isWrite);
       } else {
         this.promptForApiKey();
       }
@@ -377,6 +375,7 @@ export class WakaTime {
   }
 
   private _sendHeartbeat(
+    apiKey: string,
     file: string,
     time: number,
     selection: vscode.Position,
@@ -397,7 +396,7 @@ export class WakaTime {
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Utils.quote(project));
     if (isWrite) args.push('--write');
-    if (process.env.WAKATIME_API_KEY) args.push('--key', Utils.quote(process.env.WAKATIME_API_KEY));
+    args.push('--key', Utils.quote(apiKey));
     if (Dependencies.isWindows() || Dependencies.isPortable()) {
       args.push(
         '--config',
@@ -466,18 +465,18 @@ export class WakaTime {
     this.lastFetchToday = Date.now();
     this.getCodingActivityTimeout = setTimeout(this.getCodingActivity, this.fetchTodayInterval);
 
-    this.hasApiKey(hasApiKey => {
-      if (!hasApiKey) return;
-      this._getCodingActivity();
+    this.options.getApiKey(apiKey => {
+      if (!apiKey) return;
+      this._getCodingActivity(apiKey);
     });
   }
 
-  private _getCodingActivity() {
+  private _getCodingActivity(apiKey: string) {
     if (!this.dependencies.isCliInstalled()) return;
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Utils.quote(user_agent)];
-    if (process.env.WAKATIME_API_KEY) args.push('--key', Utils.quote(process.env.WAKATIME_API_KEY));
+    args.push('--key', Utils.quote(apiKey));
     if (Dependencies.isWindows()) {
       args.push(
         '--config',
@@ -558,5 +557,4 @@ export class WakaTime {
     }
     return '';
   }
-
 }

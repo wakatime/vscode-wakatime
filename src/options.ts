@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { Dependencies } from './dependencies';
+import { Logger } from './logger';
 import { Utils } from './utils';
 
 export interface Setting {
@@ -14,13 +15,15 @@ export class Options {
   private configFile: string;
   private internalConfigFile: string;
   private logFile: string;
+  private logger: Logger;
   private cache: any = {};
 
-  constructor() {
+  constructor(logger: Logger) {
     let wakaHome = Dependencies.getHomeDirectory();
     this.configFile = path.join(wakaHome, '.wakatime.cfg');
     this.internalConfigFile = path.join(wakaHome, '.wakatime-internal.cfg');
     this.logFile = path.join(wakaHome, '.wakatime.log');
+    this.logger = logger;
   }
 
   public async getSettingAsync<T = any>(section: string, key: string): Promise<T> {
@@ -218,6 +221,30 @@ export class Options {
         reject(e);
       }
     });
+  }
+
+  public getApiKey(callback: (apiKey: string|null) => void): void {
+    this.getApiKeyAsync()
+      .then(apiKey => {
+        if (!Utils.apiKeyInvalid(apiKey)) {
+          callback(apiKey);
+        } else {
+          callback(null);
+        }
+      })
+      .catch(err => {
+        this.logger.warn(`Unable to get api key: ${err}`);
+        callback(null);
+      });
+  }
+
+  public hasApiKey(callback: (valid: boolean) => void): void {
+    this.getApiKeyAsync()
+      .then(apiKey => callback(!Utils.apiKeyInvalid(apiKey)))
+      .catch(err => {
+        this.logger.warn(`Unable to get api key: ${err}`);
+        callback(false);
+      });
   }
 
   private startsWith(outer: string, inner: string): boolean {
