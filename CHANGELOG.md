@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.0.5 (2022-02-02)
+
+- Stop expiring api key in-memory cache and always pass api key to wakatime-cli.
+  [#256](https://github.com/wakatime/vscode-wakatime/issues/256)
+
 ## 18.0.4 (2022-01-05)
 
 - Prevent using empty cached wakatime-cli version.
