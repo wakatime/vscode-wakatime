@@ -10,16 +10,16 @@
 
 1. Press `F1` or `⌘ + Shift + P` and type `install`. Pick `Extensions: Install Extension`.
 
-    ![type install](./images/type-install.png)
+    ![type install](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/type-install.png)
 2. Type `wakatime` and hit `enter`.
 
-    ![type wakatime](./images/type-wakatime.png)
+    ![type wakatime](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/type-wakatime.png)
 
 3. Download the latest version to a local folder.
 
 4. Click in three dots on the upper right corner then Install from VSIX...
 
-    ![install from VSIX](./images/ads-install.png)
+    ![install from VSIX](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/ads-install.png)
 
 5. Restart Azure Data Studio.
 
@@ -33,7 +33,7 @@
 
 Visit [https://wakatime.com](https://wakatime.com) to see your coding activity.
 
-![Project Overview](./images/Screen-Shot-2016-03-21.png)
+![Project Overview](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/Screen-Shot-2016-03-21.png)
 
 ## Configuring
 
