@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.0.6 (2022-02-17)
+
+- Verbose logging around reading api key when debug enabled.
+  [#251](https://github.com/wakatime/vscode-wakatime/issues/251)
+
 ## 18.0.5 (2022-02-02)
 
 - Stop expiring api key in-memory cache and always pass api key to wakatime-cli.
