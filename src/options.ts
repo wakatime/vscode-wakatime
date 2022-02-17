@@ -208,6 +208,8 @@ export class Options {
         return;
       }
 
+      this.logger.debug(`Cached API Key: ${this.cache.api_key}`);
+
       // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
       if (process.env.WAKATIME_API_KEY && !Utils.apiKeyInvalid(process.env.WAKATIME_API_KEY)) {
         resolve(process.env.WAKATIME_API_KEY);
@@ -216,10 +218,13 @@ export class Options {
 
       try {
         const apiKey = await this.getSettingAsync<string>('settings', 'api_key');
-        this.cache.api_key = apiKey;
+        this.logger.debug(`API Key from config file: ${apiKey}`);
+        if (!Utils.apiKeyInvalid(apiKey)) this.cache.api_key = apiKey;
         resolve(apiKey);
-      } catch(e) {
-        reject(e);
+      } catch(err) {
+        this.logger.debug(`Exception while reading API Key from config file: ${err}`);
+        this.logger.debug(err);
+        reject(err);
       }
     });
   }
@@ -230,6 +235,7 @@ export class Options {
         if (!Utils.apiKeyInvalid(apiKey)) {
           callback(apiKey);
         } else {
+          this.logger.warn(`Invalid api key: ${apiKey}`);
           callback(null);
         }
       })
@@ -243,7 +249,7 @@ export class Options {
     this.getApiKeyAsync()
       .then(apiKey => callback(!Utils.apiKeyInvalid(apiKey)))
       .catch(err => {
-        this.logger.warn(`Unable to get api key: ${err}`);
+        this.logger.warn(`Unable to check for api key: ${err}`);
         callback(false);
       });
   }
