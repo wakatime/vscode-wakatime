@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.0.7 (2022-03-06)
+
+- Display error message when Defender prevents WakaTime from reading api key.
+  [#251](https://github.com/wakatime/vscode-wakatime/issues/251)
+
 ## 18.0.6 (2022-02-17)
 
 - Verbose logging around reading api key when debug enabled.
