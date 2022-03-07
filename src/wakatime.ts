@@ -430,7 +430,7 @@ export class WakaTime {
             'WakaTime: working offline... coding activity will sync next time we are online';
         }
         this.logger.warn(
-          `Api eror (102); Check your ${this.options.getLogFile()} file for more details`,
+          `Api error (102); Check your ${this.options.getLogFile()} file for more details`,
         );
       } else if (code == 103) {
         let error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;

@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import * as vscode from 'vscode';
 
 import { Dependencies } from './dependencies';
 import { Logger } from './logger';
@@ -223,7 +224,6 @@ export class Options {
         resolve(apiKey);
       } catch(err) {
         this.logger.debug(`Exception while reading API Key from config file: ${err}`);
-        this.logger.debug(err);
         reject(err);
       }
     });
@@ -241,6 +241,9 @@ export class Options {
       })
       .catch(err => {
         this.logger.warn(`Unable to get api key: ${err}`);
+        if (`${err}`.includes('spawn EPERM')) {
+          vscode.window.showErrorMessage("Microsoft Defender is blocking WakaTime. Please allow WakaTime to run so it can upload code stats to your dashboard.");
+        }
         callback(null);
       });
   }
