@@ -178,7 +178,10 @@ export class Dependencies {
                   'User-Agent': 'github.com/wakatime/vscode-wakatime',
                 },
               };
-              if (proxy.value) options['proxy'] = proxy.value;
+              if (proxy.value) {
+                this.logger.debug(`Using Proxy: ${proxy.value}`);
+                options['proxy'] = proxy.value;
+              }
               if (noSSLVerify.value === 'true') options['strictSSL'] = false;
               if (modified.value && version.value) options['headers']['If-Modified-Since'] = modified.value;
               try {
@@ -277,7 +280,10 @@ export class Dependencies {
     this.options.getSetting('settings', 'proxy', false, (proxy: Setting) => {
       this.options.getSetting('settings', 'no_ssl_verify', false, (noSSLVerify: Setting) => {
         let options = { url: url };
-        if (proxy.value) options['proxy'] = proxy.value;
+        if (proxy.value) {
+          this.logger.debug(`Using Proxy: ${proxy.value}`);
+          options['proxy'] = proxy.value;
+        }
         if (noSSLVerify.value === 'true') options['strictSSL'] = false;
         try {
           let r = request.get(options);
