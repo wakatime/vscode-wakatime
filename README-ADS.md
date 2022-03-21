@@ -45,7 +45,7 @@ Press `⌘ + Shift + P` then set `WakaTime: Status Bar Coding Activity` to `fals
 
 Extension settings are stored in the INI file at `$WAKATIME_HOME/.wakatime.cfg`.
 
-More information can be found from [wakatime core](https://github.com/wakatime/wakatime#configuring).
+More information can be found from [wakatime-cli][wakatime-cli configs].
 
 Notes:
 
@@ -64,17 +64,18 @@ Next, open your Developer Console to view logs and errors:
 
 `Help → Toggle Developer Tools`
 
-Errors outside the scope of vscode-wakatime go to `$WAKATIME_HOME/.wakatime.log` from [wakatime-cli][wakatime-cli-help].
+Errors outside the scope of vscode-wakatime go to `$WAKATIME_HOME/.wakatime.log` from [wakatime-cli][wakatime-cli help].
 
 The [How to Debug Plugins][how to debug] guide shows how to check when coding activity was last received from your editor using the [Plugins Status Page][plugins status page].
 
 **Microsoft Windows Only:** Using WakaTime behind a corporate proxy? Try enabling your Windows Root Certs inside VS Code with the [win-ca][winca] extension:
 Press `Ctrl + Shift + X`, search for `win-ca`, press `Install`.
 
-For more general troubleshooting info, see the [wakatime-cli Troubleshooting Section][wakatime-cli-help].
+For more general troubleshooting info, see the [wakatime-cli Troubleshooting Section][wakatime-cli help].
 
 [wakatime]: https://wakatime.com/vs-code
-[wakatime-cli-help]: https://github.com/wakatime/wakatime#troubleshooting
+[wakatime-cli help]: https://github.com/wakatime/wakatime-cli/blob/develop/TROUBLESHOOTING.md
+[wakatime-cli configs]: https://github.com/wakatime/wakatime-cli/blob/develop/USAGE.md
 [how to debug]: https://wakatime.com/faq#debug-plugins
 [plugins status page]: https://wakatime.com/plugin-status
 [winca]: https://github.com/ukoloff/win-ca/tree/master/vscode
