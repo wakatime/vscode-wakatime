@@ -371,7 +371,7 @@ export class WakaTime {
     if (!force && this.lastFetchToday > cutoff) return;
 
     this.lastFetchToday = Date.now();
-    this.getCodingActivityTimeout = setTimeout(this.getCodingActivity, this.fetchTodayInterval);
+    this.getCodingActivityTimeout = window.setTimeout(this.getCodingActivity, this.fetchTodayInterval);
 
     this.hasApiKey(hasApiKey => {
       if (!hasApiKey) return;
