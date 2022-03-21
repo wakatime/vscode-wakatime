@@ -37,7 +37,7 @@ export class WakaTime {
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
-  private getCodingActivityTimeout: number;
+  private getCodingActivityTimeout: NodeJS.Timeout;
   private fetchTodayInterval: number = 60000;
   private lastFetchToday: number = 0;
   private showStatusBar: boolean;
@@ -429,7 +429,7 @@ export class WakaTime {
     if (!force && this.lastFetchToday > cutoff) return;
 
     this.lastFetchToday = Date.now();
-    this.getCodingActivityTimeout = window.setTimeout(this.getCodingActivity, this.fetchTodayInterval);
+    this.getCodingActivityTimeout = setTimeout(this.getCodingActivity, this.fetchTodayInterval);
 
     this.options.getApiKey((apiKey) => {
       if (!apiKey) return;
