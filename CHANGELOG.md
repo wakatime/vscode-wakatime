@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.0.8 (2022-03-21)
+
+- Display code time in status bar tooltip when status_bar_coding_activity set to false.
+  [#265](https://github.com/wakatime/vscode-wakatime/issues/265)
+
 ## 18.0.7 (2022-03-06)
 
 - Display error message when Defender prevents WakaTime from reading api key.
