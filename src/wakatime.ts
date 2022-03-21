@@ -96,8 +96,8 @@ export class WakaTime {
           'settings',
           'status_bar_coding_activity',
           false,
-          (showCodeStats: Setting) => {
-            this.showCodingActivity = showCodeStats.value != 'false';
+          (showCodingActivity: Setting) => {
+            this.showCodingActivity = showCodingActivity.value !== 'false';
             this.getCodingActivity();
           },
         );

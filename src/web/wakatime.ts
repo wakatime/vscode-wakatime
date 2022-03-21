@@ -57,15 +57,14 @@ export class WakaTime {
     this.disabled = this.config.get('wakatime.disabled') === 'true';
     if (this.disabled) {
       this.setStatusBarVisibility(false);
-      this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
       return;
     }
-
-    this.checkApiKey();
     this.initializeDependencies();
   }
 
   public initializeDependencies(): void {
+    this.checkApiKey();
+
     this.logger.debug('WakaTime initialized.');
     this.statusBar.text = '$(clock)';
     this.statusBar.tooltip = 'WakaTime: Initialized';
@@ -75,12 +74,9 @@ export class WakaTime {
     this.setStatusBarVisibility(this.showStatusBar);
 
     const showCodingActivity = this.config.get('wakatime.status_bar_coding_activity');
-    if (showCodingActivity == 'false') {
-      this.showCodingActivity = false;
-    } else {
-      this.showCodingActivity = true;
-      this.getCodingActivity();
-    }
+    this.showCodingActivity = showCodingActivity !== 'false';
+
+    this.getCodingActivity();
   }
 
   public promptForApiKey(): void {
@@ -141,7 +137,6 @@ export class WakaTime {
         this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
       } else {
         this.config.update('wakatime.disabled', 'false');
-        this.checkApiKey();
         this.initializeDependencies();
         if (this.showStatusBar) this.setStatusBarVisibility(true);
         this.logger.debug('Extension enabled and reporting coding stats to dashboard.');
@@ -332,7 +327,6 @@ export class WakaTime {
       const parsedJSON = await response.json();
       if (response.status == 200 || response.status == 201 || response.status == 202) {
         if (this.showStatusBar) {
-          if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
           this.getCodingActivity();
         }
         this.logger.debug(`last heartbeat sent ${Utils.formatDate(new Date())}`);
@@ -366,7 +360,7 @@ export class WakaTime {
   }
 
   private getCodingActivity(force: boolean = false) {
-    if (!this.showCodingActivity || !this.showStatusBar) return;
+    if (!this.showStatusBar) return;
     const cutoff = Date.now() - this.fetchTodayInterval;
     if (!force && this.lastFetchToday > cutoff) return;
 
@@ -395,14 +389,19 @@ export class WakaTime {
       const parsedJSON = await response.json();
       if (response.status == 200) {
         this.config.get('wakatime.status_bar_coding_activity');
-        if (this.showStatusBar && this.showCodingActivity) {
+        if (this.showStatusBar) {
           let output = parsedJSON.data.grand_total.text;
           if (this.config.get('wakatime.status_bar_hide_categories') != 'true' && parsedJSON.data.categories.length > 1) {
             output = parsedJSON.data.categories.map(x => x.text + ' ' + x.name).join(', ');
           }
           if (output && output.trim()) {
-            this.statusBar.text = `$(clock) ${output.trim()}`;
-            this.statusBar.tooltip = 'WakaTime: Today’s coding time. Click to visit dashboard.';
+            if (this.showCodingActivity) {
+              this.statusBar.text = `$(clock) ${output.trim()}`;
+              this.statusBar.tooltip = 'WakaTime: Today’s coding time. Click to visit dashboard.';
+            } else {
+              this.statusBar.text = `$(clock)`;
+              this.statusBar.tooltip = output.trim();
+            }
           } else {
             this.statusBar.text = `$(clock)`;
             this.statusBar.tooltip = `WakaTime: Calculating time spent today in background...`;
