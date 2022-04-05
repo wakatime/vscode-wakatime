@@ -231,7 +231,7 @@ export class Dependencies {
       }
       this.logger.debug(`Downloading wakatime-cli ${version}...`);
       const url = this.cliDownloadUrl(version);
-      let zipFile = path.join(this.getResourcesLocation(), 'wakatime-cli.zip');
+      let zipFile = path.join(this.getResourcesLocation(), 'wakatime-cli' + this.randStr() + '.zip');
       this.downloadFile(
         url,
         zipFile,
@@ -248,9 +248,16 @@ export class Dependencies {
     this.removeCli(() => {
       this.unzip(zipFile, this.getResourcesLocation(), () => {
         if (!Dependencies.isWindows()) {
+          const cli = this.getCliLocation();
           try {
             this.logger.debug('Chmod 755 wakatime-cli...');
-            fs.chmodSync(this.getCliLocation(), 0o755);
+            fs.chmodSync(cli, 0o755);
+          } catch (e) {
+            this.logger.warnException(e);
+          }
+          try {
+            this.logger.debug(`Create symlink from wakatime-cli to ${cli}`);
+            fs.symlinkSync(cli, path.join(this.getResourcesLocation(), 'wakatime-cli'));
           } catch (e) {
             this.logger.warnException(e);
           }
@@ -376,5 +383,9 @@ export class Dependencies {
         } catch (e) { }
       });
     });
+  }
+
+  private randStr(): string {
+    return (Math.random() + 1).toString(36).substring(7);
   }
 }

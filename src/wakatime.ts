@@ -37,8 +37,8 @@ export class WakaTime {
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
-  private getCodingActivityTimeout: NodeJS.Timeout;
   private fetchTodayInterval: number = 60000;
+  private fetchTodayIntervalId?: NodeJS.Timeout;
   private lastFetchToday: number = 0;
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
@@ -98,17 +98,18 @@ export class WakaTime {
           false,
           (showCodingActivity: Setting) => {
             this.showCodingActivity = showCodingActivity.value !== 'false';
-            this.getCodingActivity();
+
+            this.dependencies.checkAndInstall(() => {
+              this.logger.debug('WakaTime initialized.');
+              this.statusBar.text = '$(clock)';
+              this.statusBar.tooltip = 'WakaTime: Initialized';
+              this.getCodingActivity();
+            });
+
           },
         );
       },
     );
-
-    this.dependencies.checkAndInstall(() => {
-      this.logger.debug('WakaTime initialized.');
-      this.statusBar.text = '$(clock)';
-      this.statusBar.tooltip = 'WakaTime: Initialized';
-    });
   }
 
   public promptForApiKey(): void {
@@ -267,9 +268,9 @@ export class WakaTime {
   }
 
   public dispose() {
+    this.clearTodayInterval();
     this.statusBar.dispose();
     this.disposable.dispose();
-    clearTimeout(this.getCodingActivityTimeout);
   }
 
   private checkApiKey(): void {
@@ -280,9 +281,11 @@ export class WakaTime {
 
   private setStatusBarVisibility(isVisible: boolean): void {
     if (isVisible) {
+      this.setTodayInterval();
       this.statusBar.show();
       this.logger.debug('Status bar icon enabled.');
     } else {
+      this.clearTodayInterval();
       this.statusBar.hide();
       this.logger.debug('Status bar icon disabled.');
     }
@@ -424,12 +427,17 @@ export class WakaTime {
   }
 
   private getCodingActivity(force: boolean = false) {
-    if (!this.showStatusBar) return;
+    if (!this.showStatusBar) {
+      this.clearTodayInterval();
+      return;
+    }
+
+    this.setTodayInterval();
+
     const cutoff = Date.now() - this.fetchTodayInterval;
     if (!force && this.lastFetchToday > cutoff) return;
 
     this.lastFetchToday = Date.now();
-    this.getCodingActivityTimeout = setTimeout(this.getCodingActivity, this.fetchTodayInterval);
 
     this.options.getApiKey((apiKey) => {
       if (!apiKey) return;
@@ -439,6 +447,7 @@ export class WakaTime {
 
   private _getCodingActivity(apiKey: string) {
     if (!this.dependencies.isCliInstalled()) return;
+
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Utils.quote(user_agent)];
@@ -527,5 +536,15 @@ export class WakaTime {
       } catch (e) {}
     }
     return '';
+  }
+
+  private setTodayInterval(): void {
+    if (this.fetchTodayIntervalId) return;
+    this.fetchTodayIntervalId = setInterval(this.getCodingActivity.bind(this), this.fetchTodayInterval);
+  }
+
+  private clearTodayInterval(): void {
+    if (this.fetchTodayIntervalId) clearInterval(this.fetchTodayIntervalId);
+    this.fetchTodayIntervalId = undefined;
   }
 }
