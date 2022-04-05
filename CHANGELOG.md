@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 18.0.11 (2022-04-05)
+
+- Upgrade vscode engine to v1.59.0.
+
 ## 18.0.10 (2022-04-05)
 
 - Downgrade vscode engine to support Azure Data Studio.
