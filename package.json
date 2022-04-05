@@ -39,7 +39,7 @@
     "url": "https://github.com/wakatime/vscode-wakatime.git"
   },
   "engines": {
-    "vscode": "^1.65.0",
+    "vscode": "^1.53.0",
     "sqlops": "*",
     "azdata": "*"
   },
@@ -106,7 +106,7 @@
     "@types/mocha": "^9.1.0",
     "@types/node": "^17.0.21",
     "@types/request": "^2.48.8",
-    "@types/vscode": "^1.65.0",
+    "@types/vscode": "^1.53.0",
     "@types/webpack": "^5.28.0",
     "@types/which": "^2.0.1",
     "@vscode/test-web": "^0.0.22",
