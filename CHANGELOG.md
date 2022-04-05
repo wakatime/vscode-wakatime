@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.0.9 (2022-04-05)
+
+- Append random string to wakatime-cli.zip to prevent file name collision when two workspaces open at same time.
+  [#268](https://github.com/wakatime/vscode-wakatime/issues/268)
+
 ## 18.0.8 (2022-03-21)
 
 - Display code time in status bar tooltip when status_bar_coding_activity set to false.
