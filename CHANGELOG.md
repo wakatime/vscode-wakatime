@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 18.0.10 (2022-04-05)
+
+- Downgrade vscode engine to support Azure Data Studio.
+
 ## 18.0.9 (2022-04-05)
 
 - Append random string to wakatime-cli.zip to prevent file name collision when two workspaces open at same time.
