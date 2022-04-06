@@ -27,9 +27,7 @@ export class WakaTime {
   };
   private agentName: string;
   private extension;
-  private statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Left,
-  );
+  private statusBar?: vscode.StatusBarItem = undefined;
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
@@ -59,31 +57,37 @@ export class WakaTime {
       this.options.getSetting('settings', 'global', false, (setting: Setting) => {
         const global = setting.value === 'true';
         this.dependencies = new Dependencies(this.options, this.logger, this.extensionPath, global);
-        this.statusBar.command = COMMAND_DASHBOARD;
 
         let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
         this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
-        this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
         this.agentName = this.appNames[vscode.env.appName] || 'vscode';
-        this.statusBar.text = '$(clock) WakaTime Initializing...';
-        this.statusBar.show();
-
-        this.setupEventListeners();
 
         this.options.getSetting('settings', 'disabled', false, (disabled: Setting) => {
           this.disabled = disabled.value === 'true';
           if (this.disabled) {
-            this.setStatusBarVisibility(false);
+            this.dispose();
             return;
           }
+
           this.initializeDependencies();
         });
       });
     });
   }
 
+  public dispose() {
+    this.clearTodayInterval();
+    this.statusBar?.dispose();
+    this.disposable.dispose();
+  }
+
   public initializeDependencies(): void {
-    this.checkApiKey();
+    this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
+
+    this.statusBar = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Left,
+    );
+    this.statusBar.command = COMMAND_DASHBOARD;
 
     this.options.getSetting(
       'settings',
@@ -92,6 +96,12 @@ export class WakaTime {
       (statusBarEnabled: Setting) => {
         this.showStatusBar = statusBarEnabled.value !== 'false';
         this.setStatusBarVisibility(this.showStatusBar);
+        this.updateStatusBarText('WakaTime Initializing...');
+
+        this.checkApiKey();
+
+        this.setupEventListeners();
+
         this.options.getSetting(
           'settings',
           'status_bar_coding_activity',
@@ -100,9 +110,9 @@ export class WakaTime {
             this.showCodingActivity = showCodingActivity.value !== 'false';
 
             this.dependencies.checkAndInstall(() => {
-              this.logger.debug('WakaTime initialized.');
-              this.statusBar.text = '$(clock)';
-              this.statusBar.tooltip = 'WakaTime: Initialized';
+              this.logger.debug('WakaTime initialized');
+              this.updateStatusBarText();
+              this.updateStatusBarTooltip('WakaTime: Initialized');
               this.getCodingActivity();
             });
 
@@ -110,6 +120,22 @@ export class WakaTime {
         );
       },
     );
+  }
+
+  private updateStatusBarText(text?: string): void {
+    if (!this.statusBar) return;
+    if (!text) this.statusBar.text = '$(clock)';
+    this.statusBar.text = '$(clock) ' +  text;
+  }
+
+  private updateStatusBarTooltip(tooltipText: string): void {
+    if (!this.statusBar) return;
+    this.statusBar.tooltip = tooltipText;
+  }
+
+  private statusBarShowingError(): boolean {
+    if (!this.statusBar) return false;
+    return this.statusBar.text.indexOf('Error') != -1;
   }
 
   public promptForApiKey(): void {
@@ -175,6 +201,7 @@ export class WakaTime {
 
   public promptToDisable(): void {
     this.options.getSetting('settings', 'disabled', false, (setting: Setting) => {
+      const previousValue = this.disabled;
       let currentVal = setting.value;
       if (!currentVal || currentVal !== 'true') currentVal = 'false';
       let items: string[] = ['disable', 'enable'];
@@ -186,14 +213,15 @@ export class WakaTime {
       vscode.window.showQuickPick(items, promptOptions).then((newVal) => {
         if (newVal !== 'enable' && newVal !== 'disable') return;
         this.disabled = newVal === 'disable';
-        if (this.disabled) {
-          this.options.setSetting('settings', 'disabled', 'true', false);
-          this.setStatusBarVisibility(false);
-          this.logger.debug('Extension disabled, will not report coding stats to dashboard.');
-        } else {
-          this.options.setSetting('settings', 'disabled', 'false', false);
-          this.initializeDependencies();
-          this.logger.debug('Extension enabled and reporting coding stats to dashboard.');
+        if (this.disabled != previousValue) {
+          if (this.disabled) {
+            this.options.setSetting('settings', 'disabled', 'true', false);
+            this.logger.debug('Extension disabled, will not report code stats to dashboard');
+            this.dispose();
+          } else {
+            this.options.setSetting('settings', 'disabled', 'false', false);
+            this.initializeDependencies();
+          }
         }
       });
     });
@@ -234,12 +262,12 @@ export class WakaTime {
         if (newVal === 'true') {
           this.logger.debug('Coding activity in status bar has been enabled');
           this.showCodingActivity = true;
-          this.getCodingActivity(true);
+          this.getCodingActivity();
         } else {
           this.logger.debug('Coding activity in status bar has been disabled');
           this.showCodingActivity = false;
-          if (this.statusBar.text.indexOf('Error') == -1) {
-            this.statusBar.text = '$(clock)';
+          if (!this.statusBarShowingError()) {
+            this.updateStatusBarText();
           }
         }
       });
@@ -267,12 +295,6 @@ export class WakaTime {
     }
   }
 
-  public dispose() {
-    this.clearTodayInterval();
-    this.statusBar.dispose();
-    this.disposable.dispose();
-  }
-
   private checkApiKey(): void {
     this.options.hasApiKey((hasApiKey) => {
       if (!hasApiKey) this.promptForApiKey();
@@ -282,11 +304,11 @@ export class WakaTime {
   private setStatusBarVisibility(isVisible: boolean): void {
     if (isVisible) {
       this.setTodayInterval();
-      this.statusBar.show();
+      this.statusBar?.show();
       this.logger.debug('Status bar icon enabled.');
     } else {
       this.clearTodayInterval();
-      this.statusBar.hide();
+      this.statusBar?.hide();
       this.logger.debug('Status bar icon disabled.');
     }
   }
@@ -298,7 +320,7 @@ export class WakaTime {
     vscode.window.onDidChangeActiveTextEditor(this.onChange, this, subscriptions);
     vscode.workspace.onDidSaveTextDocument(this.onSave, this, subscriptions);
 
-    // create a combined disposable from both event subscriptions
+    // create a combined disposable for all event subscriptions
     this.disposable = vscode.Disposable.from(...subscriptions);
   }
 
@@ -394,9 +416,8 @@ export class WakaTime {
         this.logger.debug(`last heartbeat sent ${Utils.formatDate(new Date())}`);
       } else if (code == 102) {
         if (this.showStatusBar) {
-          if (!this.showCodingActivity) this.statusBar.text = '$(clock)';
-          this.statusBar.tooltip =
-            'WakaTime: working offline... coding activity will sync next time we are online';
+          if (!this.showCodingActivity) this.updateStatusBarText();
+          this.updateStatusBarTooltip('WakaTime: working offline... coding activity will sync next time we are online');
         }
         this.logger.warn(
           `Api error (102); Check your ${this.options.getLogFile()} file for more details`,
@@ -404,29 +425,29 @@ export class WakaTime {
       } else if (code == 103) {
         let error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
-          this.statusBar.text = '$(clock) WakaTime Error';
-          this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+          this.updateStatusBarText('WakaTime Error');
+          this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
         }
         this.logger.error(error_msg);
       } else if (code == 104) {
         let error_msg = 'Invalid Api Key (104); Make sure your Api Key is correct!';
         if (this.showStatusBar) {
-          this.statusBar.text = '$(clock) WakaTime Error';
-          this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+          this.updateStatusBarText('WakaTime Error');
+          this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
         }
         this.logger.error(error_msg);
       } else {
         let error_msg = `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
-          this.statusBar.text = '$(clock) WakaTime Error';
-          this.statusBar.tooltip = `WakaTime: ${error_msg}`;
+          this.updateStatusBarText('WakaTime Error');
+          this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
         }
         this.logger.error(error_msg);
       }
     });
   }
 
-  private getCodingActivity(force: boolean = false) {
+  private getCodingActivity() {
     if (!this.showStatusBar) {
       this.clearTodayInterval();
       return;
@@ -434,8 +455,11 @@ export class WakaTime {
 
     this.setTodayInterval();
 
+    // prevent updating if we haven't coded since last checked
+    if (this.lastFetchToday > 0 && this.lastFetchToday > this.lastHeartbeat) return;
+
     const cutoff = Date.now() - this.fetchTodayInterval;
-    if (!force && this.lastFetchToday > cutoff) return;
+    if (this.lastFetchToday > cutoff) return;
 
     this.lastFetchToday = Date.now();
 
@@ -484,15 +508,15 @@ export class WakaTime {
         if (this.showStatusBar) {
           if (output && output.trim()) {
             if (this.showCodingActivity) {
-              this.statusBar.text = `$(clock) ${output.trim()}`;
-              this.statusBar.tooltip = 'WakaTime: Today’s coding time. Click to visit dashboard.';
+              this.updateStatusBarText(output.trim());
+              this.updateStatusBarTooltip('WakaTime: Today’s coding time. Click to visit dashboard.');
             } else {
-              this.statusBar.text = `$(clock)`;
-              this.statusBar.tooltip = output.trim();
+              this.updateStatusBarText();
+              this.updateStatusBarTooltip(output.trim());
             }
           } else {
-            this.statusBar.text = `$(clock)`;
-            this.statusBar.tooltip = `WakaTime: Calculating time spent today in background...`;
+            this.updateStatusBarText();
+            this.updateStatusBarTooltip('WakaTime: Calculating time spent today in background...');
           }
         }
       } else if (code == 102) {
