@@ -85,4 +85,9 @@ export class Utils {
     }
     return newCmds.join(' ');
   }
+
+  public static isUnsavedFile(file: string): boolean {
+    const re = new RegExp('^SQLQuery_[0-9]+$');
+    return re.test(file);
+  }
 }

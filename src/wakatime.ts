@@ -381,16 +381,25 @@ export class WakaTime {
     // prevent sending the same heartbeat (https://github.com/wakatime/vscode-wakatime/issues/163)
     if (isWrite && this.isDuplicateHeartbeat(file, time, selection)) return;
 
+    let args: string[] = [];
+
+    args.push('--entity', Utils.quote(file));
+
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-    let args = ['--entity', Utils.quote(file), '--plugin', Utils.quote(user_agent)];
+    args.push('--plugin', Utils.quote(user_agent));
+
     args.push('--lineno', String(selection.line + 1));
     args.push('--cursorpos', String(selection.character + 1));
     args.push('--lines-in-file', String(lines));
+
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Utils.quote(project));
+
     if (isWrite) args.push('--write');
+
     args.push('--key', Utils.quote(apiKey));
+
     if (Dependencies.isWindows() || Dependencies.isPortable()) {
       args.push(
         '--config',
@@ -399,6 +408,8 @@ export class WakaTime {
         Utils.quote(this.options.getLogFile()),
       );
     }
+
+    if (Utils.isUnsavedFile(file)) args.push('--is-unsaved-entity')
 
     const binary = this.dependencies.getCliLocation();
     this.logger.debug(`Sending heartbeat: ${Utils.formatArguments(binary, args)}`);
