@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.1.0 (2022-04-08)
+
+- Track time spent on unsaved sql queries in Azure Data Studio.
+  [#266](https://github.com/wakatime/vscode-wakatime/issues/266)
+
 ## 18.0.11 (2022-04-05)
 
 - Upgrade vscode engine to v1.59.0.
