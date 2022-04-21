@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.1.1 (2022-04-21)
+
+- Remove reference to window in web extension.
+  [#269](https://github.com/wakatime/vscode-wakatime/issues/269)
+
 ## 18.1.0 (2022-04-08)
 
 - Track time spent on unsaved sql queries in Azure Data Studio.
