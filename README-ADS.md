@@ -21,13 +21,11 @@
 
     ![install from VSIX](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/ads-install.png)
 
-5. Restart Azure Data Studio.
-
-6. Enter your [api key](https://wakatime.com/settings?apikey=true), then press `enter`.
+5. Enter your [api key](https://wakatime.com/settings?apikey=true), then press `enter`.
 
     > (If you’re not prompted, press `F1` or `⌘ + Shift + P` then type `WakaTime API Key`.)
 
-7. Use Azure Data Studio and your coding activity will be displayed on your [WakaTime dashboard](https://wakatime.com)
+6. Use Azure Data Studio and your coding activity will be displayed on your [WakaTime dashboard](https://wakatime.com)
 
 ## Usage
 

@@ -15,13 +15,11 @@
 
     ![type wakatime](./images/type-wakatime.png)
 
-3. Restart Visual Studio Code.
-
-4. Enter your [api key][api key], then press `enter`.
+3. Enter your [api key][api key], then press `enter`.
 
     > (If you’re not prompted, press `F1` or `⌘ + Shift + P` then type `WakaTime API Key`.)
 
-5. Use VSCode and your coding activity will be displayed on your [WakaTime dashboard](https://wakatime.com)
+4. Use VSCode and your coding activity will be displayed on your [WakaTime dashboard](https://wakatime.com)
 
 ## Usage
 
