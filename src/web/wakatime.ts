@@ -24,7 +24,7 @@ export class WakaTime {
   private dedupe: FileSelectionMap = {};
   private logger: Logger;
   private config: Memento;
-  private fetchTodayIntervalId?: number;
+  private fetchTodayIntervalId?: any;
   private fetchTodayInterval: number = 60000;
   private lastFetchToday: number = 0;
   private showStatusBar: boolean;
@@ -489,7 +489,7 @@ export class WakaTime {
 
   private setTodayInterval(): void {
     if (this.fetchTodayIntervalId) return;
-    this.fetchTodayIntervalId = window.setInterval(this.getCodingActivity.bind(this), this.fetchTodayInterval);
+    this.fetchTodayIntervalId = setInterval(this.getCodingActivity.bind(this), this.fetchTodayInterval);
   }
 
   private clearTodayInterval(): void {
