@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 18.1.2 (2022-04-29)
+
+- Create symlink to wakatime-cli for consistency with other wakatime plugins.
+
 ## 18.1.1 (2022-04-21)
 
 - Remove reference to window in web extension.
