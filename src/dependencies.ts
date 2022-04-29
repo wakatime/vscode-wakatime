@@ -243,6 +243,13 @@ export class Dependencies {
     });
   }
 
+  private isSymlink(file: string): boolean {
+    try {
+      return fs.lstatSync(file).isSymbolicLink();
+    } catch (_) {}
+    return false;
+  }
+
   private extractCli(zipFile: string, callback: () => void): void {
     this.logger.debug(`Extracting wakatime-cli into "${this.getResourcesLocation()}"...`);
     this.removeCli(() => {
@@ -255,11 +262,21 @@ export class Dependencies {
           } catch (e) {
             this.logger.warnException(e);
           }
-          try {
-            this.logger.debug(`Create symlink from wakatime-cli to ${cli}`);
-            fs.symlinkSync(cli, path.join(this.getResourcesLocation(), 'wakatime-cli'));
-          } catch (e) {
-            this.logger.warnException(e);
+          const ext = Dependencies.isWindows() ? '.exe' : '';
+          const link = path.join(this.getResourcesLocation(), `wakatime-cli${ext}`);
+          if (!this.isSymlink(link)) {
+            try {
+              this.logger.debug(`Create symlink from wakatime-cli to ${cli}`);
+              fs.symlinkSync(cli, link);
+            } catch (e) {
+              this.logger.warnException(e);
+              try {
+                fs.copyFileSync(cli, link);
+                fs.chmodSync(link, 0o755);
+              } catch (e2) {
+                this.logger.warnException(e2);
+              }
+            }
           }
         }
         callback();
