@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 18.1.4 (2022-05-11)
+
+- Pass project folder to wakatime-cli.
+
 ## 18.1.3 (2022-05-11)
 
 - Prevent updating status bar to undefined.
