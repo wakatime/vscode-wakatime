@@ -399,6 +399,9 @@ export class WakaTime {
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Utils.quote(project));
 
+    let folder = this.getProjectFolder(file);
+    if (folder) args.push('--project-folder', Utils.quote(folder));
+
     if (isWrite) args.push('--write');
 
     args.push('--key', Utils.quote(apiKey));
@@ -566,12 +569,31 @@ export class WakaTime {
   }
 
   private getProjectName(file: string): string {
+    if (!vscode.workspace) return '';
     let uri = vscode.Uri.file(file);
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-    if (vscode.workspace && workspaceFolder) {
+    if (workspaceFolder) {
       try {
         return workspaceFolder.name;
       } catch (e) {}
+    }
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length) {
+      return vscode.workspace.workspaceFolders[0].name;
+    }
+    return vscode.workspace.name || '';
+  }
+
+  private getProjectFolder(file: string): string {
+    if (!vscode.workspace) return '';
+    let uri = vscode.Uri.file(file);
+    let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+    if (workspaceFolder) {
+      try {
+        return workspaceFolder.uri.fsPath;
+      } catch (e) {}
+    }
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length) {
+      return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }
     return '';
   }
