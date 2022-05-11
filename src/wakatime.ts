@@ -124,8 +124,11 @@ export class WakaTime {
 
   private updateStatusBarText(text?: string): void {
     if (!this.statusBar) return;
-    if (!text) this.statusBar.text = '$(clock)';
-    this.statusBar.text = '$(clock) ' +  text;
+    if (!text) {
+      this.statusBar.text = '$(clock)';
+    } else {
+      this.statusBar.text = '$(clock) ' +  text;
+    }
   }
 
   private updateStatusBarTooltip(tooltipText: string): void {
