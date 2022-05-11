@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.1.3 (2022-05-11)
+
+- Prevent updating status bar to undefined.
+  [#273](https://github.com/wakatime/vscode-wakatime/issues/273)
+
 ## 18.1.2 (2022-04-29)
 
 - Create symlink to wakatime-cli for consistency with other wakatime plugins.
