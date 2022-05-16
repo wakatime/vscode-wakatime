@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.1.5 (2022-05-16)
+
+- No longer need api key in wakatime-cli arguments.
+  [#274](https://github.com/wakatime/vscode-wakatime/issues/274)
+
 ## 18.1.4 (2022-05-11)
 
 - Pass project folder to wakatime-cli.
