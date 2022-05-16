@@ -364,7 +364,7 @@ export class WakaTime {
   ): void {
     this.options.getApiKey((apiKey) => {
       if (apiKey) {
-        this._sendHeartbeat(apiKey, file, time, selection, lines, isWrite);
+        this._sendHeartbeat(file, time, selection, lines, isWrite);
       } else {
         this.promptForApiKey();
       }
@@ -372,7 +372,6 @@ export class WakaTime {
   }
 
   private _sendHeartbeat(
-    apiKey: string,
     file: string,
     time: number,
     selection: vscode.Position,
@@ -403,8 +402,6 @@ export class WakaTime {
     if (folder) args.push('--project-folder', Utils.quote(folder));
 
     if (isWrite) args.push('--write');
-
-    args.push('--key', Utils.quote(apiKey));
 
     if (Dependencies.isWindows() || Dependencies.isPortable()) {
       args.push(
@@ -482,17 +479,16 @@ export class WakaTime {
 
     this.options.getApiKey((apiKey) => {
       if (!apiKey) return;
-      this._getCodingActivity(apiKey);
+      this._getCodingActivity();
     });
   }
 
-  private _getCodingActivity(apiKey: string) {
+  private _getCodingActivity() {
     if (!this.dependencies.isCliInstalled()) return;
 
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Utils.quote(user_agent)];
-    args.push('--key', Utils.quote(apiKey));
     if (Dependencies.isWindows()) {
       args.push(
         '--config',
