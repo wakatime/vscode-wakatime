@@ -67,6 +67,25 @@ Press `Ctrl + Shift + X`, search for `win-ca`, press `Install`.
 
 For more general troubleshooting info, see the [wakatime-cli Troubleshooting Section][wakatime-cli help].
 
+## Uninstalling
+
+1. Click the Extensions sidebar item in VS Code.
+
+2. Type `wakatime` and hit enter.
+
+3. Click the settings icon next to WakaTime, then click Uninstall.
+
+4. Delete the `~/.wakatime*` files in your home directory, unless you’re still using WakaTime with another IDE.
+
+## Contributing
+
+Pull requests, bug reports, and feature requests are welcome!
+Please search [existing issues][issues] before creating a new one.
+
+Many thanks to all [contributors](AUTHORS)!
+
+Made with :heart: by the [WakaTime Team][about].
+
 [wakatime]: https://wakatime.com/vs-code
 [api key]: https://wakatime.com/api-key
 [wakatime-cli help]: https://github.com/wakatime/wakatime-cli/blob/develop/TROUBLESHOOTING.md
@@ -74,3 +93,6 @@ For more general troubleshooting info, see the [wakatime-cli Troubleshooting Sec
 [how to debug]: https://wakatime.com/faq#debug-plugins
 [plugins status page]: https://wakatime.com/plugin-status
 [winca]: https://github.com/ukoloff/win-ca/tree/master/vscode
+[issues]: https://github.com/wakatime/vscode-wakatime/issues
+[authors]: https://github.com/wakatime/vscode-wakatime/blob/master/AUTHORS
+[about]: https://wakatime.com/about
