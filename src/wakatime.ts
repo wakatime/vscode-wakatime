@@ -346,7 +346,7 @@ export class WakaTime {
         if (file) {
           let time: number = Date.now();
           if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
-            this.sendHeartbeat(file, time, editor.selection.start, doc.lineCount, isWrite);
+            this.sendHeartbeat(file, time, editor.selection.start, doc.lineCount, isWrite, doc.isUntitled);
             this.lastFile = file;
             this.lastHeartbeat = time;
           }
@@ -361,10 +361,11 @@ export class WakaTime {
     selection: vscode.Position,
     lines: number,
     isWrite: boolean,
+    isUnsavedFile: boolean = false,
   ): void {
     this.options.getApiKey((apiKey) => {
       if (apiKey) {
-        this._sendHeartbeat(file, time, selection, lines, isWrite);
+        this._sendHeartbeat(file, time, selection, lines, isWrite, isUnsavedFile);
       } else {
         this.promptForApiKey();
       }
@@ -377,6 +378,7 @@ export class WakaTime {
     selection: vscode.Position,
     lines: number,
     isWrite: boolean,
+    isUnsavedFile: boolean,
   ): void {
     if (!this.dependencies.isCliInstalled()) return;
 
@@ -412,7 +414,7 @@ export class WakaTime {
       );
     }
 
-    if (Utils.isUnsavedFile(file)) args.push('--is-unsaved-entity')
+    if (isUnsavedFile) args.push('--is-unsaved-entity');
 
     const binary = this.dependencies.getCliLocation();
     this.logger.debug(`Sending heartbeat: ${Utils.formatArguments(binary, args)}`);
