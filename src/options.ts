@@ -201,17 +201,16 @@ export class Options {
     return this.logFile;
   }
 
+  // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
+  public isApiKeyFromEnv(): boolean {
+    return !!(process.env.WAKATIME_API_KEY && !Utils.apiKeyInvalid(process.env.WAKATIME_API_KEY));
+  }
+
   public async getApiKeyAsync(): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
-      const cachedApiKey = this.cache.api_key;
-      if (!Utils.apiKeyInvalid(cachedApiKey)) {
-        resolve(cachedApiKey);
-        return;
-      }
-
-      // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
-      if (process.env.WAKATIME_API_KEY && !Utils.apiKeyInvalid(process.env.WAKATIME_API_KEY)) {
-        resolve(process.env.WAKATIME_API_KEY);
+      const key = this.getApiKeyFromEnv();
+      if (!Utils.apiKeyInvalid(key)) {
+        resolve(key!);
         return;
       }
 
@@ -242,6 +241,15 @@ export class Options {
         }
         callback(null);
       });
+  }
+
+  public getApiKeyFromEnv(): string|undefined {
+    const cachedApiKey = this.cache.api_key;
+    if (!Utils.apiKeyInvalid(cachedApiKey)) return cachedApiKey;
+
+    if (this.isApiKeyFromEnv()) return process.env.WAKATIME_API_KEY;
+
+    return undefined;
   }
 
   public hasApiKey(callback: (valid: boolean) => void): void {
