@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 18.1.6 (2022-06-17)
+
+- Support for Support for gitpod.io when api key defined in env var.
+  [#277](https://github.com/wakatime/vscode-wakatime/issues/277)
+
 ## 18.1.5 (2022-05-16)
 
 - No longer need api key in wakatime-cli arguments.
