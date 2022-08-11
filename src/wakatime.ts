@@ -433,13 +433,13 @@ export class WakaTime {
       if (code == 0) {
         if (this.showStatusBar) this.getCodingActivity();
         this.logger.debug(`last heartbeat sent ${Utils.formatDate(new Date())}`);
-      } else if (code == 102) {
+      } else if (code == 102 || code == 112) {
         if (this.showStatusBar) {
           if (!this.showCodingActivity) this.updateStatusBarText();
           this.updateStatusBarTooltip('WakaTime: working offline... coding activity will sync next time we are online');
         }
         this.logger.warn(
-          `Api error (102); Check your ${this.options.getLogFile()} file for more details`,
+          `Working offline ({$code}); Check your ${this.options.getLogFile()} file for more details`,
         );
       } else if (code == 103) {
         let error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
@@ -539,7 +539,7 @@ export class WakaTime {
             this.updateStatusBarTooltip('WakaTime: Calculating time spent today in background...');
           }
         }
-      } else if (code == 102) {
+      } else if (code == 102 || code == 112) {
         // noop, working offline
       } else {
         let error_msg = `Error fetching today coding activity (${code}); Check your ${this.options.getLogFile()} file for more details`;
