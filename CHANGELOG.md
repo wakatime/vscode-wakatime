@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 18.1.7 (2022-08-11)
+
+- Support for new wakatime-cli exit code 112.
+
 ## 18.1.6 (2022-06-17)
 
 - Support for Support for gitpod.io when api key defined in env var.
