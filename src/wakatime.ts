@@ -150,6 +150,7 @@ export class WakaTime {
         placeHolder: 'Enter your api key from https://wakatime.com/settings',
         value: defaultVal,
         ignoreFocusOut: true,
+        password: true,
         validateInput: Utils.apiKeyInvalid.bind(this),
       };
       vscode.window.showInputBox(promptOptions).then((val) => {
