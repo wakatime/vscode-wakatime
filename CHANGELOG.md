@@ -1,6 +1,12 @@
 
 # Changelog
 
+## 19.0.0 (2022-08-14)
+
+- Support tracking time spent building and debugging.
+- Use password prompt instead of plain text.
+  [#291](https://github.com/wakatime/vscode-wakatime/pull/291)
+
 ## 18.1.7 (2022-08-11)
 
 - Support for new wakatime-cli exit code 112.
