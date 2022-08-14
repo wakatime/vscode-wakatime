@@ -463,7 +463,7 @@ export class WakaTime {
     if (isDebugging) {
       args.push('--category', 'debugging');
     } else if (isCompiling) {
-      args.push('--category', 'compiling');
+      args.push('--category', 'building');
     }
 
     const apiKey = this.options.getApiKeyFromEnv();
