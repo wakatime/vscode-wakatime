@@ -31,6 +31,8 @@ export class WakaTime {
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
+  private lastDebug: boolean = false;
+  private lastCompile: boolean = false;
   private dedupe: FileSelectionMap = {};
   private dependencies: Dependencies;
   private options: Options;
@@ -42,6 +44,8 @@ export class WakaTime {
   private showCodingActivity: boolean;
   private disabled: boolean = true;
   private extensionPath: string;
+  private isCompiling: boolean = false;
+  private isDebugging: boolean = false;
 
   constructor(extensionPath: string, logger: Logger) {
     this.extensionPath = extensionPath;
@@ -84,9 +88,7 @@ export class WakaTime {
   public initializeDependencies(): void {
     this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
 
-    this.statusBar = vscode.window.createStatusBarItem(
-      vscode.StatusBarAlignment.Left,
-    );
+    this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     this.statusBar.command = COMMAND_DASHBOARD;
 
     this.options.getSetting(
@@ -115,7 +117,6 @@ export class WakaTime {
               this.updateStatusBarTooltip('WakaTime: Initialized');
               this.getCodingActivity();
             });
-
           },
         );
       },
@@ -127,7 +128,7 @@ export class WakaTime {
     if (!text) {
       this.statusBar.text = '$(clock)';
     } else {
-      this.statusBar.text = '$(clock) ' +  text;
+      this.statusBar.text = '$(clock) ' + text;
     }
   }
 
@@ -324,8 +325,40 @@ export class WakaTime {
     vscode.window.onDidChangeActiveTextEditor(this.onChange, this, subscriptions);
     vscode.workspace.onDidSaveTextDocument(this.onSave, this, subscriptions);
 
+    vscode.tasks.onDidStartTask(this.onDidStartTask, this, subscriptions);
+    vscode.tasks.onDidEndTask(this.onDidEndTask, this, subscriptions);
+
+    vscode.debug.onDidChangeActiveDebugSession(this.onDebuggingChanged, this, subscriptions);
+    vscode.debug.onDidChangeBreakpoints(this.onDebuggingChanged, this, subscriptions);
+    vscode.debug.onDidStartDebugSession(this.onDidStartDebugSession, this, subscriptions);
+    vscode.debug.onDidTerminateDebugSession(this.onDidTerminateDebugSession, this, subscriptions);
+
     // create a combined disposable for all event subscriptions
     this.disposable = vscode.Disposable.from(...subscriptions);
+  }
+
+  private onDebuggingChanged(): void {
+    this.onEvent(false);
+  }
+
+  private onDidStartDebugSession(): void {
+    this.isDebugging = true;
+    this.onEvent(false);
+  }
+
+  private onDidTerminateDebugSession(): void {
+    this.isDebugging = false;
+    this.onEvent(false);
+  }
+
+  private onDidStartTask(): void {
+    this.isCompiling = true;
+    this.onEvent(false);
+  }
+
+  private onDidEndTask(): void {
+    this.isCompiling = false;
+    this.onEvent(false);
   }
 
   private onChange(): void {
@@ -346,10 +379,27 @@ export class WakaTime {
         let file: string = doc.fileName;
         if (file) {
           let time: number = Date.now();
-          if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
-            this.sendHeartbeat(file, time, editor.selection.start, doc.lineCount, isWrite, doc.isUntitled);
+          if (
+            isWrite ||
+            this.enoughTimePassed(time) ||
+            this.lastFile !== file ||
+            this.lastDebug !== this.isDebugging ||
+            this.lastCompile !== this.isCompiling
+          ) {
+            this.sendHeartbeat(
+              file,
+              time,
+              editor.selection.start,
+              doc.lineCount,
+              isWrite,
+              this.isCompiling,
+              this.isDebugging,
+              doc.isUntitled,
+            );
             this.lastFile = file;
             this.lastHeartbeat = time;
+            this.lastDebug = this.isDebugging;
+            this.lastCompile = this.isCompiling;
           }
         }
       }
@@ -362,11 +412,22 @@ export class WakaTime {
     selection: vscode.Position,
     lines: number,
     isWrite: boolean,
+    isCompiling: boolean,
+    isDebugging: boolean,
     isUnsavedFile: boolean = false,
   ): void {
     this.options.getApiKey((apiKey) => {
       if (apiKey) {
-        this._sendHeartbeat(file, time, selection, lines, isWrite, isUnsavedFile);
+        this._sendHeartbeat(
+          file,
+          time,
+          selection,
+          lines,
+          isWrite,
+          isCompiling,
+          isDebugging,
+          isUnsavedFile,
+        );
       } else {
         this.promptForApiKey();
       }
@@ -379,6 +440,8 @@ export class WakaTime {
     selection: vscode.Position,
     lines: number,
     isWrite: boolean,
+    isCompiling: boolean,
+    isDebugging: boolean,
     isUnsavedFile: boolean,
   ): void {
     if (!this.dependencies.isCliInstalled()) return;
@@ -397,6 +460,11 @@ export class WakaTime {
     args.push('--lineno', String(selection.line + 1));
     args.push('--cursorpos', String(selection.character + 1));
     args.push('--lines-in-file', String(lines));
+    if (isDebugging) {
+      args.push('--category', 'debugging');
+    } else if (isCompiling) {
+      args.push('--category', 'compiling');
+    }
 
     const apiKey = this.options.getApiKeyFromEnv();
     if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey!));
@@ -437,7 +505,9 @@ export class WakaTime {
       } else if (code == 102 || code == 112) {
         if (this.showStatusBar) {
           if (!this.showCodingActivity) this.updateStatusBarText();
-          this.updateStatusBarTooltip('WakaTime: working offline... coding activity will sync next time we are online');
+          this.updateStatusBarTooltip(
+            'WakaTime: working offline... coding activity will sync next time we are online',
+          );
         }
         this.logger.warn(
           `Working offline ({$code}); Check your ${this.options.getLogFile()} file for more details`,
@@ -530,7 +600,9 @@ export class WakaTime {
           if (output && output.trim()) {
             if (this.showCodingActivity) {
               this.updateStatusBarText(output.trim());
-              this.updateStatusBarTooltip('WakaTime: Today’s coding time. Click to visit dashboard.');
+              this.updateStatusBarTooltip(
+                'WakaTime: Today’s coding time. Click to visit dashboard.',
+              );
             } else {
               this.updateStatusBarText();
               this.updateStatusBarTooltip(output.trim());
@@ -604,7 +676,10 @@ export class WakaTime {
 
   private setTodayInterval(): void {
     if (this.fetchTodayIntervalId) return;
-    this.fetchTodayIntervalId = setInterval(this.getCodingActivity.bind(this), this.fetchTodayInterval);
+    this.fetchTodayIntervalId = setInterval(
+      this.getCodingActivity.bind(this),
+      this.fetchTodayInterval,
+    );
   }
 
   private clearTodayInterval(): void {

@@ -21,6 +21,8 @@ export class WakaTime {
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
+  private lastDebug: boolean = false;
+  private lastCompile: boolean = false;
   private dedupe: FileSelectionMap = {};
   private logger: Logger;
   private config: Memento;
@@ -30,6 +32,8 @@ export class WakaTime {
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
   private disabled: boolean = true;
+  private isCompiling: boolean = false;
+  private isDebugging: boolean = false;
 
   constructor(logger: Logger, config: Memento) {
     this.logger = logger;
@@ -63,9 +67,7 @@ export class WakaTime {
   public initializeDependencies(): void {
     this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
 
-    this.statusBar = vscode.window.createStatusBarItem(
-      vscode.StatusBarAlignment.Left,
-    );
+    this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     this.statusBar.command = COMMAND_DASHBOARD;
 
     const showStatusBar = this.config.get('wakatime.status_bar_enabled');
@@ -93,7 +95,7 @@ export class WakaTime {
     if (!text) {
       this.statusBar.text = '$(clock)';
     } else {
-      this.statusBar.text = '$(clock) ' +  text;
+      this.statusBar.text = '$(clock) ' + text;
     }
   }
 
@@ -117,7 +119,7 @@ export class WakaTime {
       ignoreFocusOut: true,
       validateInput: Utils.apiKeyInvalid.bind(this),
     };
-    vscode.window.showInputBox(promptOptions).then(val => {
+    vscode.window.showInputBox(promptOptions).then((val) => {
       if (val != undefined) {
         let invalid = Utils.apiKeyInvalid(val);
         if (!invalid) this.config.update('wakatime.api_key', val);
@@ -135,7 +137,7 @@ export class WakaTime {
       value: defaultVal,
       ignoreFocusOut: true,
     };
-    vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+    vscode.window.showQuickPick(items, promptOptions).then((newVal) => {
       if (newVal == null) return;
       this.config.update('wakatime.debug', newVal);
       if (newVal === 'true') {
@@ -157,7 +159,7 @@ export class WakaTime {
       placeHolder: `disable or enable (extension is currently "${helperText}")`,
       ignoreFocusOut: true,
     };
-    vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+    vscode.window.showQuickPick(items, promptOptions).then((newVal) => {
       if (newVal !== 'enable' && newVal !== 'disable') return;
       this.disabled = newVal === 'disable';
       if (this.disabled != previousValue) {
@@ -182,7 +184,7 @@ export class WakaTime {
       value: defaultVal,
       ignoreFocusOut: true,
     };
-    vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+    vscode.window.showQuickPick(items, promptOptions).then((newVal) => {
       if (newVal !== 'true' && newVal !== 'false') return;
       this.config.update('wakatime.status_bar_enabled', newVal);
       this.showStatusBar = newVal === 'true'; // cache setting to prevent reading from disc too often
@@ -199,7 +201,7 @@ export class WakaTime {
       value: defaultVal,
       ignoreFocusOut: true,
     };
-    vscode.window.showQuickPick(items, promptOptions).then(newVal => {
+    vscode.window.showQuickPick(items, promptOptions).then((newVal) => {
       if (newVal !== 'true' && newVal !== 'false') return;
       this.config.update('wakatime.status_bar_coding_activity', newVal);
       if (newVal === 'true') {
@@ -222,7 +224,7 @@ export class WakaTime {
   }
 
   private checkApiKey(): void {
-    this.hasApiKey(hasApiKey => {
+    this.hasApiKey((hasApiKey) => {
       if (!hasApiKey) this.promptForApiKey();
     });
   }
@@ -274,7 +276,13 @@ export class WakaTime {
         let file: string = doc.fileName;
         if (file) {
           let time: number = Date.now();
-          if (isWrite || this.enoughTimePassed(time) || this.lastFile !== file) {
+          if (
+            isWrite ||
+            this.enoughTimePassed(time) ||
+            this.lastFile !== file ||
+            this.lastDebug !== this.isDebugging ||
+            this.lastCompile !== this.isCompiling
+          ) {
             const language = this.getLanguage(doc);
             this.sendHeartbeat(
               file,
@@ -283,9 +291,13 @@ export class WakaTime {
               doc.lineCount,
               language,
               isWrite,
+              this.isCompiling,
+              this.isDebugging,
             );
             this.lastFile = file;
             this.lastHeartbeat = time;
+            this.lastDebug = this.isDebugging;
+            this.lastCompile = this.isCompiling;
           }
         }
       }
@@ -299,10 +311,21 @@ export class WakaTime {
     lines: number,
     language: string,
     isWrite: boolean,
+    isCompiling: boolean,
+    isDebugging: boolean,
   ): void {
-    this.hasApiKey(hasApiKey => {
+    this.hasApiKey((hasApiKey) => {
       if (hasApiKey) {
-        this._sendHeartbeat(file, time, selection, lines, language, isWrite);
+        this._sendHeartbeat(
+          file,
+          time,
+          selection,
+          lines,
+          language,
+          isWrite,
+          isCompiling,
+          isDebugging,
+        );
       } else {
         this.promptForApiKey();
       }
@@ -316,6 +339,8 @@ export class WakaTime {
     lines: number,
     language: string,
     isWrite: boolean,
+    isCompiling: boolean,
+    isDebugging: boolean,
   ) {
     // prevent sending the same heartbeat (https://github.com/wakatime/vscode-wakatime/issues/163)
     if (isWrite && this.isDuplicateHeartbeat(file, time, selection)) return;
@@ -333,6 +358,11 @@ export class WakaTime {
     let project = this.getProjectName();
     if (project) payload['project'] = project;
     if (language) payload['language'] = language;
+    if (isDebugging) {
+      payload['category'] = 'debugging';
+    } else if (isCompiling) {
+      payload['category'] = 'compiling';
+    }
 
     this.logger.debug(`Sending heartbeat: ${JSON.stringify(payload)}`);
 
@@ -400,7 +430,7 @@ export class WakaTime {
 
     this.lastFetchToday = Date.now();
 
-    this.hasApiKey(hasApiKey => {
+    this.hasApiKey((hasApiKey) => {
       if (!hasApiKey) return;
       this._getCodingActivity();
     });
@@ -424,13 +454,18 @@ export class WakaTime {
         this.config.get('wakatime.status_bar_coding_activity');
         if (this.showStatusBar) {
           let output = parsedJSON.data.grand_total.text;
-          if (this.config.get('wakatime.status_bar_hide_categories') != 'true' && parsedJSON.data.categories.length > 1) {
-            output = parsedJSON.data.categories.map(x => x.text + ' ' + x.name).join(', ');
+          if (
+            this.config.get('wakatime.status_bar_hide_categories') != 'true' &&
+            parsedJSON.data.categories.length > 1
+          ) {
+            output = parsedJSON.data.categories.map((x) => x.text + ' ' + x.name).join(', ');
           }
           if (output && output.trim()) {
             if (this.showCodingActivity) {
               this.updateStatusBarText(output.trim());
-              this.updateStatusBarTooltip('WakaTime: Today’s coding time. Click to visit dashboard.');
+              this.updateStatusBarTooltip(
+                'WakaTime: Today’s coding time. Click to visit dashboard.',
+              );
             } else {
               this.updateStatusBarText();
               this.updateStatusBarTooltip(output.trim());
@@ -492,7 +527,10 @@ export class WakaTime {
 
   private setTodayInterval(): void {
     if (this.fetchTodayIntervalId) return;
-    this.fetchTodayIntervalId = setInterval(this.getCodingActivity.bind(this), this.fetchTodayInterval);
+    this.fetchTodayIntervalId = setInterval(
+      this.getCodingActivity.bind(this),
+      this.fetchTodayInterval,
+    );
   }
 
   private clearTodayInterval(): void {
