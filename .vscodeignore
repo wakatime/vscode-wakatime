@@ -17,3 +17,4 @@ node_modules/**
 tags
 tags.lock
 tags.temp
+.vscode-test-web
