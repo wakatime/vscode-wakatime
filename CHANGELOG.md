@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 19.0.1 (2022-08-20)
+
+- Add .vscode-test-web to .vscodeignore to decrease bundle size.
+  [#293](https://github.com/wakatime/vscode-wakatime/pull/293)
+
 ## 19.0.0 (2022-08-14)
 
 - Support tracking time spent building and debugging.
