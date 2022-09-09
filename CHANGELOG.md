@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 19.1.0 (2022-09-09)
+
+- Support reading api url from env var.
+  [#284](https://github.com/wakatime/vscode-wakatime/issues/284)
+
 ## 19.0.1 (2022-08-20)
 
 - Add .vscode-test-web to .vscodeignore to decrease bundle size.
