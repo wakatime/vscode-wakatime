@@ -35,13 +35,22 @@ export class Options {
     });
   }
 
-  public getSetting(section: string, key: string, internal: boolean, callback: (Setting) => void): void {
+  public getSetting(
+    section: string,
+    key: string,
+    internal: boolean,
+    callback: (Setting) => void,
+  ): void {
     fs.readFile(
       this.getConfigFile(internal),
       'utf-8',
       (err: NodeJS.ErrnoException | null, content: string) => {
         if (err) {
-          callback({error: new Error(`could not read ${this.getConfigFile(internal)}`), key: key, value: null});
+          callback({
+            error: new Error(`could not read ${this.getConfigFile(internal)}`),
+            key: key,
+            value: null,
+          });
         } else {
           let currentSection = '';
           let lines = content.split('\n');
@@ -56,13 +65,13 @@ export class Options {
               let parts = line.split('=');
               let currentKey = parts[0].trim();
               if (currentKey === key && parts.length > 1) {
-                callback({key: key, value: this.removeNulls(parts[1].trim())});
+                callback({ key: key, value: this.removeNulls(parts[1].trim()) });
                 return;
               }
             }
           }
 
-          callback({key: key, value: null});
+          callback({ key: key, value: null });
         }
       },
     );
@@ -70,127 +79,119 @@ export class Options {
 
   public setSetting(section: string, key: string, val: string, internal: boolean): void {
     const configFile = this.getConfigFile(internal);
-    fs.readFile(
-      configFile,
-      'utf-8',
-      (err: NodeJS.ErrnoException | null, content: string) => {
-        // ignore errors because config file might not exist yet
-        if (err) content = '';
+    fs.readFile(configFile, 'utf-8', (err: NodeJS.ErrnoException | null, content: string) => {
+      // ignore errors because config file might not exist yet
+      if (err) content = '';
 
-        let contents: string[] = [];
-        let currentSection = '';
+      let contents: string[] = [];
+      let currentSection = '';
 
-        let found = false;
-        let lines = content.split('\n');
-        for (var i = 0; i < lines.length; i++) {
-          let line = lines[i];
-          if (this.startsWith(line.trim(), '[') && this.endsWith(line.trim(), ']')) {
-            if (currentSection === section && !found) {
+      let found = false;
+      let lines = content.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        if (this.startsWith(line.trim(), '[') && this.endsWith(line.trim(), ']')) {
+          if (currentSection === section && !found) {
+            contents.push(this.removeNulls(key + ' = ' + val));
+            found = true;
+          }
+          currentSection = line
+            .trim()
+            .substring(1, line.trim().length - 1)
+            .toLowerCase();
+          contents.push(this.removeNulls(line));
+        } else if (currentSection === section) {
+          let parts = line.split('=');
+          let currentKey = parts[0].trim();
+          if (currentKey === key) {
+            if (!found) {
               contents.push(this.removeNulls(key + ' = ' + val));
               found = true;
-            }
-            currentSection = line
-              .trim()
-              .substring(1, line.trim().length - 1)
-              .toLowerCase();
-            contents.push(this.removeNulls(line));
-          } else if (currentSection === section) {
-            let parts = line.split('=');
-            let currentKey = parts[0].trim();
-            if (currentKey === key) {
-              if (!found) {
-                contents.push(this.removeNulls(key + ' = ' + val));
-                found = true;
-              }
-            } else {
-              contents.push(this.removeNulls(line));
             }
           } else {
             contents.push(this.removeNulls(line));
           }
+        } else {
+          contents.push(this.removeNulls(line));
         }
+      }
 
-        if (!found) {
-          if (currentSection !== section) {
-            contents.push('[' + section + ']');
-          }
-          contents.push(this.removeNulls(key + ' = ' + val));
+      if (!found) {
+        if (currentSection !== section) {
+          contents.push('[' + section + ']');
         }
+        contents.push(this.removeNulls(key + ' = ' + val));
+      }
 
-        fs.writeFile(configFile as string, contents.join('\n'), err => {
-          if (err) throw err;
-        });
-      },
-    );
+      fs.writeFile(configFile as string, contents.join('\n'), (err) => {
+        if (err) throw err;
+      });
+    });
   }
 
   public setSettings(section: string, settings: Setting[], internal: boolean): void {
     const configFile = this.getConfigFile(internal);
-    fs.readFile(
-      configFile,
-      'utf-8',
-      (err: NodeJS.ErrnoException | null, content: string) => {
-        // ignore errors because config file might not exist yet
-        if (err) content = '';
+    fs.readFile(configFile, 'utf-8', (err: NodeJS.ErrnoException | null, content: string) => {
+      // ignore errors because config file might not exist yet
+      if (err) content = '';
 
-        let contents: string[] = [];
-        let currentSection = '';
+      let contents: string[] = [];
+      let currentSection = '';
 
-        const found = {};
-        let lines = content.split('\n');
-        for (var i = 0; i < lines.length; i++) {
-          let line = lines[i];
-          if (this.startsWith(line.trim(), '[') && this.endsWith(line.trim(), ']')) {
-            if (currentSection === section) {
-              settings.forEach(setting => {
-                if (!found[setting.key]) {
-                  contents.push(this.removeNulls(setting.key + ' = ' + setting.value));
-                  found[setting.key] = true;
-                }
-              });
-            }
-            currentSection = line
-              .trim()
-              .substring(1, line.trim().length - 1)
-              .toLowerCase();
-            contents.push(this.removeNulls(line));
-          } else if (currentSection === section) {
-            let parts = line.split('=');
-            let currentKey = parts[0].trim();
-            let keepLineUnchanged = true;
-            settings.forEach(setting => {
-              if (currentKey === setting.key) {
-                keepLineUnchanged = false;
-                if (!found[setting.key]) {
-                  contents.push(this.removeNulls(setting.key + ' = ' + setting.value));
-                  found[setting.key] = true;
-                }
+      const found = {};
+      let lines = content.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        if (this.startsWith(line.trim(), '[') && this.endsWith(line.trim(), ']')) {
+          if (currentSection === section) {
+            settings.forEach((setting) => {
+              if (!found[setting.key]) {
+                contents.push(this.removeNulls(setting.key + ' = ' + setting.value));
+                found[setting.key] = true;
               }
             });
-            if (keepLineUnchanged) {
-              contents.push(this.removeNulls(line));
+          }
+          currentSection = line
+            .trim()
+            .substring(1, line.trim().length - 1)
+            .toLowerCase();
+          contents.push(this.removeNulls(line));
+        } else if (currentSection === section) {
+          let parts = line.split('=');
+          let currentKey = parts[0].trim();
+          let keepLineUnchanged = true;
+          settings.forEach((setting) => {
+            if (currentKey === setting.key) {
+              keepLineUnchanged = false;
+              if (!found[setting.key]) {
+                contents.push(this.removeNulls(setting.key + ' = ' + setting.value));
+                found[setting.key] = true;
+              }
             }
-          } else {
+          });
+          if (keepLineUnchanged) {
             contents.push(this.removeNulls(line));
           }
+        } else {
+          contents.push(this.removeNulls(line));
         }
+      }
 
-        settings.forEach(setting => {
-          if (!found[setting.key]) {
-            if (currentSection !== section) {
-              contents.push('[' + section + ']');
-              currentSection = section;
-            }
-            contents.push(this.removeNulls(setting.key + ' = ' + setting.value));
-            found[setting.key] = true;
+      settings.forEach((setting) => {
+        if (!found[setting.key]) {
+          if (currentSection !== section) {
+            contents.push('[' + section + ']');
+            currentSection = section;
           }
-        });
+          contents.push(this.removeNulls(setting.key + ' = ' + setting.value));
+          found[setting.key] = true;
+        }
+      });
 
-        fs.writeFile(configFile as string, contents.join('\n'), err => {
-          if (err) throw err;
-        });
-      },
-    );
+      fs.writeFile(configFile as string, contents.join('\n'), (err) => {
+        if (err) throw err;
+      });
+    });
   }
 
   public getConfigFile(internal: boolean): string {
@@ -201,61 +202,74 @@ export class Options {
     return this.logFile;
   }
 
-  // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
-  public isApiKeyFromEnv(): boolean {
-    return !!(process.env.WAKATIME_API_KEY && !Utils.apiKeyInvalid(process.env.WAKATIME_API_KEY));
-  }
-
   public async getApiKeyAsync(): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const key = this.getApiKeyFromEnv();
       if (!Utils.apiKeyInvalid(key)) {
-        resolve(key!);
+        resolve(key);
         return;
       }
+
+      if (!Utils.apiKeyInvalid(this.cache.api_key)) return this.cache.api_key;
 
       try {
         const apiKey = await this.getSettingAsync<string>('settings', 'api_key');
         if (!Utils.apiKeyInvalid(apiKey)) this.cache.api_key = apiKey;
         resolve(apiKey);
-      } catch(err) {
+        return;
+      } catch (err) {
         this.logger.debug(`Exception while reading API Key from config file: ${err}`);
         reject(err);
+        return;
       }
     });
   }
 
-  public getApiKey(callback: (apiKey: string|null) => void): void {
+  public getApiKey(callback: (apiKey: string | null) => void): void {
     this.getApiKeyAsync()
-      .then(apiKey => {
+      .then((apiKey) => {
         if (!Utils.apiKeyInvalid(apiKey)) {
           callback(apiKey);
         } else {
           callback(null);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         this.logger.warn(`Unable to get api key: ${err}`);
         if (`${err}`.includes('spawn EPERM')) {
-          vscode.window.showErrorMessage("Microsoft Defender is blocking WakaTime. Please allow WakaTime to run so it can upload code stats to your dashboard.");
+          vscode.window.showErrorMessage(
+            'Microsoft Defender is blocking WakaTime. Please allow WakaTime to run so it can upload code stats to your dashboard.',
+          );
         }
         callback(null);
       });
   }
 
-  public getApiKeyFromEnv(): string|undefined {
-    const cachedApiKey = this.cache.api_key;
-    if (!Utils.apiKeyInvalid(cachedApiKey)) return cachedApiKey;
+  // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
+  public getApiKeyFromEnv(): string {
+    if (this.cache.api_key_from_env !== undefined) return this.cache.api_key_from_env;
 
-    if (this.isApiKeyFromEnv()) return process.env.WAKATIME_API_KEY;
+    if (!Utils.apiKeyInvalid(process.env.WAKATIME_API_KEY)) {
+      this.cache.api_key_from_env = process.env.WAKATIME_API_KEY;
+    } else {
+      this.cache.api_key_from_env = '';
+    }
 
-    return undefined;
+    return this.cache.api_key_from_env;
+  }
+
+  public getApiUrlFromEnv(): string {
+    if (this.cache.api_url !== undefined) return this.cache.api_url;
+
+    this.cache.api_url = process.env.WAKATIME_API_URL || '';
+
+    return this.cache.api_url;
   }
 
   public hasApiKey(callback: (valid: boolean) => void): void {
     this.getApiKeyAsync()
-      .then(apiKey => callback(!Utils.apiKeyInvalid(apiKey)))
-      .catch(err => {
+      .then((apiKey) => callback(!Utils.apiKeyInvalid(apiKey)))
+      .catch((err) => {
         this.logger.warn(`Unable to check for api key: ${err}`);
         callback(false);
       });
