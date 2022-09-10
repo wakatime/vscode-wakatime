@@ -202,16 +202,16 @@ export class Options {
     return this.logFile;
   }
 
-  // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
-  public isApiKeyFromEnv(): boolean {
-    return !!(process.env.WAKATIME_API_KEY && !Utils.apiKeyInvalid(process.env.WAKATIME_API_KEY));
-  }
-
   public async getApiKeyAsync(): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const key = this.getApiKeyFromEnv();
       if (!Utils.apiKeyInvalid(key)) {
-        resolve(key!);
+        resolve(key);
+        return;
+      }
+
+      if (!Utils.apiKeyInvalid(this.cache.api_key)) {
+        resolve(this.cache.api_key);
         return;
       }
 
@@ -219,9 +219,11 @@ export class Options {
         const apiKey = await this.getSettingAsync<string>('settings', 'api_key');
         if (!Utils.apiKeyInvalid(apiKey)) this.cache.api_key = apiKey;
         resolve(apiKey);
+        return;
       } catch (err) {
         this.logger.debug(`Exception while reading API Key from config file: ${err}`);
         reject(err);
+        return;
       }
     });
   }
@@ -246,13 +248,21 @@ export class Options {
       });
   }
 
-  public getApiKeyFromEnv(): string | undefined {
-    const cachedApiKey = this.cache.api_key;
-    if (!Utils.apiKeyInvalid(cachedApiKey)) return cachedApiKey;
+  // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
+  public getApiKeyFromEnv(): string {
+    if (this.cache.api_key_from_env !== undefined) return this.cache.api_key_from_env;
 
-    if (this.isApiKeyFromEnv()) return process.env.WAKATIME_API_KEY;
+    this.cache.api_key_from_env = process.env.WAKATIME_API_KEY || '';
 
-    return undefined;
+    return this.cache.api_key_from_env;
+  }
+
+  public getApiUrlFromEnv(): string {
+    if (this.cache.api_url_from_env !== undefined) return this.cache.api_url_from_env;
+
+    this.cache.api_url_from_env = process.env.WAKATIME_API_URL || '';
+
+    return this.cache.api_url_from_env;
   }
 
   public hasApiKey(callback: (valid: boolean) => void): void {

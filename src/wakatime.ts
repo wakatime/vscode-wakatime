@@ -467,7 +467,10 @@ export class WakaTime {
     }
 
     const apiKey = this.options.getApiKeyFromEnv();
-    if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey!));
+    if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
+
+    const apiUrl = this.options.getApiUrlFromEnv();
+    if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
     let project = this.getProjectName(file);
     if (project) args.push('--alternate-project', Utils.quote(project));
@@ -565,8 +568,13 @@ export class WakaTime {
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--plugin', Utils.quote(user_agent)];
+
     const apiKey = this.options.getApiKeyFromEnv();
-    if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey!));
+    if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
+
+    const apiUrl = this.options.getApiUrlFromEnv();
+    if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
+
     if (Dependencies.isWindows()) {
       args.push(
         '--config',
