@@ -15,17 +15,14 @@ export class Dependencies {
   private extensionPath: string;
   private resourcesLocation?: string = undefined;
   private githubDownloadPrefix = 'https://github.com/wakatime/wakatime-cli/releases/download';
-  private githubReleasesStableUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
-  private githubReleasesAlphaUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases?per_page=1';
+  private githubReleasesStableUrl =
+    'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
+  private githubReleasesAlphaUrl =
+    'https://api.github.com/repos/wakatime/wakatime-cli/releases?per_page=1';
   private global: boolean;
   private latestCliVersion: string = '';
 
-  constructor(
-    options: Options,
-    logger: Logger,
-    extensionPath: string,
-    global: boolean,
-  ) {
+  constructor(options: Options, logger: Logger, extensionPath: string, global: boolean) {
     this.options = options;
     this.logger = logger;
     this.extensionPath = extensionPath;
@@ -97,7 +94,7 @@ export class Dependencies {
       windowsHide: true,
     };
     if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) {
-      options['env'] = { ...process.env, 'WAKATIME_HOME': Dependencies.getHomeDirectory() };
+      options['env'] = { ...process.env, WAKATIME_HOME: Dependencies.getHomeDirectory() };
     }
     return options;
   }
@@ -106,7 +103,7 @@ export class Dependencies {
     if (!this.isCliInstalled()) {
       this.installCli(callback);
     } else {
-      this.isCliLatest(isLatest => {
+      this.isCliLatest((isLatest) => {
         if (!isLatest) {
           this.installCli(callback);
         } else {
@@ -140,7 +137,7 @@ export class Dependencies {
           this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
 
           this.logger.debug('Checking for updates to wakatime-cli...');
-          this.getLatestCliVersion(latestVersion => {
+          this.getLatestCliVersion((latestVersion) => {
             if (currentVersion === latestVersion) {
               this.logger.debug('wakatime-cli is up to date');
               callback(true);
@@ -168,70 +165,93 @@ export class Dependencies {
     }
     this.options.getSetting('settings', 'proxy', false, (proxy: Setting) => {
       this.options.getSetting('settings', 'no_ssl_verify', false, (noSSLVerify: Setting) => {
-        this.options.getSetting('internal', 'cli_version_last_modified', true, (modified: Setting) => {
-          this.options.getSetting('internal', 'cli_version', true, (version: Setting) => {
-            this.options.getSetting('settings', 'alpha', false, (alpha: Setting) => {
-              let options = {
-                url: alpha.value == 'true' ? this.githubReleasesAlphaUrl : this.githubReleasesStableUrl,
-                json: true,
-                headers: {
-                  'User-Agent': 'github.com/wakatime/vscode-wakatime',
-                },
-              };
-              if (proxy.value) {
-                this.logger.debug(`Using Proxy: ${proxy.value}`);
-                options['proxy'] = proxy.value;
-              }
-              if (noSSLVerify.value === 'true') options['strictSSL'] = false;
-              if (modified.value && version.value) options['headers']['If-Modified-Since'] = modified.value;
-              try {
-                request.get(options, (error, response, json) => {
-                  if (!error && response && (response.statusCode == 200 || response.statusCode == 304)) {
-                    this.logger.debug(`GitHub API Response ${response.statusCode}`);
-                    if (response.statusCode == 304) {
-                      this.latestCliVersion = version.value;
+        this.options.getSetting(
+          'internal',
+          'cli_version_last_modified',
+          true,
+          (modified: Setting) => {
+            this.options.getSetting('internal', 'cli_version', true, (version: Setting) => {
+              this.options.getSetting('settings', 'alpha', false, (alpha: Setting) => {
+                let options = {
+                  url:
+                    alpha.value == 'true'
+                      ? this.githubReleasesAlphaUrl
+                      : this.githubReleasesStableUrl,
+                  json: true,
+                  headers: {
+                    'User-Agent': 'github.com/wakatime/vscode-wakatime',
+                  },
+                };
+                if (proxy.value) {
+                  this.logger.debug(`Using Proxy: ${proxy.value}`);
+                  options['proxy'] = proxy.value;
+                }
+                if (noSSLVerify.value === 'true') options['strictSSL'] = false;
+                if (modified.value && version.value)
+                  options['headers']['If-Modified-Since'] = modified.value;
+                try {
+                  request.get(options, (error, response, json) => {
+                    if (
+                      !error &&
+                      response &&
+                      (response.statusCode == 200 || response.statusCode == 304)
+                    ) {
+                      this.logger.debug(`GitHub API Response ${response.statusCode}`);
+                      if (response.statusCode == 304) {
+                        this.latestCliVersion = version.value;
+                        callback(this.latestCliVersion);
+                        return;
+                      }
+                      this.latestCliVersion =
+                        alpha.value == 'true' ? json[0]['tag_name'] : json['tag_name'];
+                      this.logger.debug(
+                        `Latest wakatime-cli version from GitHub: ${this.latestCliVersion}`,
+                      );
+                      const lastModified = response.headers['last-modified'] as string;
+                      if (lastModified && this.latestCliVersion) {
+                        this.options.setSettings(
+                          'internal',
+                          [
+                            { key: 'cli_version', value: this.latestCliVersion },
+                            { key: 'cli_version_last_modified', value: lastModified },
+                          ],
+                          true,
+                        );
+                      }
                       callback(this.latestCliVersion);
-                      return;
-                    }
-                    this.latestCliVersion = alpha.value == 'true' ? json[0]['tag_name'] : json['tag_name'];
-                    this.logger.debug(`Latest wakatime-cli version from GitHub: ${this.latestCliVersion}`);
-                    const lastModified = response.headers['last-modified'] as string;
-                    if (lastModified && this.latestCliVersion) {
-                      this.options.setSettings('internal', [
-                        {key: 'cli_version', value: this.latestCliVersion},
-                        {key: 'cli_version_last_modified', value: lastModified},
-                      ], true);
-                    }
-                    callback(this.latestCliVersion);
-                  } else {
-                    if (response) {
-                      this.logger.warn(`GitHub API Response ${response.statusCode}: ${error}`);
                     } else {
-                      this.logger.warn(`GitHub API Response Error: ${error}`);
+                      if (response) {
+                        this.logger.warn(`GitHub API Response ${response.statusCode}: ${error}`);
+                      } else {
+                        this.logger.warn(`GitHub API Response Error: ${error}`);
+                      }
+                      callback('');
                     }
-                    callback('');
-                  }
-                });
-              } catch (e) {
-                this.logger.warnException(e);
-                callback('');
-              }
+                  });
+                } catch (e) {
+                  this.logger.warnException(e);
+                  callback('');
+                }
+              });
             });
-          });
-        });
+          },
+        );
       });
     });
   }
 
   private installCli(callback: () => void): void {
-    this.getLatestCliVersion(version => {
+    this.getLatestCliVersion((version) => {
       if (!version) {
         callback();
         return;
       }
       this.logger.debug(`Downloading wakatime-cli ${version}...`);
       const url = this.cliDownloadUrl(version);
-      let zipFile = path.join(this.getResourcesLocation(), 'wakatime-cli' + this.randStr() + '.zip');
+      let zipFile = path.join(
+        this.getResourcesLocation(),
+        'wakatime-cli' + this.randStr() + '.zip',
+      );
       this.downloadFile(
         url,
         zipFile,
@@ -311,7 +331,7 @@ export class Dependencies {
         if (noSSLVerify.value === 'true') options['strictSSL'] = false;
         try {
           let r = request.get(options);
-          r.on('error', e => {
+          r.on('error', (e) => {
             this.logger.warn(`Failed to download ${url}`);
             this.logger.warn(e.toString());
             error();
@@ -383,7 +403,8 @@ export class Dependencies {
       'windows-amd64',
       'windows-arm64',
     ];
-    if (!validCombinations.includes(`${osname}-${arch}`)) this.reportMissingPlatformSupport(osname, arch);
+    if (!validCombinations.includes(`${osname}-${arch}`))
+      this.reportMissingPlatformSupport(osname, arch);
 
     return `${this.githubDownloadPrefix}/${version}/wakatime-cli-${osname}-${arch}.zip`;
   }
@@ -397,7 +418,7 @@ export class Dependencies {
         if (noSSLVerify.value === 'true') options['strictSSL'] = false;
         try {
           request.get(options);
-        } catch (e) { }
+        } catch (e) {}
       });
     });
   }
