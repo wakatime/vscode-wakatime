@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 19.3.0 (2022-09-10)
+
+- Support reading api url from env var, re-applied.
+  [#284](https://github.com/wakatime/vscode-wakatime/issues/284)
+
 ## 19.2.0 (2022-09-09)
 
 - Rollback previous release.
