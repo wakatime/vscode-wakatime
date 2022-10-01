@@ -14,27 +14,20 @@ export class Dependencies {
   private logger: Logger;
   private extensionPath: string;
   private resourcesLocation?: string = undefined;
+  private cliLocation?: string = undefined;
+  private cliLocationGlobal?: string = undefined;
+  private cliInstalled: boolean = false;
   private githubDownloadPrefix = 'https://github.com/wakatime/wakatime-cli/releases/download';
   private githubReleasesStableUrl =
     'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
   private githubReleasesAlphaUrl =
     'https://api.github.com/repos/wakatime/wakatime-cli/releases?per_page=1';
-  private global: boolean;
   private latestCliVersion: string = '';
 
-  constructor(options: Options, logger: Logger, extensionPath: string, global: boolean) {
+  constructor(options: Options, logger: Logger, extensionPath: string) {
     this.options = options;
     this.logger = logger;
     this.extensionPath = extensionPath;
-    this.global = global;
-  }
-
-  public checkAndInstall(callback: () => void): void {
-    if (this.global) {
-      this.checkGlobalCli(callback);
-    } else {
-      this.checkAndInstallCli(callback);
-    }
   }
 
   private getResourcesLocation() {
@@ -58,27 +51,42 @@ export class Dependencies {
   }
 
   public getCliLocation(): string {
-    if (this.global) return this.getCliLocationGlobal();
+    if (this.cliLocation) return this.cliLocation;
+
+    this.cliLocation = this.getCliLocationGlobal();
+    if (this.cliLocation) return this.cliLocation;
 
     const ext = Dependencies.isWindows() ? '.exe' : '';
     let osname = os.platform() as string;
     if (osname == 'win32') osname = 'windows';
     const arch = this.architecture();
-    return path.join(this.getResourcesLocation(), `wakatime-cli-${osname}-${arch}${ext}`);
+    this.cliLocation = path.join(
+      this.getResourcesLocation(),
+      `wakatime-cli-${osname}-${arch}${ext}`,
+    );
+
+    return this.cliLocation;
   }
 
-  public getCliLocationGlobal(): string {
+  public getCliLocationGlobal(): string | undefined {
+    if (this.cliLocationGlobal) return this.cliLocationGlobal;
+
     const binaryName = `wakatime-cli${Dependencies.isWindows() ? '.exe' : ''}`;
-    const pathName =
+    const path =
       which.sync(binaryName, { nothrow: true }) ??
       which.sync(binaryName.replace('-cli', ''), { nothrow: true });
-    if (pathName) return pathName;
-    this.logger.error('Could not find global cli - is it installed?');
-    throw new Error('Could not find global cli - is it installed?');
+    if (path) {
+      this.cliLocationGlobal = path;
+      this.logger.debug(`Using global wakatime-cli location: ${path}`);
+    }
+
+    return this.cliLocationGlobal;
   }
 
   public isCliInstalled(): boolean {
-    return fs.existsSync(this.getCliLocation());
+    if (this.cliInstalled) return true;
+    this.cliInstalled = fs.existsSync(this.getCliLocation());
+    return this.cliInstalled;
   }
 
   public static isWindows(): boolean {
@@ -99,7 +107,7 @@ export class Dependencies {
     return options;
   }
 
-  private checkAndInstallCli(callback: () => void): void {
+  public checkAndInstallCli(callback: () => void): void {
     if (!this.isCliInstalled()) {
       this.installCli(callback);
     } else {
@@ -113,21 +121,12 @@ export class Dependencies {
     }
   }
 
-  private checkGlobalCli(callback: () => void): void {
-    const binaryName = `wakatime-cli${Dependencies.isWindows() ? '.exe' : ''}`;
-    which(binaryName)
-      .then(() => callback())
-      .catch(() => {
-        which(binaryName.replace('-cli', ''))
-          .then(() => callback())
-          .catch(() => {
-            this.logger.error('Could not find global installation.');
-            throw new Error('Could not find global installation.');
-          });
-      });
-  }
-
   private isCliLatest(callback: (arg0: boolean) => void): void {
+    if (this.getCliLocationGlobal()) {
+      callback(true);
+      return;
+    }
+
     let args = ['--version'];
     const options = this.buildOptions();
     try {

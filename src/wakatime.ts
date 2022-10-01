@@ -58,23 +58,21 @@ export class WakaTime {
       if (setting.value === 'true') {
         this.logger.setLevel(LogLevel.DEBUG);
       }
-      this.options.getSetting('settings', 'global', false, (setting: Setting) => {
-        const global = setting.value === 'true';
-        this.dependencies = new Dependencies(this.options, this.logger, this.extensionPath, global);
 
-        let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
-        this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
-        this.agentName = this.appNames[vscode.env.appName] || 'vscode';
+      this.dependencies = new Dependencies(this.options, this.logger, this.extensionPath);
 
-        this.options.getSetting('settings', 'disabled', false, (disabled: Setting) => {
-          this.disabled = disabled.value === 'true';
-          if (this.disabled) {
-            this.dispose();
-            return;
-          }
+      let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
+      this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
+      this.agentName = this.appNames[vscode.env.appName] || 'vscode';
 
-          this.initializeDependencies();
-        });
+      this.options.getSetting('settings', 'disabled', false, (disabled: Setting) => {
+        this.disabled = disabled.value === 'true';
+        if (this.disabled) {
+          this.dispose();
+          return;
+        }
+
+        this.initializeDependencies();
       });
     });
   }
@@ -111,7 +109,7 @@ export class WakaTime {
           (showCodingActivity: Setting) => {
             this.showCodingActivity = showCodingActivity.value !== 'false';
 
-            this.dependencies.checkAndInstall(() => {
+            this.dependencies.checkAndInstallCli(() => {
               this.logger.debug('WakaTime initialized');
               this.updateStatusBarText();
               this.updateStatusBarTooltip('WakaTime: Initialized');
