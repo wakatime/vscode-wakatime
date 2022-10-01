@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 20.0.0 (2022-10-01)
+
+- Use global wakatime-cli from PATH by default if exists.
+  [#303](https://github.com/wakatime/vscode-wakatime/issues/303)
+
 ## 19.3.0 (2022-09-10)
 
 - Support reading api url from env var, re-applied.
