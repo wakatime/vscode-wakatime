@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 21.0.0 (2022-10-31)
+
+- Only use new wakatime-cli from PATH not legacy Python wakatime-cli.
+  [#310](https://github.com/wakatime/vscode-wakatime/issues/310)
+
 ## 20.0.0 (2022-10-01)
 
 - Use global wakatime-cli from PATH by default if exists.
