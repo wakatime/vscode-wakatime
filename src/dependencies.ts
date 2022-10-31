@@ -72,9 +72,7 @@ export class Dependencies {
     if (this.cliLocationGlobal) return this.cliLocationGlobal;
 
     const binaryName = `wakatime-cli${Dependencies.isWindows() ? '.exe' : ''}`;
-    const path =
-      which.sync(binaryName, { nothrow: true }) ??
-      which.sync(binaryName.replace('-cli', ''), { nothrow: true });
+    const path = which.sync(binaryName, { nothrow: true });
     if (path) {
       this.cliLocationGlobal = path;
       this.logger.debug(`Using global wakatime-cli location: ${path}`);
