@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 21.0.1 (2022-11-07)
+
+- Correctly log exit code to dev console when working offline.
+
 ## 21.0.0 (2022-10-31)
 
 - Only use new wakatime-cli from PATH not legacy Python wakatime-cli.
