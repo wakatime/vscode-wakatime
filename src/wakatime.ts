@@ -478,7 +478,7 @@ export class WakaTime {
 
     if (isWrite) args.push('--write');
 
-    if (Dependencies.isWindows() || Dependencies.isPortable()) {
+    if (Utils.isWindows() || Utils.isPortable()) {
       args.push(
         '--config',
         Utils.quote(this.options.getConfigFile(false)),
@@ -491,7 +491,7 @@ export class WakaTime {
 
     const binary = this.dependencies.getCliLocation();
     this.logger.debug(`Sending heartbeat: ${Utils.formatArguments(binary, args)}`);
-    const options = this.dependencies.buildOptions();
+    const options = Utils.buildOptions();
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
@@ -573,7 +573,7 @@ export class WakaTime {
     const apiUrl = this.options.getApiUrlFromEnv();
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
-    if (Dependencies.isWindows()) {
+    if (Utils.isWindows()) {
       args.push(
         '--config',
         Utils.quote(this.options.getConfigFile(false)),
@@ -586,7 +586,7 @@ export class WakaTime {
     this.logger.debug(
       `Fetching coding activity for Today from api: ${Utils.formatArguments(binary, args)}`,
     );
-    const options = this.dependencies.buildOptions();
+    const options = Utils.buildOptions();
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());

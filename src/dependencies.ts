@@ -8,6 +8,7 @@ import * as which from 'which';
 
 import { Options, Setting } from './options';
 import { Logger } from './logger';
+import { Utils } from './utils';
 
 export class Dependencies {
   private options: Options;
@@ -33,7 +34,7 @@ export class Dependencies {
   private getResourcesLocation() {
     if (this.resourcesLocation) return this.resourcesLocation;
 
-    const folder = path.join(Dependencies.getHomeDirectory(), '.wakatime');
+    const folder = path.join(Utils.getHomeDirectory(), '.wakatime');
     try {
       fs.mkdirSync(folder, { recursive: true });
       this.resourcesLocation = folder;
@@ -43,20 +44,13 @@ export class Dependencies {
     return this.resourcesLocation;
   }
 
-  public static getHomeDirectory(): string {
-    let home = process.env.WAKATIME_HOME;
-    if (home && home.trim() && fs.existsSync(home.trim())) return home.trim();
-    if (Dependencies.isPortable()) return process.env['VSCODE_PORTABLE'] as string;
-    return process.env[Dependencies.isWindows() ? 'USERPROFILE' : 'HOME'] || process.cwd();
-  }
-
   public getCliLocation(): string {
     if (this.cliLocation) return this.cliLocation;
 
     this.cliLocation = this.getCliLocationGlobal();
     if (this.cliLocation) return this.cliLocation;
 
-    const ext = Dependencies.isWindows() ? '.exe' : '';
+    const ext = Utils.isWindows() ? '.exe' : '';
     let osname = os.platform() as string;
     if (osname == 'win32') osname = 'windows';
     const arch = this.architecture();
@@ -71,7 +65,7 @@ export class Dependencies {
   public getCliLocationGlobal(): string | undefined {
     if (this.cliLocationGlobal) return this.cliLocationGlobal;
 
-    const binaryName = `wakatime-cli${Dependencies.isWindows() ? '.exe' : ''}`;
+    const binaryName = `wakatime-cli${Utils.isWindows() ? '.exe' : ''}`;
     const path = which.sync(binaryName, { nothrow: true });
     if (path) {
       this.cliLocationGlobal = path;
@@ -85,24 +79,6 @@ export class Dependencies {
     if (this.cliInstalled) return true;
     this.cliInstalled = fs.existsSync(this.getCliLocation());
     return this.cliInstalled;
-  }
-
-  public static isWindows(): boolean {
-    return os.platform() === 'win32';
-  }
-
-  public static isPortable(): boolean {
-    return !!process.env['VSCODE_PORTABLE'];
-  }
-
-  public buildOptions(): Object {
-    const options = {
-      windowsHide: true,
-    };
-    if (!Dependencies.isWindows() && !process.env.WAKATIME_HOME && !process.env.HOME) {
-      options['env'] = { ...process.env, WAKATIME_HOME: Dependencies.getHomeDirectory() };
-    }
-    return options;
   }
 
   public checkAndInstallCli(callback: () => void): void {
@@ -126,7 +102,7 @@ export class Dependencies {
     }
 
     let args = ['--version'];
-    const options = this.buildOptions();
+    const options = Utils.buildOptions();
     try {
       child_process.execFile(this.getCliLocation(), args, options, (error, _stdout, stderr) => {
         if (!(error != null)) {
@@ -271,7 +247,7 @@ export class Dependencies {
     this.logger.debug(`Extracting wakatime-cli into "${this.getResourcesLocation()}"...`);
     this.removeCli(() => {
       this.unzip(zipFile, this.getResourcesLocation(), () => {
-        if (!Dependencies.isWindows()) {
+        if (!Utils.isWindows()) {
           const cli = this.getCliLocation();
           try {
             this.logger.debug('Chmod 755 wakatime-cli...');
@@ -279,7 +255,7 @@ export class Dependencies {
           } catch (e) {
             this.logger.warnException(e);
           }
-          const ext = Dependencies.isWindows() ? '.exe' : '';
+          const ext = Utils.isWindows() ? '.exe' : '';
           const link = path.join(this.getResourcesLocation(), `wakatime-cli${ext}`);
           if (!this.isSymlink(link)) {
             try {
