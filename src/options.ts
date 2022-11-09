@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 
+import * as child_process from 'child_process';
 import { Logger } from './logger';
 import { Utils } from './utils';
 
@@ -202,29 +203,62 @@ export class Options {
   }
 
   public async getApiKeyAsync(): Promise<string> {
-    return new Promise<string>(async (resolve, reject) => {
-      const key = this.getApiKeyFromEnv();
-      if (!Utils.apiKeyInvalid(key)) {
-        resolve(key);
-        return;
-      }
+    const key = this.getApiKeyFromEnv();
+    if (!Utils.apiKeyInvalid(key)) {
+      return key;
+    }
 
-      if (!Utils.apiKeyInvalid(this.cache.api_key)) {
-        resolve(this.cache.api_key);
-        return;
-      }
+    if (!Utils.apiKeyInvalid(this.cache.api_key)) {
+      return this.cache.api_key;
+    }
 
-      try {
-        const apiKey = await this.getSettingAsync<string>('settings', 'api_key');
-        if (!Utils.apiKeyInvalid(apiKey)) this.cache.api_key = apiKey;
-        resolve(apiKey);
-        return;
-      } catch (err) {
-        this.logger.debug(`Exception while reading API Key from config file: ${err}`);
-        reject(err);
-        return;
+    try {
+      const apiKeyFromVault = await this.getApiKeyFromVaultCmd();
+      if (!Utils.apiKeyInvalid(apiKeyFromVault)) {
+        this.cache.api_key = apiKeyFromVault;
+        return this.cache.api_key;
       }
-    });
+    } catch (err) {}
+
+    try {
+      const apiKey = await this.getSettingAsync<string>('settings', 'api_key');
+      if (!Utils.apiKeyInvalid(apiKey)) this.cache.api_key = apiKey;
+      return apiKey;
+    } catch (err) {
+      this.logger.debug(`Exception while reading API Key from config file: ${err}`);
+      return '';
+    }
+  }
+
+  public async getApiKeyFromVaultCmd(): Promise<string> {
+    try {
+      const apiKeyCmd = await this.getSettingAsync<string>('settings', 'api_key_vault_cmd');
+      if (!apiKeyCmd) return '';
+
+      const options = Utils.buildOptions();
+      const proc = child_process.spawn(apiKeyCmd, options);
+
+      let stdout = '';
+      for await (const chunk of proc.stdout) {
+        stdout += chunk;
+      }
+      let stderr = '';
+      for await (const chunk of proc.stderr) {
+        stderr += chunk;
+      }
+      const exitCode = await new Promise((resolve) => {
+        proc.on('close', resolve);
+      });
+
+      if (exitCode) this.logger.warn(`api key vault command error (${exitCode}): ${stderr}`);
+      else if (stderr && stderr.trim()) this.logger.warn(stderr.trim());
+
+      const apiKey = stdout.toString().trim();
+      return apiKey;
+    } catch (err) {
+      this.logger.debug(`Exception while reading API Key Vault Cmd from config file: ${err}`);
+      return '';
+    }
   }
 
   public getApiKey(callback: (apiKey: string | null) => void): void {
