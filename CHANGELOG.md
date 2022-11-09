@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 22.0.0 (2022-11-09)
+
+- Support for api key vault cmd config.
+
 ## 21.0.1 (2022-11-07)
 
 - Correctly log exit code to dev console when working offline.
