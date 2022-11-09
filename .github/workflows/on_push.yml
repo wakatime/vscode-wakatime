@@ -10,12 +10,9 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v2
-      -
-        name: Install dependencies
+      - name: Install dependencies
         run: npm install
-      -
-        name: Unit tests
+      - name: Unit tests
         run: npm run compile:dev

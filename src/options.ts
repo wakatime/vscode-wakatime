@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 
 import * as child_process from 'child_process';
+import { Desktop } from './desktop';
 import { Logger } from './logger';
 import { Utils } from './utils';
 
@@ -20,7 +21,7 @@ export class Options {
   private cache: any = {};
 
   constructor(logger: Logger) {
-    let wakaHome = Utils.getHomeDirectory();
+    let wakaHome = Desktop.getHomeDirectory();
     this.configFile = path.join(wakaHome, '.wakatime.cfg');
     this.internalConfigFile = path.join(wakaHome, '.wakatime-internal.cfg');
     this.logFile = path.join(wakaHome, '.wakatime.log');
@@ -235,7 +236,7 @@ export class Options {
       const apiKeyCmd = await this.getSettingAsync<string>('settings', 'api_key_vault_cmd');
       if (!apiKeyCmd) return '';
 
-      const options = Utils.buildOptions();
+      const options = Desktop.buildOptions();
       const proc = child_process.spawn(apiKeyCmd, options);
 
       let stdout = '';

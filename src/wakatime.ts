@@ -7,6 +7,7 @@ import { COMMAND_DASHBOARD, LogLevel } from './constants';
 import { Options, Setting } from './options';
 import { Logger } from './logger';
 import { Utils } from './utils';
+import { Desktop } from './desktop';
 
 interface FileSelection {
   selection: vscode.Position;
@@ -478,7 +479,7 @@ export class WakaTime {
 
     if (isWrite) args.push('--write');
 
-    if (Utils.isWindows() || Utils.isPortable()) {
+    if (Desktop.isWindows() || Desktop.isPortable()) {
       args.push(
         '--config',
         Utils.quote(this.options.getConfigFile(false)),
@@ -491,7 +492,7 @@ export class WakaTime {
 
     const binary = this.dependencies.getCliLocation();
     this.logger.debug(`Sending heartbeat: ${Utils.formatArguments(binary, args)}`);
-    const options = Utils.buildOptions();
+    const options = Desktop.buildOptions();
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
@@ -573,7 +574,7 @@ export class WakaTime {
     const apiUrl = this.options.getApiUrlFromEnv();
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
-    if (Utils.isWindows()) {
+    if (Desktop.isWindows()) {
       args.push(
         '--config',
         Utils.quote(this.options.getConfigFile(false)),
@@ -586,7 +587,7 @@ export class WakaTime {
     this.logger.debug(
       `Fetching coding activity for Today from api: ${Utils.formatArguments(binary, args)}`,
     );
-    const options = Utils.buildOptions();
+    const options = Desktop.buildOptions();
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
