@@ -67,6 +67,10 @@ Press `Ctrl + Shift + X`, search for `win-ca`, press `Install`.
 
 For more general troubleshooting info, see the [wakatime-cli Troubleshooting Section][wakatime-cli help].
 
+### SSH configuration
+
+If you're connected to a remote host using the [ssh extension](https://code.visualstudio.com/docs/remote/ssh) you might want to force WakaTime to run locally instead on the server. This configuration is needed when the server you connect is shared among other people. Please follow [this](https://code.visualstudio.com/docs/remote/ssh#_advanced-forcing-an-extension-to-run-locally-remotely) guide.
+
 ## Uninstalling
 
 1. Click the Extensions sidebar item in VS Code.
