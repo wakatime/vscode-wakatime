@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 22.0.1 (2022-11-27)
+
+- Support api key with waka prefix.
+
 ## 22.0.0 (2022-11-09)
 
 - Support for api key vault cmd config.
