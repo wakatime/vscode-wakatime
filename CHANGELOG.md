@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 22.1.0 (2022-12-08)
+
+- Support remote files over ssh when running in UI mode.
+  [#314](https://github.com/wakatime/vscode-wakatime/issues/314)
+
 ## 22.0.1 (2022-11-27)
 
 - Support api key with waka prefix.
