@@ -386,14 +386,12 @@ export class WakaTime {
             this.lastCompile !== this.isCompiling
           ) {
             this.sendHeartbeat(
-              file,
+              doc,
               time,
               editor.selection.start,
-              doc.lineCount,
               isWrite,
               this.isCompiling,
               this.isDebugging,
-              doc.isUntitled,
             );
             this.lastFile = file;
             this.lastHeartbeat = time;
@@ -406,26 +404,22 @@ export class WakaTime {
   }
 
   private sendHeartbeat(
-    file: string,
+    doc: vscode.TextDocument,
     time: number,
     selection: vscode.Position,
-    lines: number,
     isWrite: boolean,
     isCompiling: boolean,
     isDebugging: boolean,
-    isUnsavedFile: boolean = false,
   ): void {
     this.options.getApiKey((apiKey) => {
       if (apiKey) {
         this._sendHeartbeat(
-          file,
+          doc,
           time,
           selection,
-          lines,
           isWrite,
           isCompiling,
           isDebugging,
-          isUnsavedFile,
         );
       } else {
         this.promptForApiKey();
@@ -434,16 +428,21 @@ export class WakaTime {
   }
 
   private _sendHeartbeat(
-    file: string,
+    doc: vscode.TextDocument,
     time: number,
     selection: vscode.Position,
-    lines: number,
     isWrite: boolean,
     isCompiling: boolean,
     isDebugging: boolean,
-    isUnsavedFile: boolean,
   ): void {
     if (!this.dependencies.isCliInstalled()) return;
+
+    let file = doc.fileName;
+    if (Utils.isRemoteUri(doc.uri)) {
+      file = `${doc.uri.authority}${doc.uri.path}`;
+      file = file.replace('ssh-remote+', 'ssh://');
+      // TODO: how to support 'dev-container', 'attached-container', 'wsl', and 'codespaces' schemes?
+    }
 
     // prevent sending the same heartbeat (https://github.com/wakatime/vscode-wakatime/issues/163)
     if (isWrite && this.isDuplicateHeartbeat(file, time, selection)) return;
@@ -458,7 +457,7 @@ export class WakaTime {
 
     args.push('--lineno', String(selection.line + 1));
     args.push('--cursorpos', String(selection.character + 1));
-    args.push('--lines-in-file', String(lines));
+    args.push('--lines-in-file', String(doc.lineCount));
     if (isDebugging) {
       args.push('--category', 'debugging');
     } else if (isCompiling) {
@@ -471,10 +470,10 @@ export class WakaTime {
     const apiUrl = this.options.getApiUrlFromEnv();
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
-    let project = this.getProjectName(file);
+    let project = this.getProjectName(doc.uri);
     if (project) args.push('--alternate-project', Utils.quote(project));
 
-    let folder = this.getProjectFolder(file);
+    let folder = this.getProjectFolder(doc.uri);
     if (folder) args.push('--project-folder', Utils.quote(folder));
 
     if (isWrite) args.push('--write');
@@ -488,7 +487,7 @@ export class WakaTime {
       );
     }
 
-    if (isUnsavedFile) args.push('--is-unsaved-entity');
+    if (doc.isUntitled) args.push('--is-unsaved-entity');
 
     const binary = this.dependencies.getCliLocation();
     this.logger.debug(`Sending heartbeat: ${Utils.formatArguments(binary, args)}`);
@@ -651,9 +650,8 @@ export class WakaTime {
     return duplicate;
   }
 
-  private getProjectName(file: string): string {
+  private getProjectName(uri: vscode.Uri): string {
     if (!vscode.workspace) return '';
-    let uri = vscode.Uri.file(file);
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
     if (workspaceFolder) {
       try {
@@ -666,9 +664,8 @@ export class WakaTime {
     return vscode.workspace.name || '';
   }
 
-  private getProjectFolder(file: string): string {
+  private getProjectFolder(uri: vscode.Uri): string {
     if (!vscode.workspace) return '';
-    let uri = vscode.Uri.file(file);
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
     if (workspaceFolder) {
       try {

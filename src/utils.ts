@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 export class Utils {
   public static quote(str: string): string {
     if (str.includes(' ')) return `"${str.replace('"', '\\"')}"`;
@@ -84,5 +86,10 @@ export class Utils {
       lastCmd = clone[i];
     }
     return newCmds.join(' ');
+  }
+
+  public static isRemoteUri(uri: vscode.Uri): boolean {
+    if (!uri) return false;
+    return uri.scheme == 'vscode-remote';
   }
 }

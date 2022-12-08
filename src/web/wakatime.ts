@@ -283,13 +283,10 @@ export class WakaTime {
             this.lastDebug !== this.isDebugging ||
             this.lastCompile !== this.isCompiling
           ) {
-            const language = this.getLanguage(doc);
             this.sendHeartbeat(
-              file,
+              doc,
               time,
               editor.selection.start,
-              doc.lineCount,
-              language,
               isWrite,
               this.isCompiling,
               this.isDebugging,
@@ -305,11 +302,9 @@ export class WakaTime {
   }
 
   private sendHeartbeat(
-    file: string,
+    doc: vscode.TextDocument,
     time: number,
     selection: vscode.Position,
-    lines: number,
-    language: string,
     isWrite: boolean,
     isCompiling: boolean,
     isDebugging: boolean,
@@ -317,11 +312,9 @@ export class WakaTime {
     this.hasApiKey((hasApiKey) => {
       if (hasApiKey) {
         this._sendHeartbeat(
-          file,
+          doc,
           time,
           selection,
-          lines,
-          language,
           isWrite,
           isCompiling,
           isDebugging,
@@ -333,15 +326,20 @@ export class WakaTime {
   }
 
   private async _sendHeartbeat(
-    file: string,
+    doc: vscode.TextDocument,
     time: number,
     selection: vscode.Position,
-    lines: number,
-    language: string,
     isWrite: boolean,
     isCompiling: boolean,
     isDebugging: boolean,
   ) {
+    let file = doc.fileName;
+    if (Utils.isRemoteUri(doc.uri)) {
+      file = `${doc.uri.authority}${doc.uri.path}`;
+      file = file.replace('ssh-remote+', 'ssh://');
+      // TODO: how to support 'dev-container', 'attached-container', 'wsl', and 'codespaces' schemes?
+    }
+
     // prevent sending the same heartbeat (https://github.com/wakatime/vscode-wakatime/issues/163)
     if (isWrite && this.isDuplicateHeartbeat(file, time, selection)) return;
 
@@ -352,11 +350,12 @@ export class WakaTime {
       plugin: this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version,
       lineno: String(selection.line + 1),
       cursorpos: String(selection.character + 1),
-      lines: String(lines),
+      lines: String(doc.lineCount),
       is_write: isWrite,
     };
-    let project = this.getProjectName();
+    const project = this.getProjectName();
     if (project) payload['project'] = project;
+    const language = this.getLanguage(doc);
     if (language) payload['language'] = language;
     if (isDebugging) {
       payload['category'] = 'debugging';
