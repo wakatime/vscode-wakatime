@@ -25,7 +25,7 @@
 
 Visit [https://wakatime.com](https://wakatime.com) to see your coding activity.
 
-![Project Overview](./images/Screen-Shot-2016-03-21.png)
+![Project Overview](https://wakatime.com/static/img/ScreenShots/Screen-Shot-2016-03-21.png)
 
 ## Configuring
 
