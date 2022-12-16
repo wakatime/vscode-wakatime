@@ -1,6 +1,6 @@
 # WakaTime for Visual Studio Code
 
-[![Tests](https://img.shields.io/github/workflow/status/wakatime/vscode-wakatime/Tests/master?label=tests)](https://github.com/wakatime/vscode-wakatime/actions)
+[![Tests](https://img.shields.io/github/actions/workflow/status/wakatime/vscode-wakatime/on_push.yml?branch=master&label=tests)](https://github.com/wakatime/vscode-wakatime/actions)
 [![Version](https://img.shields.io/visual-studio-marketplace/v/WakaTime.vscode-wakatime.png?label=Visual%20Studio%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=WakaTime.vscode-wakatime)
 [![WakaTime](https://wakatime.com/badge/github/wakatime/vscode-wakatime.png?branch=master)](https://wakatime.com/badge/github/wakatime/vscode-wakatime)
 
