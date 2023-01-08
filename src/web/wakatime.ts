@@ -110,7 +110,7 @@ export class WakaTime {
   }
 
   public promptForApiKey(): void {
-    let defaultVal: string = this.config.get('wakatime.api_key') || '';
+    let defaultVal: string = this.config.get('wakatime.apiKey') || '';
     if (Utils.apiKeyInvalid(defaultVal)) defaultVal = '';
     let promptOptions = {
       prompt: 'WakaTime Api Key',
@@ -122,7 +122,7 @@ export class WakaTime {
     vscode.window.showInputBox(promptOptions).then((val) => {
       if (val != undefined) {
         let invalid = Utils.apiKeyInvalid(val);
-        if (!invalid) this.config.update('wakatime.api_key', val);
+        if (!invalid) this.config.update('wakatime.apiKey', val);
         else vscode.window.setStatusBarMessage(invalid);
       } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
     });
@@ -230,7 +230,7 @@ export class WakaTime {
   }
 
   private hasApiKey(callback: (arg0: boolean) => void): void {
-    const apiKey: string = this.config.get('wakatime.api_key') || '';
+    const apiKey: string = this.config.get('wakatime.apiKey') || '';
     callback(!Utils.apiKeyInvalid(apiKey));
   }
 
@@ -365,7 +365,7 @@ export class WakaTime {
 
     this.logger.debug(`Sending heartbeat: ${JSON.stringify(payload)}`);
 
-    const apiKey = this.config.get('wakatime.api_key');
+    const apiKey = this.config.get('wakatime.apiKey');
     const url = `https://api.wakatime.com/api/v1/users/current/heartbeats?api_key=${apiKey}`;
 
     try {
@@ -437,7 +437,7 @@ export class WakaTime {
 
   private async _getCodingActivity() {
     this.logger.debug('Fetching coding activity for Today from api.');
-    const apiKey = this.config.get('wakatime.api_key');
+    const apiKey = this.config.get('wakatime.apiKey');
     const url = `https://api.wakatime.com/api/v1/users/current/statusbar/today?api_key=${apiKey}`;
     try {
       const response = await fetch(url, {

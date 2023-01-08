@@ -93,10 +93,13 @@
       }
     ],
     "configuration": {
-      "wakatime.api_key": {
-        "type": "string",
-        "description": "Defaults to value from ~/.wakatime.cfg, unless running in browser.",
-        "scope": "application"
+      "title": "WakaTime",
+      "properties": {
+        "wakatime.apiKey": {
+          "type": "string",
+          "description": "Defaults to value from ~/.wakatime.cfg, unless running in browser.",
+          "scope": "application"
+        }
       }
     }
   },
