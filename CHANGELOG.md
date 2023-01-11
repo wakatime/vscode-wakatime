@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 23.0.0 (2023-01-11)
+
+- Support for Arduino IDE.
+
 ## 22.1.0 (2022-12-08)
 
 - Support remote files over ssh when running in UI mode.
