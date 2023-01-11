@@ -20,6 +20,7 @@ interface FileSelectionMap {
 
 export class WakaTime {
   private appNames = {
+    'Arduino IDE': 'arduino',
     'Azure Data Studio': 'azdata',
     'SQL Operations Studio': 'sqlops',
     'Visual Studio Code': 'vscode',
