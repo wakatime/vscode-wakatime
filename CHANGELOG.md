@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 23.1.0 (2023-01-11)
+
+- Allow the api key to be persisted via settings sync.
+[#283](https://github.com/wakatime/vscode-wakatime/issues/283)
+
 ## 23.0.0 (2023-01-11)
 
 - Support for Arduino IDE.
