@@ -156,7 +156,6 @@ export class WakaTime {
         if (val != undefined) {
           let invalid = Utils.apiKeyInvalid(val);
           if (!invalid) {
-            vscode.workspace.getConfiguration().update('wakatime.apiKey', val, vscode.ConfigurationTarget.Global);
             this.options.setSetting('settings', 'api_key', val, false);
           } else vscode.window.setStatusBarMessage(invalid);
         } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
