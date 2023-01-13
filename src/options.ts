@@ -204,9 +204,14 @@ export class Options {
   }
 
   public async getApiKeyAsync(): Promise<string> {
-    const key = this.getApiKeyFromEnv();
-    if (!Utils.apiKeyInvalid(key)) {
-      return key;
+    const keyFromSettings = this.getApiKeyFromEditor();
+    if (!Utils.apiKeyInvalid(keyFromSettings)) {
+      return keyFromSettings;
+    }
+
+    const keyFromEnv = this.getApiKeyFromEnv();
+    if (!Utils.apiKeyInvalid(keyFromEnv)) {
+      return keyFromEnv;
     }
 
     if (!Utils.apiKeyInvalid(this.cache.api_key)) {
@@ -280,6 +285,10 @@ export class Options {
         }
         callback(null);
       });
+  }
+
+  private getApiKeyFromEditor(): string {
+    return vscode.workspace.getConfiguration().get('wakatime.apiKey') || '';
   }
 
   // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
