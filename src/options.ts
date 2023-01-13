@@ -204,17 +204,19 @@ export class Options {
   }
 
   public async getApiKeyAsync(): Promise<string> {
+    if (!Utils.apiKeyInvalid(this.cache.api_key)) {
+      return this.cache.api_key;
+    }
+
     const keyFromSettings = this.getApiKeyFromEditor();
     if (!Utils.apiKeyInvalid(keyFromSettings)) {
-      return keyFromSettings;
+      this.cache.api_key = keyFromSettings;
+      return this.cache.api_key;
     }
 
     const keyFromEnv = this.getApiKeyFromEnv();
     if (!Utils.apiKeyInvalid(keyFromEnv)) {
-      return keyFromEnv;
-    }
-
-    if (!Utils.apiKeyInvalid(this.cache.api_key)) {
+      this.cache.api_key = keyFromEnv;
       return this.cache.api_key;
     }
 
