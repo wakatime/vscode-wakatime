@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 23.2.0 (2023-01-20)
+
+- Detect category code reviewing when a GitHub pull request is open.
+
 ## 23.1.0 (2023-01-11)
 
 - Allow the api key to be persisted via settings sync.
