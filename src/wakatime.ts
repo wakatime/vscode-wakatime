@@ -463,6 +463,8 @@ export class WakaTime {
       args.push('--category', 'debugging');
     } else if (isCompiling) {
       args.push('--category', 'building');
+    } else if (Utils.isPullRequest(doc.uri)) {
+      args.push('--category', 'code reviewing');
     }
 
     const apiKey = this.options.getApiKeyFromEnv();

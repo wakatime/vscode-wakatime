@@ -92,4 +92,9 @@ export class Utils {
     if (!uri) return false;
     return uri.scheme == 'vscode-remote';
   }
+
+  public static isPullRequest(uri: vscode.Uri): boolean {
+    if (!uri) return false;
+    return uri.scheme == 'pr';
+  }
 }

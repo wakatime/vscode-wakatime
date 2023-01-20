@@ -361,6 +361,8 @@ export class WakaTime {
       payload['category'] = 'debugging';
     } else if (isCompiling) {
       payload['category'] = 'building';
+    } else if (Utils.isPullRequest(doc.uri)) {
+      payload['category'] = 'code reviewing';
     }
 
     this.logger.debug(`Sending heartbeat: ${JSON.stringify(payload)}`);
