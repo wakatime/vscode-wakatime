@@ -28,8 +28,10 @@ export class WakaTime {
     'Onivim 2': 'onivim',
   };
   private agentName: string;
-  private extension;
+  private extension: any;
   private statusBar?: vscode.StatusBarItem = undefined;
+  private statusBarTeamYou?: vscode.StatusBarItem = undefined;
+  private statusBarTeamOther?: vscode.StatusBarItem = undefined;
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
@@ -40,14 +42,16 @@ export class WakaTime {
   private options: Options;
   private logger: Logger;
   private fetchTodayInterval: number = 60000;
-  private fetchTodayIntervalId?: NodeJS.Timeout;
   private lastFetchToday: number = 0;
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
+  private showStatusBarTeam: boolean;
   private disabled: boolean = true;
   private extensionPath: string;
   private isCompiling: boolean = false;
   private isDebugging: boolean = false;
+  private currentlyFocusedFile: string;
+  private teamDevsForFileCache = {};
 
   constructor(extensionPath: string, logger: Logger) {
     this.extensionPath = extensionPath;
@@ -80,8 +84,9 @@ export class WakaTime {
   }
 
   public dispose() {
-    this.clearTodayInterval();
     this.statusBar?.dispose();
+    this.statusBarTeamYou?.dispose();
+    this.statusBarTeamOther?.dispose();
     this.disposable.dispose();
   }
 
@@ -91,36 +96,42 @@ export class WakaTime {
     this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     this.statusBar.command = COMMAND_DASHBOARD;
 
-    this.options.getSetting(
-      'settings',
-      'status_bar_enabled',
-      false,
-      (statusBarEnabled: Setting) => {
-        this.showStatusBar = statusBarEnabled.value !== 'false';
-        this.setStatusBarVisibility(this.showStatusBar);
-        this.updateStatusBarText('WakaTime Initializing...');
+    this.statusBarTeamYou = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+    this.statusBarTeamOther = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
 
-        this.checkApiKey();
+    this.options.getSetting('settings', 'status_bar_team', false, (statusBarTeam: Setting) => {
+      this.showStatusBarTeam = statusBarTeam.value !== 'false';
+      this.options.getSetting(
+        'settings',
+        'status_bar_enabled',
+        false,
+        (statusBarEnabled: Setting) => {
+          this.showStatusBar = statusBarEnabled.value !== 'false';
+          this.setStatusBarVisibility(this.showStatusBar);
+          this.updateStatusBarText('WakaTime Initializing...');
 
-        this.setupEventListeners();
+          this.checkApiKey();
 
-        this.options.getSetting(
-          'settings',
-          'status_bar_coding_activity',
-          false,
-          (showCodingActivity: Setting) => {
-            this.showCodingActivity = showCodingActivity.value !== 'false';
+          this.setupEventListeners();
 
-            this.dependencies.checkAndInstallCli(() => {
-              this.logger.debug('WakaTime initialized');
-              this.updateStatusBarText();
-              this.updateStatusBarTooltip('WakaTime: Initialized');
-              this.getCodingActivity();
-            });
-          },
-        );
-      },
-    );
+          this.options.getSetting(
+            'settings',
+            'status_bar_coding_activity',
+            false,
+            (showCodingActivity: Setting) => {
+              this.showCodingActivity = showCodingActivity.value !== 'false';
+
+              this.dependencies.checkAndInstallCli(() => {
+                this.logger.debug('WakaTime initialized');
+                this.updateStatusBarText();
+                this.updateStatusBarTooltip('WakaTime: Initialized');
+                this.getCodingActivity();
+              });
+            },
+          );
+        },
+      );
+    });
   }
 
   private updateStatusBarText(text?: string): void {
@@ -140,6 +151,24 @@ export class WakaTime {
   private statusBarShowingError(): boolean {
     if (!this.statusBar) return false;
     return this.statusBar.text.indexOf('Error') != -1;
+  }
+
+  private updateTeamStatusBarTextForCurrentUser(text?: string): void {
+    if (!this.statusBarTeamYou) return;
+    if (!text) {
+      this.statusBarTeamYou.text = '';
+    } else {
+      this.statusBarTeamYou.text = text;
+    }
+  }
+
+  private updateTeamStatusBarTextForOther(text?: string): void {
+    if (!this.statusBarTeamOther) return;
+    if (!text) {
+      this.statusBarTeamOther.text = '';
+    } else {
+      this.statusBarTeamOther.text = text;
+    }
   }
 
   public promptForApiKey(): void {
@@ -308,12 +337,14 @@ export class WakaTime {
 
   private setStatusBarVisibility(isVisible: boolean): void {
     if (isVisible) {
-      this.setTodayInterval();
       this.statusBar?.show();
+      this.statusBarTeamYou?.show();
+      this.statusBarTeamOther?.show();
       this.logger.debug('Status bar icon enabled.');
     } else {
-      this.clearTodayInterval();
       this.statusBar?.hide();
+      this.statusBarTeamYou?.hide();
+      this.statusBarTeamOther?.hide();
       this.logger.debug('Status bar icon disabled.');
     }
   }
@@ -378,6 +409,11 @@ export class WakaTime {
       if (doc) {
         let file: string = doc.fileName;
         if (file) {
+          if (this.currentlyFocusedFile !== file) {
+            this.currentlyFocusedFile = file;
+            this.updateTeamStatusBar(doc);
+          }
+
           let time: number = Date.now();
           if (
             isWrite ||
@@ -414,14 +450,7 @@ export class WakaTime {
   ): void {
     this.options.getApiKey((apiKey) => {
       if (apiKey) {
-        this._sendHeartbeat(
-          doc,
-          time,
-          selection,
-          isWrite,
-          isCompiling,
-          isDebugging,
-        );
+        this._sendHeartbeat(doc, time, selection, isWrite, isCompiling, isDebugging);
       } else {
         this.promptForApiKey();
       }
@@ -473,10 +502,10 @@ export class WakaTime {
     const apiUrl = this.options.getApiUrlFromEnv();
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
-    let project = this.getProjectName(doc.uri);
+    const project = this.getProjectName(doc.uri);
     if (project) args.push('--alternate-project', Utils.quote(project));
 
-    let folder = this.getProjectFolder(doc.uri);
+    const folder = this.getProjectFolder(doc.uri);
     if (folder) args.push('--project-folder', Utils.quote(folder));
 
     if (isWrite) args.push('--write');
@@ -542,15 +571,7 @@ export class WakaTime {
   }
 
   private getCodingActivity() {
-    if (!this.showStatusBar) {
-      this.clearTodayInterval();
-      return;
-    }
-
-    this.setTodayInterval();
-
-    // prevent updating if we haven't coded since last checked
-    if (this.lastFetchToday > 0 && this.lastFetchToday > this.lastHeartbeat) return;
+    if (!this.showStatusBar) return;
 
     const cutoff = Date.now() - this.fetchTodayInterval;
     if (this.lastFetchToday > cutoff) return;
@@ -568,7 +589,7 @@ export class WakaTime {
 
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-    let args = ['--today', '--plugin', Utils.quote(user_agent)];
+    let args = ['--today', '--output', 'json', '--plugin', Utils.quote(user_agent)];
 
     const apiKey = this.options.getApiKeyFromEnv();
     if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
@@ -606,16 +627,32 @@ export class WakaTime {
     proc.on('close', (code, _signal) => {
       if (code == 0) {
         if (this.showStatusBar) {
-          if (output && output.trim()) {
-            if (this.showCodingActivity) {
-              this.updateStatusBarText(output.trim());
-              this.updateStatusBarTooltip(
-                'WakaTime: Today’s coding time. Click to visit dashboard.',
+          if (output) {
+            let jsonData: any;
+            try {
+              jsonData = JSON.parse(output);
+            } catch (e) {
+              this.logger.debug(
+                `Error parsing today coding activity as json:\n${output}\nCheck your ${this.options.getLogFile()} file for more details.`,
               );
+            }
+            if (jsonData?.text) {
+              if (this.showCodingActivity) {
+                this.updateStatusBarText(jsonData.text.trim());
+                this.updateStatusBarTooltip(
+                  'WakaTime: Today’s coding time. Click to visit dashboard.',
+                );
+              } else {
+                this.updateStatusBarText();
+                this.updateStatusBarTooltip(jsonData.text.trim());
+              }
             } else {
               this.updateStatusBarText();
-              this.updateStatusBarTooltip(output.trim());
+              this.updateStatusBarTooltip(
+                'WakaTime: Calculating time spent today in background...',
+              );
             }
+            if (jsonData?.has_team_features) this.updateTeamStatusBar();
           } else {
             this.updateStatusBarText();
             this.updateStatusBarTooltip('WakaTime: Calculating time spent today in background...');
@@ -624,8 +661,118 @@ export class WakaTime {
       } else if (code == 102 || code == 112) {
         // noop, working offline
       } else {
-        let error_msg = `Error fetching today coding activity (${code}); Check your ${this.options.getLogFile()} file for more details`;
-        this.logger.debug(error_msg);
+        this.logger.debug(
+          `Error fetching today coding activity (${code}); Check your ${this.options.getLogFile()} file for more details.`,
+        );
+      }
+    });
+  }
+
+  private updateTeamStatusBar(doc?: vscode.TextDocument) {
+    if (!this.showStatusBarTeam) return;
+    if (!this.dependencies.isCliInstalled()) return;
+
+    if (!doc) {
+      doc = vscode.window.activeTextEditor?.document;
+      if (!doc) return;
+    }
+
+    let file = doc.fileName;
+
+    if (Utils.isRemoteUri(doc.uri)) {
+      file = `${doc.uri.authority}${doc.uri.path}`;
+      file = file.replace('ssh-remote+', 'ssh://');
+      // TODO: how to support 'dev-container', 'attached-container', 'wsl', and 'codespaces' schemes?
+    }
+
+    // TODO: expire cached text after some hours
+    if (this.teamDevsForFileCache[file]) {
+      this.updateTeamStatusBarTextForCurrentUser(this.teamDevsForFileCache[file].you);
+      this.updateTeamStatusBarTextForOther(this.teamDevsForFileCache[file].other);
+      return;
+    }
+
+    let user_agent =
+      this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
+    let args = ['--output', 'json', '--plugin', Utils.quote(user_agent)];
+
+    args.push('--devs-for-file', Utils.quote(file));
+
+    args.push('--entity', Utils.quote(file));
+
+    const apiKey = this.options.getApiKeyFromEnv();
+    if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
+
+    const apiUrl = this.options.getApiUrlFromEnv();
+    if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
+
+    const project = this.getProjectName(doc.uri);
+    if (project) args.push('--alternate-project', Utils.quote(project));
+
+    const folder = this.getProjectFolder(doc.uri);
+    if (folder) args.push('--project-folder', Utils.quote(folder));
+
+    if (Desktop.isWindows()) {
+      args.push(
+        '--config',
+        Utils.quote(this.options.getConfigFile(false)),
+        '--logfile',
+        Utils.quote(this.options.getLogFile()),
+      );
+    }
+
+    if (doc.isUntitled) args.push('--is-unsaved-entity');
+
+    const binary = this.dependencies.getCliLocation();
+    this.logger.debug(`Fetching devs for file from api: ${Utils.formatArguments(binary, args)}`);
+    const options = Desktop.buildOptions();
+    let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
+      if (error != null) {
+        if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
+        if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
+        this.logger.error(error.toString());
+      }
+    });
+    let output = '';
+    if (proc.stdout) {
+      proc.stdout.on('data', (data: string | null) => {
+        if (data) output += data;
+      });
+    }
+    proc.on('close', (code, _signal) => {
+      if (code == 0) {
+        if (output) {
+          let jsonData;
+          try {
+            jsonData = JSON.parse(output);
+          } catch (e) {
+            this.logger.debug(
+              `Error parsing devs for file as json:\n${output}\nCheck your ${this.options.getLogFile()} file for more details.`,
+            );
+          }
+
+          if (jsonData) this.teamDevsForFileCache[file!] = jsonData;
+
+          // make sure this file is still the currently focused file
+          if (file !== this.currentlyFocusedFile) return;
+
+          if (jsonData?.text) {
+            this.updateTeamStatusBarTextForCurrentUser(jsonData.you);
+            this.updateTeamStatusBarTextForOther(jsonData.other);
+          } else {
+            this.updateTeamStatusBarTextForCurrentUser();
+            this.updateTeamStatusBarTextForOther();
+          }
+        } else {
+          this.updateTeamStatusBarTextForCurrentUser();
+          this.updateTeamStatusBarTextForOther();
+        }
+      } else if (code == 102 || code == 112) {
+        // noop, working offline
+      } else {
+        this.logger.debug(
+          `Error fetching devs for file (${code}); Check your ${this.options.getLogFile()} file for more details.`,
+        );
       }
     });
   }
@@ -655,7 +802,7 @@ export class WakaTime {
 
   private getProjectName(uri: vscode.Uri): string {
     if (!vscode.workspace) return '';
-    let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
     if (workspaceFolder) {
       try {
         return workspaceFolder.name;
@@ -669,7 +816,7 @@ export class WakaTime {
 
   private getProjectFolder(uri: vscode.Uri): string {
     if (!vscode.workspace) return '';
-    let workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
     if (workspaceFolder) {
       try {
         return workspaceFolder.uri.fsPath;
@@ -679,18 +826,5 @@ export class WakaTime {
       return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }
     return '';
-  }
-
-  private setTodayInterval(): void {
-    if (this.fetchTodayIntervalId) return;
-    this.fetchTodayIntervalId = setInterval(
-      this.getCodingActivity.bind(this),
-      this.fetchTodayInterval,
-    );
-  }
-
-  private clearTodayInterval(): void {
-    if (this.fetchTodayIntervalId) clearInterval(this.fetchTodayIntervalId);
-    this.fetchTodayIntervalId = undefined;
   }
 }

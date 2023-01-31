@@ -109,6 +109,11 @@ export class Dependencies {
           let currentVersion = _stdout.toString().trim() + stderr.toString().trim();
           this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
 
+          if (currentVersion.trim() === '<local-build>') {
+            callback(true);
+            return;
+          }
+
           this.logger.debug('Checking for updates to wakatime-cli...');
           this.getLatestCliVersion((latestVersion) => {
             if (currentVersion === latestVersion) {
