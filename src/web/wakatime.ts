@@ -16,8 +16,10 @@ interface FileSelectionMap {
 
 export class WakaTime {
   private agentName: string;
-  private extension;
+  private extension: any;
   private statusBar?: vscode.StatusBarItem = undefined;
+  private statusBarTeamYou?: vscode.StatusBarItem = undefined;
+  private statusBarTeamOther?: vscode.StatusBarItem = undefined;
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
@@ -26,14 +28,16 @@ export class WakaTime {
   private dedupe: FileSelectionMap = {};
   private logger: Logger;
   private config: Memento;
-  private fetchTodayIntervalId?: any;
   private fetchTodayInterval: number = 60000;
   private lastFetchToday: number = 0;
   private showStatusBar: boolean;
+  private showStatusBarTeam: boolean;
   private showCodingActivity: boolean;
   private disabled: boolean = true;
   private isCompiling: boolean = false;
   private isDebugging: boolean = false;
+  private currentlyFocusedFile: string;
+  private teamDevsForFileCache = {};
 
   constructor(logger: Logger, config: Memento) {
     this.logger = logger;
@@ -59,8 +63,9 @@ export class WakaTime {
   }
 
   public dispose() {
-    this.clearTodayInterval();
     this.statusBar?.dispose();
+    this.statusBarTeamYou?.dispose();
+    this.statusBarTeamOther?.dispose();
     this.disposable.dispose();
   }
 
@@ -70,8 +75,14 @@ export class WakaTime {
     this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     this.statusBar.command = COMMAND_DASHBOARD;
 
+    this.statusBarTeamYou = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+    this.statusBarTeamOther = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+
     const showStatusBar = this.config.get('wakatime.status_bar_enabled');
     this.showStatusBar = showStatusBar !== 'false';
+
+    const showStatusBarTeam = this.config.get('wakatime.status_bar_team');
+    this.showStatusBarTeam = showStatusBarTeam !== 'false';
 
     this.setStatusBarVisibility(this.showStatusBar);
     this.updateStatusBarText('WakaTime Initializing...');
@@ -102,6 +113,24 @@ export class WakaTime {
   private updateStatusBarTooltip(tooltipText: string): void {
     if (!this.statusBar) return;
     this.statusBar.tooltip = tooltipText;
+  }
+
+  private updateTeamStatusBarTextForCurrentUser(text?: string): void {
+    if (!this.statusBarTeamYou) return;
+    if (!text) {
+      this.statusBarTeamYou.text = '';
+    } else {
+      this.statusBarTeamYou.text = text;
+    }
+  }
+
+  private updateTeamStatusBarTextForOther(text?: string): void {
+    if (!this.statusBarTeamOther) return;
+    if (!text) {
+      this.statusBarTeamOther.text = '';
+    } else {
+      this.statusBarTeamOther.text = text;
+    }
   }
 
   private statusBarShowingError(): boolean {
@@ -236,12 +265,14 @@ export class WakaTime {
 
   private setStatusBarVisibility(isVisible: boolean): void {
     if (isVisible) {
-      this.setTodayInterval();
       this.statusBar?.show();
+      this.statusBarTeamYou?.show();
+      this.statusBarTeamOther?.show();
       this.logger.debug('Status bar icon enabled.');
     } else {
-      this.clearTodayInterval();
       this.statusBar?.hide();
+      this.statusBarTeamYou?.hide();
+      this.statusBarTeamOther?.hide();
       this.logger.debug('Status bar icon disabled.');
     }
   }
@@ -275,6 +306,11 @@ export class WakaTime {
         doc.languageId;
         let file: string = doc.fileName;
         if (file) {
+          if (this.currentlyFocusedFile !== file) {
+            this.currentlyFocusedFile = file;
+            this.updateTeamStatusBar(doc);
+          }
+
           let time: number = Date.now();
           if (
             isWrite ||
@@ -311,14 +347,7 @@ export class WakaTime {
   ): void {
     this.hasApiKey((hasApiKey) => {
       if (hasApiKey) {
-        this._sendHeartbeat(
-          doc,
-          time,
-          selection,
-          isWrite,
-          isCompiling,
-          isDebugging,
-        );
+        this._sendHeartbeat(doc, time, selection, isWrite, isCompiling, isDebugging);
       } else {
         this.promptForApiKey();
       }
@@ -353,10 +382,18 @@ export class WakaTime {
       lines: String(doc.lineCount),
       is_write: isWrite,
     };
+
     const project = this.getProjectName();
     if (project) payload['project'] = project;
+
     const language = this.getLanguage(doc);
     if (language) payload['language'] = language;
+
+    const folder = this.getProjectFolder(doc.uri);
+    if (folder && file.indexOf(folder) === 0) {
+      payload['project_root_count'] = this.countSlashesInPath(folder);
+    }
+
     if (isDebugging) {
       payload['category'] = 'debugging';
     } else if (isCompiling) {
@@ -382,9 +419,7 @@ export class WakaTime {
       });
       const parsedJSON = await response.json();
       if (response.status == 200 || response.status == 201 || response.status == 202) {
-        if (this.showStatusBar) {
-          this.getCodingActivity();
-        }
+        if (this.showStatusBar) this.getCodingActivity();
         this.logger.debug(`last heartbeat sent ${Utils.formatDate(new Date())}`);
       } else {
         this.logger.warn(`API Error ${response.status}: ${parsedJSON}`);
@@ -416,15 +451,7 @@ export class WakaTime {
   }
 
   private getCodingActivity() {
-    if (!this.showStatusBar) {
-      this.clearTodayInterval();
-      return;
-    }
-
-    this.setTodayInterval();
-
-    // prevent updating if we haven't coded since last checked
-    if (this.lastFetchToday > 0 && this.lastFetchToday > this.lastHeartbeat) return;
+    if (!this.showStatusBar) return;
 
     const cutoff = Date.now() - this.fetchTodayInterval;
     if (this.lastFetchToday > cutoff) return;
@@ -475,6 +502,7 @@ export class WakaTime {
             this.updateStatusBarText();
             this.updateStatusBarTooltip('WakaTime: Calculating time spent today in background...');
           }
+          if (parsedJSON.data.has_team_features) this.updateTeamStatusBar();
         }
       } else {
         this.logger.warn(`API Error ${response.status}: ${parsedJSON}`);
@@ -487,6 +515,95 @@ export class WakaTime {
           this.logger.error(error_msg);
         } else {
           let error_msg = `Error fetching code stats for status bar (${response.status}); Check your browser console for more details.`;
+          this.logger.debug(error_msg);
+        }
+      }
+    } catch (ex) {
+      this.logger.warn(`API Error: ${ex}`);
+    }
+  }
+
+  private async updateTeamStatusBar(doc?: vscode.TextDocument) {
+    if (!this.showStatusBarTeam) return;
+
+    if (!doc) {
+      doc = vscode.window.activeTextEditor?.document;
+      if (!doc) return;
+    }
+
+    const file = doc.fileName;
+
+    if (this.teamDevsForFileCache[file]) {
+      this.updateTeamStatusBarTextForCurrentUser(this.teamDevsForFileCache[file].you);
+      this.updateTeamStatusBarTextForOther(this.teamDevsForFileCache[file].other);
+      return;
+    }
+
+    this.logger.debug('Fetching devs for currently focused file from api.');
+    const apiKey = this.config.get('wakatime.apiKey');
+    const url = `https://api.wakatime.com/api/v1/users/current/developers_for_file?api_key=${apiKey}`;
+
+    const payload = {
+      entity: file,
+      plugin: this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version,
+    };
+
+    const project = this.getProjectName();
+    if (!project) return;
+    payload['project'] = project;
+
+    const folder = this.getProjectFolder(doc.uri);
+    if (!folder || file.indexOf(folder) !== 0) return;
+    payload['project_root_count'] = this.countSlashesInPath(folder);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent':
+            this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version,
+        },
+        body: JSON.stringify(payload),
+      });
+      const parsedJSON = await response.json();
+      if (response.status == 200) {
+        const devs = {
+          you: '',
+          other: '',
+        };
+        if (parsedJSON.data) {
+          const currentUser = parsedJSON.data.find((dev) => dev.user.is_current_user);
+          let topDev = parsedJSON.data[0];
+          if (topDev.user.is_current_user) {
+            if (parsedJSON.data.length > 1) {
+              topDev = parsedJSON.data[1];
+            } else {
+              topDev = null;
+            }
+          }
+
+          if (currentUser) devs.you = `${currentUser.user.name}: ${currentUser.total.text}`;
+          if (topDev) devs.you = `${topDev.user.name}: ${topDev.total.text}`;
+        }
+        this.teamDevsForFileCache[file] = devs;
+
+        // make sure this file is still the currently focused file
+        if (file !== this.currentlyFocusedFile) return;
+
+        this.config.get('wakatime.status_bar_coding_activity');
+        if (this.showStatusBar) {
+          this.updateTeamStatusBarTextForCurrentUser(devs.you);
+          this.updateTeamStatusBarTextForOther(devs.other);
+        }
+      } else {
+        this.updateTeamStatusBarTextForCurrentUser();
+        this.updateTeamStatusBarTextForOther();
+        this.logger.warn(`API Error ${response.status}: ${parsedJSON}`);
+        if (response && response.status == 401) {
+          this.logger.error('Invalid WakaTime Api Key');
+        } else {
+          let error_msg = `Error fetching devs for currently focused file (${response.status}); Check your browser console for more details.`;
           this.logger.debug(error_msg);
         }
       }
@@ -526,16 +643,33 @@ export class WakaTime {
     return vscode.workspace.name || '';
   }
 
-  private setTodayInterval(): void {
-    if (this.fetchTodayIntervalId) return;
-    this.fetchTodayIntervalId = setInterval(
-      this.getCodingActivity.bind(this),
-      this.fetchTodayInterval,
-    );
+  private getProjectFolder(uri: vscode.Uri): string {
+    if (!vscode.workspace) return '';
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+    if (workspaceFolder) {
+      try {
+        return workspaceFolder.uri.fsPath;
+      } catch (e) {}
+    }
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length) {
+      return vscode.workspace.workspaceFolders[0].uri.fsPath;
+    }
+    return '';
   }
 
-  private clearTodayInterval(): void {
-    if (this.fetchTodayIntervalId) clearInterval(this.fetchTodayIntervalId);
-    this.fetchTodayIntervalId = undefined;
+  private countSlashesInPath(path: string): number {
+    if (!path) return 0;
+
+    const windowsNetDrive = path.indexOf('\\\\') === 0;
+
+    path = path.replace(/[\\/]+/, '/');
+
+    if (windowsNetDrive) {
+      path = '\\\\' + path.slice(1);
+    }
+
+    if (!path.endsWith('/')) path = path + '/';
+
+    return (path.match(/\//g) || []).length;
   }
 }
