@@ -803,7 +803,7 @@ export class WakaTime {
       }
       if (other) {
         this.updateTeamStatusBarTextForOther(other.user.name + ': ' + other.total.text);
-        this.updateStatusBarTooltipForOther(other.user.name + '’s total time spent in this file');
+        this.updateStatusBarTooltipForOther(other.user.long_name + '’s total time spent in this file');
       } else {
         this.updateTeamStatusBarTextForOther();
       }
