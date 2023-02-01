@@ -93,11 +93,11 @@ export class WakaTime {
   public initializeDependencies(): void {
     this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
 
-    this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+    this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 3);
     this.statusBar.command = COMMAND_DASHBOARD;
 
-    this.statusBarTeamYou = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
-    this.statusBarTeamOther = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+    this.statusBarTeamYou = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 2);
+    this.statusBarTeamOther = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
 
     this.options.getSetting('settings', 'status_bar_team', false, (statusBarTeam: Setting) => {
       this.showStatusBarTeam = statusBarTeam.value !== 'false';
