@@ -162,13 +162,24 @@ export class WakaTime {
     }
   }
 
+  private updateStatusBarTooltipForCurrentUser(tooltipText: string): void {
+    if (!this.statusBarTeamYou) return;
+    this.statusBarTeamYou.tooltip = tooltipText;
+  }
+
   private updateTeamStatusBarTextForOther(text?: string): void {
     if (!this.statusBarTeamOther) return;
     if (!text) {
       this.statusBarTeamOther.text = '';
     } else {
       this.statusBarTeamOther.text = text;
+      this.statusBarTeamOther.tooltip = 'Developer with the most time spent in this file';
     }
+  }
+
+  private updateStatusBarTooltipForOther(tooltipText: string): void {
+    if (!this.statusBarTeamOther) return;
+    this.statusBarTeamOther.tooltip = tooltipText;
   }
 
   public promptForApiKey(): void {
@@ -689,8 +700,7 @@ export class WakaTime {
 
     // TODO: expire cached text after some hours
     if (this.teamDevsForFileCache[file]) {
-      this.updateTeamStatusBarTextForCurrentUser(this.teamDevsForFileCache[file].you);
-      this.updateTeamStatusBarTextForOther(this.teamDevsForFileCache[file].other);
+      this.updateTeamStatusBarFromJson(this.teamDevsForFileCache[file]);
       return;
     }
 
@@ -760,8 +770,7 @@ export class WakaTime {
             return;
           }
 
-          this.updateTeamStatusBarTextForCurrentUser(jsonData?.you);
-          this.updateTeamStatusBarTextForOther(jsonData?.other);
+          this.updateTeamStatusBarFromJson(jsonData);
         } else {
           this.updateTeamStatusBarTextForCurrentUser();
           this.updateTeamStatusBarTextForOther();
@@ -774,6 +783,30 @@ export class WakaTime {
         );
       }
     });
+  }
+
+  private updateTeamStatusBarFromJson(jsonData?: any) {
+      if (!jsonData) {
+        this.updateTeamStatusBarTextForCurrentUser();
+        this.updateTeamStatusBarTextForOther();
+        return;
+      }
+
+      const you = jsonData.you;
+      const other = jsonData.other;
+
+      if (you) {
+        this.updateTeamStatusBarTextForCurrentUser('You: ' + you.total.text);
+        this.updateStatusBarTooltipForCurrentUser('Your total time spent in this file');
+      } else {
+        this.updateTeamStatusBarTextForCurrentUser();
+      }
+      if (other) {
+        this.updateTeamStatusBarTextForOther(other.user.name + ': ' + other.total.text);
+        this.updateStatusBarTooltipForOther(other.user.name + '’s total time spent in this file');
+      } else {
+        this.updateTeamStatusBarTextForOther();
+      }
   }
 
   private enoughTimePassed(time: number): boolean {

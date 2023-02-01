@@ -124,6 +124,11 @@ export class WakaTime {
     }
   }
 
+  private updateStatusBarTooltipForCurrentUser(tooltipText: string): void {
+    if (!this.statusBarTeamYou) return;
+    this.statusBarTeamYou.tooltip = tooltipText;
+  }
+
   private updateTeamStatusBarTextForOther(text?: string): void {
     if (!this.statusBarTeamOther) return;
     if (!text) {
@@ -131,6 +136,11 @@ export class WakaTime {
     } else {
       this.statusBarTeamOther.text = text;
     }
+  }
+
+  private updateStatusBarTooltipForOther(tooltipText: string): void {
+    if (!this.statusBarTeamOther) return;
+    this.statusBarTeamOther.tooltip = tooltipText;
   }
 
   private statusBarShowingError(): boolean {
@@ -574,8 +584,7 @@ export class WakaTime {
     this.currentlyFocusedFile = file;
 
     if (this.teamDevsForFileCache[file]) {
-      this.updateTeamStatusBarTextForCurrentUser(this.teamDevsForFileCache[file].you);
-      this.updateTeamStatusBarTextForOther(this.teamDevsForFileCache[file].other);
+      this.updateTeamStatusBarFromJson(this.teamDevsForFileCache[file]);
       return;
     }
 
@@ -609,8 +618,8 @@ export class WakaTime {
       const parsedJSON = await response.json();
       if (response.status == 200) {
         const devs = {
-          you: '',
-          other: '',
+          you: null,
+          other: null,
         };
         if (parsedJSON.data) {
           const currentUser = parsedJSON.data.find((dev) => dev.user.is_current_user);
@@ -623,18 +632,17 @@ export class WakaTime {
             }
           }
 
-          if (currentUser) devs.you = `${currentUser.user.name}: ${currentUser.total.text}`;
-          if (topDev) devs.you = `${topDev.user.name}: ${topDev.total.text}`;
+          devs.you = currentUser;
+          devs.other = topDev;
+          this.teamDevsForFileCache[file] = devs;
         }
-        this.teamDevsForFileCache[file] = devs;
 
         // make sure this file is still the currently focused file
         if (file !== this.currentlyFocusedFile) return;
 
         this.config.get('wakatime.status_bar_coding_activity');
         if (this.showStatusBar) {
-          this.updateTeamStatusBarTextForCurrentUser(devs.you);
-          this.updateTeamStatusBarTextForOther(devs.other);
+          this.updateTeamStatusBarFromJson(devs);
         }
       } else {
         this.updateTeamStatusBarTextForCurrentUser();
@@ -649,6 +657,30 @@ export class WakaTime {
       }
     } catch (ex) {
       this.logger.warn(`API Error: ${ex}`);
+    }
+  }
+
+  private updateTeamStatusBarFromJson(jsonData?: any) {
+    if (!jsonData) {
+      this.updateTeamStatusBarTextForCurrentUser();
+      this.updateTeamStatusBarTextForOther();
+      return;
+    }
+
+    const you = jsonData.you;
+    const other = jsonData.other;
+
+    if (you) {
+      this.updateTeamStatusBarTextForCurrentUser('You: ' + you.total.text);
+      this.updateStatusBarTooltipForCurrentUser('Your total time spent in this file');
+    } else {
+      this.updateTeamStatusBarTextForCurrentUser();
+    }
+    if (other) {
+      this.updateTeamStatusBarTextForOther(other.user.name + ': ' + other.total.text);
+      this.updateStatusBarTooltipForOther(other.user.name + '’s total time spent in this file');
+    } else {
+      this.updateTeamStatusBarTextForOther();
     }
   }
 
