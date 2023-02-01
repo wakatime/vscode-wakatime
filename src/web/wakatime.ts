@@ -284,8 +284,42 @@ export class WakaTime {
     vscode.window.onDidChangeActiveTextEditor(this.onChange, this, subscriptions);
     vscode.workspace.onDidSaveTextDocument(this.onSave, this, subscriptions);
 
+    vscode.tasks.onDidStartTask(this.onDidStartTask, this, subscriptions);
+    vscode.tasks.onDidEndTask(this.onDidEndTask, this, subscriptions);
+
+    vscode.debug.onDidChangeActiveDebugSession(this.onDebuggingChanged, this, subscriptions);
+    vscode.debug.onDidChangeBreakpoints(this.onDebuggingChanged, this, subscriptions);
+    vscode.debug.onDidStartDebugSession(this.onDidStartDebugSession, this, subscriptions);
+    vscode.debug.onDidTerminateDebugSession(this.onDidTerminateDebugSession, this, subscriptions);
+
     // create a combined disposable for all event subscriptions
     this.disposable = vscode.Disposable.from(...subscriptions);
+  }
+
+  private onDebuggingChanged(): void {
+    this.onEvent(false);
+  }
+
+  private onDidStartDebugSession(): void {
+    this.isDebugging = true;
+    this.onEvent(false);
+  }
+
+  private onDidTerminateDebugSession(): void {
+    this.isDebugging = false;
+    this.onEvent(false);
+  }
+
+  private onDidStartTask(e: vscode.TaskStartEvent): void {
+    if (e.execution.task.isBackground) return;
+    if (e.execution.task.detail && e.execution.task.detail.indexOf('watch') !== -1) return;
+    this.isCompiling = true;
+    this.onEvent(false);
+  }
+
+  private onDidEndTask(): void {
+    this.isCompiling = false;
+    this.onEvent(false);
   }
 
   private onChange(): void {

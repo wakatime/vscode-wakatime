@@ -382,7 +382,9 @@ export class WakaTime {
     this.onEvent(false);
   }
 
-  private onDidStartTask(): void {
+  private onDidStartTask(e: vscode.TaskStartEvent): void {
+    if (e.execution.task.isBackground) return;
+    if (e.execution.task.detail && e.execution.task.detail.indexOf('watch') !== -1) return;
     this.isCompiling = true;
     this.onEvent(false);
   }
