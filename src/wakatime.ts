@@ -412,7 +412,6 @@ export class WakaTime {
         let file: string = doc.fileName;
         if (file) {
           if (this.currentlyFocusedFile !== file) {
-            this.currentlyFocusedFile = file;
             this.updateTeamStatusBar(doc);
           }
 
@@ -680,12 +679,13 @@ export class WakaTime {
     }
 
     let file = doc.fileName;
-
     if (Utils.isRemoteUri(doc.uri)) {
       file = `${doc.uri.authority}${doc.uri.path}`;
       file = file.replace('ssh-remote+', 'ssh://');
       // TODO: how to support 'dev-container', 'attached-container', 'wsl', and 'codespaces' schemes?
     }
+
+    this.currentlyFocusedFile = file;
 
     // TODO: expire cached text after some hours
     if (this.teamDevsForFileCache[file]) {
@@ -756,15 +756,12 @@ export class WakaTime {
           if (jsonData) this.teamDevsForFileCache[file!] = jsonData;
 
           // make sure this file is still the currently focused file
-          if (file !== this.currentlyFocusedFile) return;
-
-          if (jsonData?.text) {
-            this.updateTeamStatusBarTextForCurrentUser(jsonData.you);
-            this.updateTeamStatusBarTextForOther(jsonData.other);
-          } else {
-            this.updateTeamStatusBarTextForCurrentUser();
-            this.updateTeamStatusBarTextForOther();
+          if (file !== this.currentlyFocusedFile) {
+            return;
           }
+
+          this.updateTeamStatusBarTextForCurrentUser(jsonData?.you);
+          this.updateTeamStatusBarTextForOther(jsonData?.other);
         } else {
           this.updateTeamStatusBarTextForCurrentUser();
           this.updateTeamStatusBarTextForOther();

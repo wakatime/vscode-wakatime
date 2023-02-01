@@ -341,7 +341,6 @@ export class WakaTime {
         let file: string = doc.fileName;
         if (file) {
           if (this.currentlyFocusedFile !== file) {
-            this.currentlyFocusedFile = file;
             this.updateTeamStatusBar(doc);
           }
 
@@ -565,7 +564,14 @@ export class WakaTime {
       if (!doc) return;
     }
 
-    const file = doc.fileName;
+    let file = doc.fileName;
+    if (Utils.isRemoteUri(doc.uri)) {
+      file = `${doc.uri.authority}${doc.uri.path}`;
+      file = file.replace('ssh-remote+', 'ssh://');
+      // TODO: how to support 'dev-container', 'attached-container', 'wsl', and 'codespaces' schemes?
+    }
+
+    this.currentlyFocusedFile = file;
 
     if (this.teamDevsForFileCache[file]) {
       this.updateTeamStatusBarTextForCurrentUser(this.teamDevsForFileCache[file].you);
