@@ -627,7 +627,7 @@ export class WakaTime {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
         if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
-        this.logger.error(error.toString());
+        this.logger.debug(error.toString());
       }
     });
     let output = '';
@@ -742,7 +742,7 @@ export class WakaTime {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
         if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
-        this.logger.error(error.toString());
+        this.logger.debug(error.toString());
       }
     });
     let output = '';
