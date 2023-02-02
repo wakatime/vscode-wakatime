@@ -1,6 +1,13 @@
 
 # Changelog
 
+## 24.0.0 (2023-02-02)
+
+- Exclude watch tasks and background tasks from Building category.
+  [#305](https://github.com/wakatime/vscode-wakatime/issues/305)
+- New team status bar item showing expert for currently focused file.
+  [#325](https://github.com/wakatime/vscode-wakatime/issues/325)
+
 ## 23.2.0 (2023-01-20)
 
 - Detect category code reviewing when a GitHub pull request is open.
