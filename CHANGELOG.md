@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.0.2 (2023-02-03)
+
+- Clear expert status bar when file changed.
+
 ## 24.0.1 (2023-02-02)
 
 - Use new command line option --file-expert.
