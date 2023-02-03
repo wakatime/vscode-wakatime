@@ -590,7 +590,7 @@ export class WakaTime {
 
     this.logger.debug('Fetching devs for currently focused file from api.');
     const apiKey = this.config.get('wakatime.apiKey');
-    const url = `https://api.wakatime.com/api/v1/users/current/developers_for_file?api_key=${apiKey}`;
+    const url = `https://api.wakatime.com/api/v1/users/current/file_experts?api_key=${apiKey}`;
 
     const payload = {
       entity: file,
