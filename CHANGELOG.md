@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.0.1 (2023-02-02)
+
+- Use new command line option --file-expert.
+
 ## 24.0.0 (2023-02-02)
 
 - Exclude watch tasks and background tasks from Building category.
