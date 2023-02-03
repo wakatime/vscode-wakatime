@@ -423,6 +423,7 @@ export class WakaTime {
         let file: string = doc.fileName;
         if (file) {
           if (this.currentlyFocusedFile !== file) {
+            this.updateTeamStatusBarFromJson();
             this.updateTeamStatusBar(doc);
           }
 
