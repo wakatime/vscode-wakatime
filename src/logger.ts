@@ -29,6 +29,13 @@ export class Logger {
     this.log(LogLevel.DEBUG, msg);
   }
 
+  public debugException(msg: unknown): void {
+    if ((msg as Error).message !== undefined) {
+      this.log(LogLevel.DEBUG, (msg as Error).message);
+    }
+  }
+
+
   public info(msg: string): void {
     this.log(LogLevel.INFO, msg);
   }

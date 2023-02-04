@@ -624,61 +624,68 @@ export class WakaTime {
       `Fetching coding activity for Today from api: ${Utils.formatArguments(binary, args)}`,
     );
     const options = Desktop.buildOptions();
-    let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
-      if (error != null) {
-        if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
-        if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
-        this.logger.debug(error.toString());
-      }
-    });
-    let output = '';
-    if (proc.stdout) {
-      proc.stdout.on('data', (data: string | null) => {
-        if (data) output += data;
+
+    try {
+      let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
+        if (error != null) {
+          if (stderr && stderr.toString() != '') this.logger.debug(stderr.toString());
+          if (stdout && stdout.toString() != '') this.logger.debug(stdout.toString());
+          this.logger.debug(error.toString());
+        }
       });
-    }
-    proc.on('close', (code, _signal) => {
-      if (code == 0) {
-        if (this.showStatusBar) {
-          if (output) {
-            let jsonData: any;
-            try {
-              jsonData = JSON.parse(output);
-            } catch (e) {
-              this.logger.debug(
-                `Error parsing today coding activity as json:\n${output}\nCheck your ${this.options.getLogFile()} file for more details.`,
-              );
-            }
-            if (jsonData?.text) {
-              if (this.showCodingActivity) {
-                this.updateStatusBarText(jsonData.text.trim());
-                this.updateStatusBarTooltip(
-                  'WakaTime: Today’s coding time. Click to visit dashboard.',
+      let output = '';
+      if (proc.stdout) {
+        proc.stdout.on('data', (data: string | null) => {
+          if (data) output += data;
+        });
+      }
+      proc.on('close', (code, _signal) => {
+        if (code == 0) {
+          if (this.showStatusBar) {
+            if (output) {
+              let jsonData: any;
+              try {
+                jsonData = JSON.parse(output);
+              } catch (e) {
+                this.logger.debug(
+                  `Error parsing today coding activity as json:\n${output}\nCheck your ${this.options.getLogFile()} file for more details.`,
                 );
+              }
+              if (jsonData?.text) {
+                if (this.showCodingActivity) {
+                  this.updateStatusBarText(jsonData.text.trim());
+                  this.updateStatusBarTooltip(
+                    'WakaTime: Today’s coding time. Click to visit dashboard.',
+                  );
+                } else {
+                  this.updateStatusBarText();
+                  this.updateStatusBarTooltip(jsonData.text.trim());
+                }
               } else {
                 this.updateStatusBarText();
-                this.updateStatusBarTooltip(jsonData.text.trim());
+                this.updateStatusBarTooltip(
+                  'WakaTime: Calculating time spent today in background...',
+                );
               }
+              if (jsonData?.has_team_features) this.updateTeamStatusBar();
             } else {
               this.updateStatusBarText();
               this.updateStatusBarTooltip(
                 'WakaTime: Calculating time spent today in background...',
               );
             }
-            if (jsonData?.has_team_features) this.updateTeamStatusBar();
-          } else {
-            this.updateStatusBarText();
-            this.updateStatusBarTooltip('WakaTime: Calculating time spent today in background...');
           }
+        } else if (code == 102 || code == 112) {
+          // noop, working offline
+        } else {
+          this.logger.debug(
+            `Error fetching today coding activity (${code}); Check your ${this.options.getLogFile()} file for more details.`,
+          );
         }
-      } else if (code == 102 || code == 112) {
-        // noop, working offline
-      } else {
-        this.logger.debug(
-          `Error fetching today coding activity (${code}); Check your ${this.options.getLogFile()} file for more details.`,
-        );
-      }
-    });
+      });
+    } catch (e) {
+      this.logger.debugException(e);
+    }
   }
 
   private updateTeamStatusBar(doc?: vscode.TextDocument) {
@@ -739,75 +746,82 @@ export class WakaTime {
     const binary = this.dependencies.getCliLocation();
     this.logger.debug(`Fetching devs for file from api: ${Utils.formatArguments(binary, args)}`);
     const options = Desktop.buildOptions();
-    let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
-      if (error != null) {
-        if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
-        if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
-        this.logger.debug(error.toString());
-      }
-    });
-    let output = '';
-    if (proc.stdout) {
-      proc.stdout.on('data', (data: string | null) => {
-        if (data) output += data;
-      });
-    }
-    proc.on('close', (code, _signal) => {
-      if (code == 0) {
-        if (output) {
-          let jsonData;
-          try {
-            jsonData = JSON.parse(output);
-          } catch (e) {
-            this.logger.debug(
-              `Error parsing devs for file as json:\n${output}\nCheck your ${this.options.getLogFile()} file for more details.`,
-            );
-          }
 
-          if (jsonData) this.teamDevsForFileCache[file!] = jsonData;
-
-          // make sure this file is still the currently focused file
-          if (file !== this.currentlyFocusedFile) {
-            return;
-          }
-
-          this.updateTeamStatusBarFromJson(jsonData);
-        } else {
-          this.updateTeamStatusBarTextForCurrentUser();
-          this.updateTeamStatusBarTextForOther();
+    try {
+      let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
+        if (error != null) {
+          if (stderr && stderr.toString() != '') this.logger.debug(stderr.toString());
+          if (stdout && stdout.toString() != '') this.logger.debug(stdout.toString());
+          this.logger.debug(error.toString());
         }
-      } else if (code == 102 || code == 112) {
-        // noop, working offline
-      } else {
-        this.logger.debug(
-          `Error fetching devs for file (${code}); Check your ${this.options.getLogFile()} file for more details.`,
-        );
+      });
+      let output = '';
+      if (proc.stdout) {
+        proc.stdout.on('data', (data: string | null) => {
+          if (data) output += data;
+        });
       }
-    });
+      proc.on('close', (code, _signal) => {
+        if (code == 0) {
+          if (output) {
+            let jsonData;
+            try {
+              jsonData = JSON.parse(output);
+            } catch (e) {
+              this.logger.debug(
+                `Error parsing devs for file as json:\n${output}\nCheck your ${this.options.getLogFile()} file for more details.`,
+              );
+            }
+
+            if (jsonData) this.teamDevsForFileCache[file!] = jsonData;
+
+            // make sure this file is still the currently focused file
+            if (file !== this.currentlyFocusedFile) {
+              return;
+            }
+
+            this.updateTeamStatusBarFromJson(jsonData);
+          } else {
+            this.updateTeamStatusBarTextForCurrentUser();
+            this.updateTeamStatusBarTextForOther();
+          }
+        } else if (code == 102 || code == 112) {
+          // noop, working offline
+        } else {
+          this.logger.debug(
+            `Error fetching devs for file (${code}); Check your ${this.options.getLogFile()} file for more details.`,
+          );
+        }
+      });
+    } catch (e) {
+      this.logger.debugException(e);
+    }
   }
 
   private updateTeamStatusBarFromJson(jsonData?: any) {
-      if (!jsonData) {
-        this.updateTeamStatusBarTextForCurrentUser();
-        this.updateTeamStatusBarTextForOther();
-        return;
-      }
+    if (!jsonData) {
+      this.updateTeamStatusBarTextForCurrentUser();
+      this.updateTeamStatusBarTextForOther();
+      return;
+    }
 
-      const you = jsonData.you;
-      const other = jsonData.other;
+    const you = jsonData.you;
+    const other = jsonData.other;
 
-      if (you) {
-        this.updateTeamStatusBarTextForCurrentUser('You: ' + you.total.text);
-        this.updateStatusBarTooltipForCurrentUser('Your total time spent in this file');
-      } else {
-        this.updateTeamStatusBarTextForCurrentUser();
-      }
-      if (other) {
-        this.updateTeamStatusBarTextForOther(other.user.name + ': ' + other.total.text);
-        this.updateStatusBarTooltipForOther(other.user.long_name + '’s total time spent in this file');
-      } else {
-        this.updateTeamStatusBarTextForOther();
-      }
+    if (you) {
+      this.updateTeamStatusBarTextForCurrentUser('You: ' + you.total.text);
+      this.updateStatusBarTooltipForCurrentUser('Your total time spent in this file');
+    } else {
+      this.updateTeamStatusBarTextForCurrentUser();
+    }
+    if (other) {
+      this.updateTeamStatusBarTextForOther(other.user.name + ': ' + other.total.text);
+      this.updateStatusBarTooltipForOther(
+        other.user.long_name + '’s total time spent in this file',
+      );
+    } else {
+      this.updateTeamStatusBarTextForOther();
+    }
   }
 
   private enoughTimePassed(time: number): boolean {
