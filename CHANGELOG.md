@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.0.3 (2023-02-04)
+
+- Only log status bar errors in debug mode.
+  [#327](https://github.com/wakatime/vscode-wakatime/issues/327)
+
 ## 24.0.2 (2023-02-03)
 
 - Clear expert status bar when file changed.
