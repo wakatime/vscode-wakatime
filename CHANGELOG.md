@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.0.4 (2023-02-04)
+
+- Fix spelling of --file-experts wakatime-cli flag.
+
 ## 24.0.3 (2023-02-04)
 
 - Only log status bar errors in debug mode.
