@@ -716,7 +716,7 @@ export class WakaTime {
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--output', 'json', '--plugin', Utils.quote(user_agent)];
 
-    args.push('--file-expert', Utils.quote(file));
+    args.push('--file-experts', Utils.quote(file));
 
     args.push('--entity', Utils.quote(file));
 
