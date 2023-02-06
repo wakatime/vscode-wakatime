@@ -46,6 +46,7 @@ export class WakaTime {
   private showStatusBar: boolean;
   private showCodingActivity: boolean;
   private showStatusBarTeam: boolean;
+  private hasTeamFeatures: boolean;
   private disabled: boolean = true;
   private extensionPath: string;
   private isCompiling: boolean = false;
@@ -651,6 +652,7 @@ export class WakaTime {
                   `Error parsing today coding activity as json:\n${output}\nCheck your ${this.options.getLogFile()} file for more details.`,
                 );
               }
+              if (jsonData) this.hasTeamFeatures = jsonData?.has_team_features;
               if (jsonData?.text) {
                 if (this.showCodingActivity) {
                   this.updateStatusBarText(jsonData.text.trim());
@@ -667,7 +669,7 @@ export class WakaTime {
                   'WakaTime: Calculating time spent today in background...',
                 );
               }
-              if (jsonData?.has_team_features) this.updateTeamStatusBar();
+              this.updateTeamStatusBar();
             } else {
               this.updateStatusBarText();
               this.updateStatusBarTooltip(
@@ -690,6 +692,7 @@ export class WakaTime {
 
   private updateTeamStatusBar(doc?: vscode.TextDocument) {
     if (!this.showStatusBarTeam) return;
+    if (!this.hasTeamFeatures) return;
     if (!this.dependencies.isCliInstalled()) return;
 
     if (!doc) {
