@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.0.5 (2023-02-06)
+
+- Only update file expert in statusbar when team features enabled.
+
 ## 24.0.4 (2023-02-04)
 
 - Fix spelling of --file-experts wakatime-cli flag.
