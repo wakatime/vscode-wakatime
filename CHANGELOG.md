@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.0.6 (2023-02-13)
+
+- Unwrap disposable before using.
+  [#329](https://github.com/wakatime/vscode-wakatime/issues/329)
+
 ## 24.0.5 (2023-02-06)
 
 - Only update file expert in statusbar when team features enabled.
