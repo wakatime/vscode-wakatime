@@ -67,7 +67,7 @@ export class WakaTime {
     this.statusBar?.dispose();
     this.statusBarTeamYou?.dispose();
     this.statusBarTeamOther?.dispose();
-    this.disposable.dispose();
+    this.disposable?.dispose();
   }
 
   public initializeDependencies(): void {
