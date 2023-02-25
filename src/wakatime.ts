@@ -39,7 +39,7 @@ export class WakaTime {
   private lastCompile: boolean = false;
   private dedupe: FileSelectionMap = {};
   private debounceTimeoutId: any = null;
-  private debounceMs = 200;
+  private debounceMs = 50;
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
@@ -552,7 +552,6 @@ export class WakaTime {
     proc.on('close', (code, _signal) => {
       if (code == 0) {
         if (this.showStatusBar) this.getCodingActivity();
-        this.logger.debug(`last heartbeat sent ${Utils.formatDate(new Date())}`);
       } else if (code == 102 || code == 112) {
         if (this.showStatusBar) {
           if (!this.showCodingActivity) this.updateStatusBarText();

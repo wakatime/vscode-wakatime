@@ -27,7 +27,7 @@ export class WakaTime {
   private lastCompile: boolean = false;
   private dedupe: FileSelectionMap = {};
   private debounceTimeoutId: any = null;
-  private debounceMs = 200;
+  private debounceMs = 50;
   private logger: Logger;
   private config: Memento;
   private fetchTodayInterval: number = 60000;
@@ -469,7 +469,6 @@ export class WakaTime {
       const parsedJSON = await response.json();
       if (response.status == 200 || response.status == 201 || response.status == 202) {
         if (this.showStatusBar) this.getCodingActivity();
-        this.logger.debug(`last heartbeat sent ${Utils.formatDate(new Date())}`);
       } else {
         this.logger.warn(`API Error ${response.status}: ${parsedJSON}`);
         if (response && response.status == 401) {
