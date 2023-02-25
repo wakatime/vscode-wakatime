@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.0.7 (2023-02-25)
+
+- Debounce user event handler to prevent slowness.
+  [#302](https://github.com/wakatime/vscode-wakatime/issues/302)
+
 ## 24.0.6 (2023-02-13)
 
 - Unwrap disposable before using.
