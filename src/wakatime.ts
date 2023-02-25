@@ -38,6 +38,8 @@ export class WakaTime {
   private lastDebug: boolean = false;
   private lastCompile: boolean = false;
   private dedupe: FileSelectionMap = {};
+  private debounceTimeoutId: any = null;
+  private debounceMs = 200;
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
@@ -415,43 +417,45 @@ export class WakaTime {
   }
 
   private onEvent(isWrite: boolean): void {
-    if (this.disabled) return;
+    clearTimeout(this.debounceTimeoutId);
+    this.debounceTimeoutId = setTimeout(() => {
+      if (this.disabled) return;
+      let editor = vscode.window.activeTextEditor;
+      if (editor) {
+        let doc = editor.document;
+        if (doc) {
+          let file: string = doc.fileName;
+          if (file) {
+            if (this.currentlyFocusedFile !== file) {
+              this.updateTeamStatusBarFromJson();
+              this.updateTeamStatusBar(doc);
+            }
 
-    let editor = vscode.window.activeTextEditor;
-    if (editor) {
-      let doc = editor.document;
-      if (doc) {
-        let file: string = doc.fileName;
-        if (file) {
-          if (this.currentlyFocusedFile !== file) {
-            this.updateTeamStatusBarFromJson();
-            this.updateTeamStatusBar(doc);
-          }
-
-          let time: number = Date.now();
-          if (
-            isWrite ||
-            this.enoughTimePassed(time) ||
-            this.lastFile !== file ||
-            this.lastDebug !== this.isDebugging ||
-            this.lastCompile !== this.isCompiling
-          ) {
-            this.sendHeartbeat(
-              doc,
-              time,
-              editor.selection.start,
-              isWrite,
-              this.isCompiling,
-              this.isDebugging,
-            );
-            this.lastFile = file;
-            this.lastHeartbeat = time;
-            this.lastDebug = this.isDebugging;
-            this.lastCompile = this.isCompiling;
+            let time: number = Date.now();
+            if (
+              isWrite ||
+              this.enoughTimePassed(time) ||
+              this.lastFile !== file ||
+              this.lastDebug !== this.isDebugging ||
+              this.lastCompile !== this.isCompiling
+            ) {
+              this.sendHeartbeat(
+                doc,
+                time,
+                editor.selection.start,
+                isWrite,
+                this.isCompiling,
+                this.isDebugging,
+              );
+              this.lastFile = file;
+              this.lastHeartbeat = time;
+              this.lastDebug = this.isDebugging;
+              this.lastCompile = this.isCompiling;
+            }
           }
         }
       }
-    }
+    }, this.debounceMs);
   }
 
   private sendHeartbeat(

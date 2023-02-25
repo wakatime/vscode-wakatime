@@ -26,6 +26,8 @@ export class WakaTime {
   private lastDebug: boolean = false;
   private lastCompile: boolean = false;
   private dedupe: FileSelectionMap = {};
+  private debounceTimeoutId: any = null;
+  private debounceMs = 200;
   private logger: Logger;
   private config: Memento;
   private fetchTodayInterval: number = 60000;
@@ -342,44 +344,46 @@ export class WakaTime {
   }
 
   private onEvent(isWrite: boolean): void {
-    if (this.disabled) return;
+    clearTimeout(this.debounceTimeoutId);
+    this.debounceTimeoutId = setTimeout(() => {
+      if (this.disabled) return;
+      let editor = vscode.window.activeTextEditor;
+      if (editor) {
+        let doc = editor.document;
+        if (doc) {
+          doc.languageId;
+          let file: string = doc.fileName;
+          if (file) {
+            if (this.currentlyFocusedFile !== file) {
+              this.updateTeamStatusBarFromJson();
+              this.updateTeamStatusBar(doc);
+            }
 
-    let editor = vscode.window.activeTextEditor;
-    if (editor) {
-      let doc = editor.document;
-      if (doc) {
-        doc.languageId;
-        let file: string = doc.fileName;
-        if (file) {
-          if (this.currentlyFocusedFile !== file) {
-            this.updateTeamStatusBarFromJson();
-            this.updateTeamStatusBar(doc);
-          }
-
-          let time: number = Date.now();
-          if (
-            isWrite ||
-            this.enoughTimePassed(time) ||
-            this.lastFile !== file ||
-            this.lastDebug !== this.isDebugging ||
-            this.lastCompile !== this.isCompiling
-          ) {
-            this.sendHeartbeat(
-              doc,
-              time,
-              editor.selection.start,
-              isWrite,
-              this.isCompiling,
-              this.isDebugging,
-            );
-            this.lastFile = file;
-            this.lastHeartbeat = time;
-            this.lastDebug = this.isDebugging;
-            this.lastCompile = this.isCompiling;
+            let time: number = Date.now();
+            if (
+              isWrite ||
+              this.enoughTimePassed(time) ||
+              this.lastFile !== file ||
+              this.lastDebug !== this.isDebugging ||
+              this.lastCompile !== this.isCompiling
+            ) {
+              this.sendHeartbeat(
+                doc,
+                time,
+                editor.selection.start,
+                isWrite,
+                this.isCompiling,
+                this.isDebugging,
+              );
+              this.lastFile = file;
+              this.lastHeartbeat = time;
+              this.lastDebug = this.isDebugging;
+              this.lastCompile = this.isCompiling;
+            }
           }
         }
       }
-    }
+    }, this.debounceMs);
   }
 
   private sendHeartbeat(
@@ -682,7 +686,9 @@ export class WakaTime {
     }
     if (other) {
       this.updateTeamStatusBarTextForOther(other.user.name + ': ' + other.total.text);
-      this.updateStatusBarTooltipForOther(other.user.long_name + '’s total time spent in this file');
+      this.updateStatusBarTooltipForOther(
+        other.user.long_name + '’s total time spent in this file',
+      );
     } else {
       this.updateTeamStatusBarTextForOther();
     }
