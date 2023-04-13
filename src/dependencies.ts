@@ -7,14 +7,13 @@ import * as request from 'request';
 import * as which from 'which';
 
 import { Options, Setting } from './options';
-import { Desktop, HomeDirType } from './desktop';
+import { Desktop } from './desktop';
 import { Logger } from './logger';
 
 export class Dependencies {
   private options: Options;
   private logger: Logger;
-  private extensionPath: string;
-  private resourcesLocation?: string = undefined;
+  private resourcesLocation: string;
   private cliLocation?: string = undefined;
   private cliLocationGlobal?: string = undefined;
   private cliInstalled: boolean = false;
@@ -25,30 +24,10 @@ export class Dependencies {
     'https://api.github.com/repos/wakatime/wakatime-cli/releases?per_page=1';
   private latestCliVersion: string = '';
 
-  constructor(options: Options, logger: Logger, extensionPath: string) {
+  constructor(options: Options, logger: Logger, resourcesLocation: string) {
     this.options = options;
     this.logger = logger;
-    this.extensionPath = extensionPath;
-  }
-
-  private getResourcesLocation() {
-    if (this.resourcesLocation) return this.resourcesLocation;
-
-    const home = Desktop.getHomeDirectory();
-    let folder: string;
-    if (home.type === HomeDirType.Os) {
-      folder = path.join(home.folder, '.wakatime');
-    } else {
-      folder = home.folder;
-    }
-
-    try {
-      fs.mkdirSync(folder, { recursive: true });
-      this.resourcesLocation = folder;
-    } catch (e) {
-      this.resourcesLocation = this.extensionPath;
-    }
-    return this.resourcesLocation;
+    this.resourcesLocation = resourcesLocation;
   }
 
   public getCliLocation(): string {
@@ -62,7 +41,7 @@ export class Dependencies {
     if (osname == 'win32') osname = 'windows';
     const arch = this.architecture();
     this.cliLocation = path.join(
-      this.getResourcesLocation(),
+      this.resourcesLocation,
       `wakatime-cli-${osname}-${arch}${ext}`,
     );
 
@@ -234,7 +213,7 @@ export class Dependencies {
       this.logger.debug(`Downloading wakatime-cli ${version}...`);
       const url = this.cliDownloadUrl(version);
       let zipFile = path.join(
-        this.getResourcesLocation(),
+        this.resourcesLocation,
         'wakatime-cli' + this.randStr() + '.zip',
       );
       this.downloadFile(
@@ -256,9 +235,9 @@ export class Dependencies {
   }
 
   private extractCli(zipFile: string, callback: () => void): void {
-    this.logger.debug(`Extracting wakatime-cli into "${this.getResourcesLocation()}"...`);
+    this.logger.debug(`Extracting wakatime-cli into "${this.resourcesLocation}"...`);
     this.removeCli(() => {
-      this.unzip(zipFile, this.getResourcesLocation(), () => {
+      this.unzip(zipFile, this.resourcesLocation, () => {
         if (!Desktop.isWindows()) {
           const cli = this.getCliLocation();
           try {
@@ -268,7 +247,7 @@ export class Dependencies {
             this.logger.warnException(e);
           }
           const ext = Desktop.isWindows() ? '.exe' : '';
-          const link = path.join(this.getResourcesLocation(), `wakatime-cli${ext}`);
+          const link = path.join(this.resourcesLocation, `wakatime-cli${ext}`);
           if (!this.isSymlink(link)) {
             try {
               this.logger.debug(`Create symlink from wakatime-cli to ${cli}`);

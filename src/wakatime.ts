@@ -1,13 +1,15 @@
 import * as vscode from 'vscode';
 // import * as azdata from 'azdata';
 import * as child_process from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import { Dependencies } from './dependencies';
 import { COMMAND_DASHBOARD, LogLevel } from './constants';
 import { Options, Setting } from './options';
 import { Logger } from './logger';
 import { Utils } from './utils';
-import { Desktop } from './desktop';
+import { Desktop, HomeDirType } from './desktop';
 
 interface FileSelection {
   selection: vscode.Position;
@@ -55,11 +57,13 @@ export class WakaTime {
   private isDebugging: boolean = false;
   private currentlyFocusedFile: string;
   private teamDevsForFileCache = {};
+  private resourcesLocation: string;
 
   constructor(extensionPath: string, logger: Logger) {
     this.extensionPath = extensionPath;
     this.logger = logger;
-    this.options = new Options(logger);
+    this.setResourcesLocation();
+    this.options = new Options(logger, this.resourcesLocation);
   }
 
   public initialize(): void {
@@ -68,7 +72,7 @@ export class WakaTime {
         this.logger.setLevel(LogLevel.DEBUG);
       }
 
-      this.dependencies = new Dependencies(this.options, this.logger, this.extensionPath);
+      this.dependencies = new Dependencies(this.options, this.logger, this.resourcesLocation);
 
       let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
       this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
@@ -91,6 +95,23 @@ export class WakaTime {
     this.statusBarTeamYou?.dispose();
     this.statusBarTeamOther?.dispose();
     this.disposable?.dispose();
+  }
+
+  private setResourcesLocation() {
+    const home = Desktop.getHomeDirectory();
+    let folder: string;
+    if (home.type === HomeDirType.Os) {
+      folder = path.join(home.folder, '.wakatime');
+    } else {
+      folder = home.folder;
+    }
+
+    try {
+      fs.mkdirSync(folder, { recursive: true });
+      this.resourcesLocation = folder;
+    } catch (e) {
+      this.resourcesLocation = this.extensionPath;
+    }
   }
 
   public initializeDependencies(): void {
