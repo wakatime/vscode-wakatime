@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.0.8 (2023-04-14)
+
+- Move internal config into wakatime folder.
+
 ## 24.0.7 (2023-02-25)
 
 - Debounce user event handler to prevent slowness.
