@@ -10,11 +10,11 @@ export class Desktop {
     return !!process.env['VSCODE_PORTABLE'];
   }
 
-  public static getHomeDirectory(): [string, Desktop.WakaHomeType] {
+  public static getHomeDirectory(): HomeDir {
     let home = process.env.WAKATIME_HOME;
-    if (home && home.trim() && fs.existsSync(home.trim())) return [home.trim(), Desktop.WakaHomeType.EnvVar];
-    if (this.isPortable()) return [process.env['VSCODE_PORTABLE'] as string, Desktop.WakaHomeType.OsDir];
-    return [process.env[this.isWindows() ? 'USERPROFILE' : 'HOME'] || process.cwd(), Desktop.WakaHomeType.OsDir];
+    if (home && home.trim() && fs.existsSync(home.trim())) return {folder: home.trim(), type: HomeDirType.Env};
+    if (this.isPortable()) return {folder: process.env['VSCODE_PORTABLE'] as string, type: HomeDirType.Os};
+    return {folder: process.env[this.isWindows() ? 'USERPROFILE' : 'HOME'] || process.cwd(), type: HomeDirType.Os};
   }
 
   public static buildOptions(): Object {
@@ -28,9 +28,12 @@ export class Desktop {
   }
 }
 
-export namespace Desktop {
-  export enum WakaHomeType {
-    EnvVar,
-    OsDir
-  }
+export enum HomeDirType {
+  Env,
+  Os,
+}
+
+export interface HomeDir {
+  folder: string
+  type: HomeDirType
 }

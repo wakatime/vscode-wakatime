@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 
 import * as child_process from 'child_process';
-import { Desktop } from './desktop';
+import { Desktop, HomeDirType } from './desktop';
 import { Logger } from './logger';
 import { Utils } from './utils';
 
@@ -21,15 +21,15 @@ export class Options {
   private cache: any = {};
 
   constructor(logger: Logger) {
-    const [wakaHome, wakaHomeType] = Desktop.getHomeDirectory();
-    this.configFile = path.join(wakaHome, '.wakatime.cfg');
-    this.internalConfigFile = path.join(wakaHome, '.wakatime-internal.cfg');
+    const home = Desktop.getHomeDirectory();
+    this.configFile = path.join(home.folder, '.wakatime.cfg');
+    this.internalConfigFile = path.join(home.folder, '.wakatime-internal.cfg');
     this.logger = logger;
 
-    if (wakaHomeType === Desktop.WakaHomeType.OsDir) {
-      this.logFile = path.join(wakaHome, '.wakatime', 'wakatime.log');
+    if (home.type === HomeDirType.Os) {
+      this.logFile = path.join(home.folder, '.wakatime', 'wakatime.log');
     } else {
-      this.logFile = path.join(wakaHome, '.wakatime.log');
+      this.logFile = path.join(home.folder, '.wakatime.log');
     }
   }
 
