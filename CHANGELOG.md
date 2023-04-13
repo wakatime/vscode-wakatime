@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.0.9 (2023-04-14)
+
+- Remove duplicate dot from internal cfg file.
+
 ## 24.0.8 (2023-04-14)
 
 - Move internal config into wakatime folder.
