@@ -21,11 +21,16 @@ export class Options {
   private cache: any = {};
 
   constructor(logger: Logger) {
-    let wakaHome = Desktop.getHomeDirectory();
+    const [wakaHome, wakaHomeType] = Desktop.getHomeDirectory();
     this.configFile = path.join(wakaHome, '.wakatime.cfg');
     this.internalConfigFile = path.join(wakaHome, '.wakatime-internal.cfg');
-    this.logFile = path.join(wakaHome, '.wakatime.log');
     this.logger = logger;
+
+    if (wakaHomeType === Desktop.WakaHomeType.OsDir) {
+      this.logFile = path.join(wakaHome, '.wakatime', 'wakatime.log');
+    } else {
+      this.logFile = path.join(wakaHome, '.wakatime.log');
+    }
   }
 
   public async getSettingAsync<T = any>(section: string, key: string): Promise<T> {

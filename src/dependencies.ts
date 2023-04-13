@@ -34,7 +34,8 @@ export class Dependencies {
   private getResourcesLocation() {
     if (this.resourcesLocation) return this.resourcesLocation;
 
-    const folder = path.join(Desktop.getHomeDirectory(), '.wakatime');
+    const [wakaHome, _] = Desktop.getHomeDirectory();
+    const folder = path.join(wakaHome, '.wakatime');
     try {
       fs.mkdirSync(folder, { recursive: true });
       this.resourcesLocation = folder;
