@@ -7,7 +7,7 @@ import * as request from 'request';
 import * as which from 'which';
 
 import { Options, Setting } from './options';
-import { Desktop } from './desktop';
+import { Desktop, HomeDirType } from './desktop';
 import { Logger } from './logger';
 
 export class Dependencies {
@@ -35,7 +35,13 @@ export class Dependencies {
     if (this.resourcesLocation) return this.resourcesLocation;
 
     const home = Desktop.getHomeDirectory();
-    const folder = path.join(home.folder, '.wakatime');
+    let folder: string;
+    if (home.type === HomeDirType.Os) {
+      folder = path.join(home.folder, '.wakatime');
+    } else {
+      folder = home.folder;
+    }
+
     try {
       fs.mkdirSync(folder, { recursive: true });
       this.resourcesLocation = folder;
