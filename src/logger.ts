@@ -35,7 +35,6 @@ export class Logger {
     }
   }
 
-
   public info(msg: string): void {
     this.log(LogLevel.INFO, msg);
   }

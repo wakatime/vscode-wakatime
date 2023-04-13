@@ -40,10 +40,7 @@ export class Dependencies {
     let osname = os.platform() as string;
     if (osname == 'win32') osname = 'windows';
     const arch = this.architecture();
-    this.cliLocation = path.join(
-      this.resourcesLocation,
-      `wakatime-cli-${osname}-${arch}${ext}`,
-    );
+    this.cliLocation = path.join(this.resourcesLocation, `wakatime-cli-${osname}-${arch}${ext}`);
 
     return this.cliLocation;
   }
@@ -212,10 +209,7 @@ export class Dependencies {
       }
       this.logger.debug(`Downloading wakatime-cli ${version}...`);
       const url = this.cliDownloadUrl(version);
-      let zipFile = path.join(
-        this.resourcesLocation,
-        'wakatime-cli' + this.randStr() + '.zip',
-      );
+      let zipFile = path.join(this.resourcesLocation, 'wakatime-cli' + this.randStr() + '.zip');
       this.downloadFile(
         url,
         zipFile,

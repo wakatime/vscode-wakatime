@@ -12,9 +12,14 @@ export class Desktop {
 
   public static getHomeDirectory(): HomeDir {
     let home = process.env.WAKATIME_HOME;
-    if (home && home.trim() && fs.existsSync(home.trim())) return {folder: home.trim(), type: HomeDirType.Env};
-    if (this.isPortable()) return {folder: process.env['VSCODE_PORTABLE'] as string, type: HomeDirType.Os};
-    return {folder: process.env[this.isWindows() ? 'USERPROFILE' : 'HOME'] || process.cwd(), type: HomeDirType.Os};
+    if (home && home.trim() && fs.existsSync(home.trim()))
+      return { folder: home.trim(), type: HomeDirType.Env };
+    if (this.isPortable())
+      return { folder: process.env['VSCODE_PORTABLE'] as string, type: HomeDirType.Os };
+    return {
+      folder: process.env[this.isWindows() ? 'USERPROFILE' : 'HOME'] || process.cwd(),
+      type: HomeDirType.Os,
+    };
   }
 
   public static buildOptions(): Object {
@@ -34,6 +39,6 @@ export enum HomeDirType {
 }
 
 export interface HomeDir {
-  folder: string
-  type: HomeDirType
+  folder: string;
+  type: HomeDirType;
 }
