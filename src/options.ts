@@ -24,7 +24,7 @@ export class Options {
     this.logger = logger;
     const home = Desktop.getHomeDirectory();
     this.configFile = path.join(home.folder, '.wakatime.cfg');
-    this.internalConfigFile = path.join(resourcesFolder, '.wakatime-internal.cfg');
+    this.internalConfigFile = path.join(resourcesFolder, 'wakatime-internal.cfg');
   }
 
   public async getSettingAsync<T = any>(section: string, key: string): Promise<T> {
