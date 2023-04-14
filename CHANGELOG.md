@@ -1,6 +1,15 @@
 
 # Changelog
 
+## 24.0.10 (2023-04-14)
+
+- Fix missing logfile attribute initialization.
+  [#335](https://github.com/wakatime/vscode-wakatime/issues/335)
+  [#336](https://github.com/wakatime/vscode-wakatime/issues/336)
+  [#339](https://github.com/wakatime/vscode-wakatime/issues/339)
+  [#338](https://github.com/wakatime/vscode-wakatime/issues/338)
+  [#340](https://github.com/wakatime/vscode-wakatime/issues/340)
+
 ## 24.0.9 (2023-04-14)
 
 - Remove duplicate dot from internal cfg file.
