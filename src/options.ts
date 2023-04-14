@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 
 import * as child_process from 'child_process';
-import { Desktop } from './desktop';
+import { Desktop, HomeDirType } from './desktop';
 import { Logger } from './logger';
 import { Utils } from './utils';
 
@@ -25,6 +25,11 @@ export class Options {
     const home = Desktop.getHomeDirectory();
     this.configFile = path.join(home.folder, '.wakatime.cfg');
     this.internalConfigFile = path.join(resourcesFolder, 'wakatime-internal.cfg');
+    if (home.type === HomeDirType.Os) {
+      this.logFile = path.join(home.folder, '.wakatime', 'wakatime.log');
+    } else {
+      this.logFile = path.join(home.folder, '.wakatime.log');
+    }
   }
 
   public async getSettingAsync<T = any>(section: string, key: string): Promise<T> {
