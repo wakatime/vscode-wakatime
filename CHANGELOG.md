@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.0.11 (2023-06-06)
+
+- Use unique identifier when creating status bar items.
+  [#355](https://github.com/wakatime/vscode-wakatime/issues/355)
+
 ## 24.0.10 (2023-04-14)
 
 - Fix missing logfile attribute initialization.
