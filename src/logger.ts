@@ -46,6 +46,8 @@ export class Logger {
   public warnException(msg: unknown): void {
     if ((msg as Error).message !== undefined) {
       this.log(LogLevel.WARN, (msg as Error).message);
+    } else {
+      this.log(LogLevel.WARN, (msg as Error).toString());
     }
   }
 
