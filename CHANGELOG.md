@@ -1,11 +1,14 @@
 
 # Changelog
 
+## 24.0.13 (2023-06-11)
+
+- Always log exception even when message missing.
+
 ## 24.0.12 (2023-06-11)
 
 - More verbose debug logging around downloading wakatime-cli.
 - Always create dot wakatime folder even when using wakatime_home env.
-
 
 ## 24.0.11 (2023-06-06)
 
