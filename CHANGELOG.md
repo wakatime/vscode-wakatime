@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.0.14 (2023-06-11)
+
+- Always log debug and error exceptions even when message missing.
+
 ## 24.0.13 (2023-06-11)
 
 - Always log exception even when message missing.
