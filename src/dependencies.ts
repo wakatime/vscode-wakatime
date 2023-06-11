@@ -121,6 +121,7 @@ export class Dependencies {
 
   private getLatestCliVersion(callback: (arg0: string) => void): void {
     if (this.latestCliVersion) {
+      this.logger.debug(`Using cached latest wakatime-cli version: ${this.latestCliVersion}`);
       callback(this.latestCliVersion);
       return;
     }
@@ -143,6 +144,7 @@ export class Dependencies {
                     'User-Agent': 'github.com/wakatime/vscode-wakatime',
                   },
                 };
+                this.logger.debug(`Fetching latest wakatime-cli version from GitHub API: ${options.url}`);
                 if (proxy.value) {
                   this.logger.debug(`Using Proxy: ${proxy.value}`);
                   options['proxy'] = proxy.value;
@@ -204,6 +206,7 @@ export class Dependencies {
   private installCli(callback: () => void): void {
     this.getLatestCliVersion((version) => {
       if (!version) {
+        this.logger.debug('Unable to find latest version from GitHub releases api.');
         callback();
         return;
       }
