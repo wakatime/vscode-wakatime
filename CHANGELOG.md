@@ -1,6 +1,12 @@
 
 # Changelog
 
+## 24.0.12 (2023-06-11)
+
+- More verbose debug logging around downloading wakatime-cli.
+- Always create dot wakatime folder even when using wakatime_home env.
+
+
 ## 24.0.11 (2023-06-06)
 
 - Use unique identifier when creating status bar items.
