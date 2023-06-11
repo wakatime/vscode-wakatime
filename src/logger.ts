@@ -32,6 +32,8 @@ export class Logger {
   public debugException(msg: unknown): void {
     if ((msg as Error).message !== undefined) {
       this.log(LogLevel.DEBUG, (msg as Error).message);
+    } else {
+      this.log(LogLevel.DEBUG, (msg as Error).toString());
     }
   }
 
@@ -58,6 +60,8 @@ export class Logger {
   public errorException(msg: unknown): void {
     if ((msg as Error).message !== undefined) {
       this.log(LogLevel.ERROR, (msg as Error).message);
+    } else {
+      this.log(LogLevel.ERROR, (msg as Error).toString());
     }
   }
 }
