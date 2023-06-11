@@ -9,7 +9,7 @@ import { COMMAND_DASHBOARD, LogLevel } from './constants';
 import { Options, Setting } from './options';
 import { Logger } from './logger';
 import { Utils } from './utils';
-import { Desktop, HomeDirType } from './desktop';
+import { Desktop } from './desktop';
 
 interface FileSelection {
   selection: vscode.Position;
@@ -99,12 +99,7 @@ export class WakaTime {
 
   private setResourcesLocation() {
     const home = Desktop.getHomeDirectory();
-    let folder: string;
-    if (home.type === HomeDirType.Os) {
-      folder = path.join(home.folder, '.wakatime');
-    } else {
-      folder = home.folder;
-    }
+    const folder = path.join(home, '.wakatime');
 
     try {
       fs.mkdirSync(folder, { recursive: true });

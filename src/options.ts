@@ -22,8 +22,7 @@ export class Options {
 
   constructor(logger: Logger, resourcesFolder: string) {
     this.logger = logger;
-    const home = Desktop.getHomeDirectory();
-    this.configFile = path.join(home.folder, '.wakatime.cfg');
+    this.configFile = path.join(Desktop.getHomeDirectory(), '.wakatime.cfg');
     this.internalConfigFile = path.join(resourcesFolder, 'wakatime-internal.cfg');
     this.logFile = path.join(resourcesFolder, 'wakatime.log');
   }

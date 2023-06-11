@@ -10,16 +10,13 @@ export class Desktop {
     return !!process.env['VSCODE_PORTABLE'];
   }
 
-  public static getHomeDirectory(): HomeDir {
+  public static getHomeDirectory(): string {
     let home = process.env.WAKATIME_HOME;
     if (home && home.trim() && fs.existsSync(home.trim()))
-      return { folder: home.trim(), type: HomeDirType.Env };
+      return home.trim();
     if (this.isPortable())
-      return { folder: process.env['VSCODE_PORTABLE'] as string, type: HomeDirType.Os };
-    return {
-      folder: process.env[this.isWindows() ? 'USERPROFILE' : 'HOME'] || process.cwd(),
-      type: HomeDirType.Os,
-    };
+      return process.env['VSCODE_PORTABLE'] as string;
+    return process.env[this.isWindows() ? 'USERPROFILE' : 'HOME'] || process.cwd();
   }
 
   public static buildOptions(): Object {
@@ -31,14 +28,4 @@ export class Desktop {
     }
     return options;
   }
-}
-
-export enum HomeDirType {
-  Env,
-  Os,
-}
-
-export interface HomeDir {
-  folder: string;
-  type: HomeDirType;
 }
