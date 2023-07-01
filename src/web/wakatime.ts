@@ -425,11 +425,11 @@ export class WakaTime {
       type: 'file',
       entity: file,
       time: Date.now() / 1000,
-      plugin: this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version,
       lineno: String(selection.line + 1),
       cursorpos: String(selection.character + 1),
       lines: String(doc.lineCount),
       is_write: isWrite,
+      plugin: this.getPlugin(),
     };
 
     const project = this.getProjectName();
@@ -461,8 +461,7 @@ export class WakaTime {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent':
-            this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version,
+          'X-Machine-Name': vscode.env.appHost,
         },
         body: JSON.stringify(payload),
       });
@@ -736,6 +735,36 @@ export class WakaTime {
       return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }
     return '';
+  }
+
+  private getPlugin(): string {
+    let agent = navigator.userAgent;
+    const os = this.getOperatingSystem();
+    if (os) agent = `${agent} (${os})`;
+    return `${agent} ${this.agentName}/${vscode.version} vscode-wakatime/${this.extension.version}`;
+  }
+
+  private getOperatingSystem(): string|null {
+    if ((navigator as any).userAgentData && (navigator as any).userAgentData.platform) {
+      const platform = (navigator as any).userAgentData.platform as string;
+      if (platform.toLowerCase().indexOf('mac') != -1) return 'Mac';
+      if (platform.toLowerCase().indexOf('win') != -1) return 'Windows';
+      if (platform.toLowerCase().indexOf('linux') != -1) return 'Linux';
+      if (platform.toLowerCase().indexOf('unix') != -1) return 'Unix';
+      if (platform.toLowerCase().indexOf('android') != -1) return 'Android';
+      return platform;
+    }
+    if (navigator.platform) {
+      const platform = navigator.platform;
+      if (navigator.userAgent && navigator.userAgent.toLowerCase().indexOf('android') != -1) return 'Android';
+      if (platform.toLowerCase().indexOf('mac') != -1) return 'Mac';
+      if (platform.toLowerCase().indexOf('win') != -1) return 'Windows';
+      if (platform.toLowerCase().indexOf('linux') != -1) return 'Linux';
+      if (platform.toLowerCase().indexOf('unix') != -1) return 'Unix';
+      if (platform.toLowerCase().indexOf('android') != -1) return 'Android';
+      return platform;
+    }
+    return null;
   }
 
   private countSlashesInPath(path: string): number {
