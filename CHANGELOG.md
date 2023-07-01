@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.1.1 (2023-06-30)
+
+- Prevent duplicating user agent in web environments.
+
 ## 24.1.0 (2023-06-30)
 
 - Support OS and Machine for web environments.
