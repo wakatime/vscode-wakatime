@@ -738,10 +738,10 @@ export class WakaTime {
   }
 
   private getPlugin(): string {
-    let agent = navigator.userAgent;
+    const agent = `${this.agentName}/${vscode.version} vscode-wakatime/${this.extension.version}`;
     const os = this.getOperatingSystem();
-    if (os) agent = `${agent} (${os})`;
-    return `${agent} ${this.agentName}/${vscode.version} vscode-wakatime/${this.extension.version}`;
+    if (os) return `(${os}) ${agent}`;
+    return agent;
   }
 
   private getOperatingSystem(): string|null {
