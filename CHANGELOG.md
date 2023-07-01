@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.1.0 (2023-06-30)
+
+- Support OS and Machine for web environments.
+  [#356](https://github.com/wakatime/vscode-wakatime/issues/356)
+
 ## 24.0.14 (2023-06-11)
 
 - Always log debug and error exceptions even when message missing.
