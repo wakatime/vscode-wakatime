@@ -86,6 +86,24 @@ If you're connected to a remote host using the [ssh extension](https://code.visu
 Pull requests, bug reports, and feature requests are welcome!
 Please search [existing issues][issues] before creating a new one.
 
+To run from source:
+
+1. `git clone git@github.com:wakatime/vscode-wakatime.git`
+2. `cd vscode-wakatime`
+3. `npm install`
+4. `npm run watch`
+5. Install the extension from the marketplace
+6. Then symlink `~/.vscode/extensions/wakatime.vscode-wakatime-*/dist/extension.js` to `./dist/extension.js`
+
+Or to run the web version from source:
+
+1. `git clone git@github.com:wakatime/vscode-wakatime.git`
+2. `cd vscode-wakatime`
+3. `npm install`
+4. `npm run compile`
+5. `npm run open-in-browser`
+6. Go to [localhost:3000](http://localhost:3000/) in your web browser
+
 Many thanks to all [contributors](AUTHORS)!
 
 Made with :heart: by the [WakaTime Team][about].
