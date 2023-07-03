@@ -58,6 +58,7 @@ export class WakaTime {
   private currentlyFocusedFile: string;
   private teamDevsForFileCache = {};
   private resourcesLocation: string;
+  private lastApiKeyPrompted: number = 0;
 
   constructor(extensionPath: string, logger: Logger) {
     this.extensionPath = extensionPath;
@@ -201,7 +202,7 @@ export class WakaTime {
     this.statusBarTeamOther.tooltip = tooltipText;
   }
 
-  public promptForApiKey(): void {
+  public promptForApiKey(hidden: boolean = true): void {
     this.options.getApiKey((defaultVal: string | null) => {
       if (Utils.apiKeyInvalid(defaultVal ?? undefined)) defaultVal = '';
       let promptOptions = {
@@ -209,7 +210,7 @@ export class WakaTime {
         placeHolder: 'Enter your api key from https://wakatime.com/settings',
         value: defaultVal!,
         ignoreFocusOut: true,
-        password: true,
+        password: hidden,
         validateInput: Utils.apiKeyInvalid.bind(this),
       };
       vscode.window.showInputBox(promptOptions).then((val) => {
@@ -592,6 +593,11 @@ export class WakaTime {
           this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
         }
         this.logger.error(error_msg);
+        let now: number = Date.now();
+        if (this.lastApiKeyPrompted < now - 86400000) { // only prompt once per day
+          this.promptForApiKey(false);
+          this.lastApiKeyPrompted = now;
+        }
       } else {
         let error_msg = `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
