@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.2.0 (2023-07-03)
+
+- Prompt to enter new api key when API response says key is invalid.
+  [#341](https://github.com/wakatime/vscode-wakatime/issues/341)
+
 ## 24.1.1 (2023-06-30)
 
 - Prevent duplicating user agent in web environments.
