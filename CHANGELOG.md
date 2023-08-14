@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.2.1 (2023-08-14)
+
+- Support ipv6 proxy address.
+  [#361](https://github.com/wakatime/vscode-wakatime/issues/361)
+
 ## 24.2.0 (2023-07-03)
 
 - Prompt to enter new api key when API response says key is invalid.
