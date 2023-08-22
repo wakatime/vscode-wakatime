@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.2.2 (2023-08-22)
+
+- Add keywords and categories to marketplace listing.
+
 ## 24.2.1 (2023-08-14)
 
 - Support ipv6 proxy address.
