@@ -8,14 +8,29 @@
     "name": "WakaTime"
   },
   "categories": [
-    "Other"
+    "Visualization",
+    "Education"
   ],
   "keywords": [
+    "analytics",
+    "code",
     "code time",
+    "codetime",
+    "flow",
+    "focus",
+    "metrics",
     "productivity",
+    "slack",
+    "standup",
     "time",
+    "timer",
+    "time tracker",
+    "time tracking",
+    "todo",
+    "tracker",
     "tracking",
-    "tracker"
+    "worktime",
+    "wakatime"
   ],
   "homepage": "https://wakatime.com/",
   "bugs": {
