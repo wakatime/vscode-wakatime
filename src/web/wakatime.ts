@@ -157,7 +157,7 @@ export class WakaTime {
     if (Utils.apiKeyInvalid(defaultVal)) defaultVal = '';
     let promptOptions = {
       prompt: 'WakaTime Api Key',
-      placeHolder: 'Enter your api key from https://wakatime.com/settings',
+      placeHolder: 'Enter your api key from https://wakatime.com/api-key',
       value: defaultVal,
       ignoreFocusOut: true,
       password: hidden,
