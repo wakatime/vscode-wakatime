@@ -18,10 +18,7 @@ export class Dependencies {
   private cliLocationGlobal?: string = undefined;
   private cliInstalled: boolean = false;
   private githubDownloadPrefix = 'https://github.com/wakatime/wakatime-cli/releases/download';
-  private githubReleasesStableUrl =
-    'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
-  private githubReleasesAlphaUrl =
-    'https://api.github.com/repos/wakatime/wakatime-cli/releases?per_page=1';
+  private githubReleasesUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
   private latestCliVersion: string = '';
 
   constructor(options: Options, logger: Logger, resourcesLocation: string) {
@@ -133,69 +130,65 @@ export class Dependencies {
           true,
           (modified: Setting) => {
             this.options.getSetting('internal', 'cli_version', true, (version: Setting) => {
-              this.options.getSetting('settings', 'alpha', false, (alpha: Setting) => {
-                let options = {
-                  url:
-                    alpha.value == 'true'
-                      ? this.githubReleasesAlphaUrl
-                      : this.githubReleasesStableUrl,
-                  json: true,
-                  headers: {
-                    'User-Agent': 'github.com/wakatime/vscode-wakatime',
-                  },
-                };
-                this.logger.debug(`Fetching latest wakatime-cli version from GitHub API: ${options.url}`);
-                if (proxy.value) {
-                  this.logger.debug(`Using Proxy: ${proxy.value}`);
-                  options['proxy'] = proxy.value;
-                }
-                if (noSSLVerify.value === 'true') options['strictSSL'] = false;
-                if (modified.value && version.value)
-                  options['headers']['If-Modified-Since'] = modified.value;
-                try {
-                  request.get(options, (error, response, json) => {
-                    if (
-                      !error &&
-                      response &&
-                      (response.statusCode == 200 || response.statusCode == 304)
-                    ) {
-                      this.logger.debug(`GitHub API Response ${response.statusCode}`);
-                      if (response.statusCode == 304) {
-                        this.latestCliVersion = version.value;
-                        callback(this.latestCliVersion);
-                        return;
-                      }
-                      this.latestCliVersion =
-                        alpha.value == 'true' ? json[0]['tag_name'] : json['tag_name'];
-                      this.logger.debug(
-                        `Latest wakatime-cli version from GitHub: ${this.latestCliVersion}`,
-                      );
-                      const lastModified = response.headers['last-modified'] as string;
-                      if (lastModified && this.latestCliVersion) {
-                        this.options.setSettings(
-                          'internal',
-                          [
-                            { key: 'cli_version', value: this.latestCliVersion },
-                            { key: 'cli_version_last_modified', value: lastModified },
-                          ],
-                          true,
-                        );
-                      }
+              let options = {
+                url: this.githubReleasesUrl,
+                json: true,
+                headers: {
+                  'User-Agent': 'github.com/wakatime/vscode-wakatime',
+                },
+              };
+              this.logger.debug(
+                `Fetching latest wakatime-cli version from GitHub API: ${options.url}`,
+              );
+              if (proxy.value) {
+                this.logger.debug(`Using Proxy: ${proxy.value}`);
+                options['proxy'] = proxy.value;
+              }
+              if (noSSLVerify.value === 'true') options['strictSSL'] = false;
+              if (modified.value && version.value)
+                options['headers']['If-Modified-Since'] = modified.value;
+              try {
+                request.get(options, (error, response, json) => {
+                  if (
+                    !error &&
+                    response &&
+                    (response.statusCode == 200 || response.statusCode == 304)
+                  ) {
+                    this.logger.debug(`GitHub API Response ${response.statusCode}`);
+                    if (response.statusCode == 304) {
+                      this.latestCliVersion = version.value;
                       callback(this.latestCliVersion);
-                    } else {
-                      if (response) {
-                        this.logger.warn(`GitHub API Response ${response.statusCode}: ${error}`);
-                      } else {
-                        this.logger.warn(`GitHub API Response Error: ${error}`);
-                      }
-                      callback('');
+                      return;
                     }
-                  });
-                } catch (e) {
-                  this.logger.warnException(e);
-                  callback('');
-                }
-              });
+                    this.latestCliVersion = json['tag_name'];
+                    this.logger.debug(
+                      `Latest wakatime-cli version from GitHub: ${this.latestCliVersion}`,
+                    );
+                    const lastModified = response.headers['last-modified'] as string;
+                    if (lastModified && this.latestCliVersion) {
+                      this.options.setSettings(
+                        'internal',
+                        [
+                          { key: 'cli_version', value: this.latestCliVersion },
+                          { key: 'cli_version_last_modified', value: lastModified },
+                        ],
+                        true,
+                      );
+                    }
+                    callback(this.latestCliVersion);
+                  } else {
+                    if (response) {
+                      this.logger.warn(`GitHub API Response ${response.statusCode}: ${error}`);
+                    } else {
+                      this.logger.warn(`GitHub API Response Error: ${error}`);
+                    }
+                    callback('');
+                  }
+                });
+              } catch (e) {
+                this.logger.warnException(e);
+                callback('');
+              }
             });
           },
         );
