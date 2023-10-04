@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.2.3 (2023-10-04)
+
+- Remove alpha config, since alpha wakatime-cli builds no longer necessary.
+
 ## 24.2.2 (2023-08-22)
 
 - Add keywords and categories to marketplace listing.
