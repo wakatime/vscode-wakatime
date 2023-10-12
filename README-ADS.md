@@ -10,20 +10,21 @@
 
 1. Press `F1` or `⌘ + Shift + P` and type `install`. Pick `Extensions: Install Extension`.
 
-    ![type install](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/type-install.png)
+   ![type install](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/type-install.png)
+
 2. Type `wakatime` and hit `enter`.
 
-    ![type wakatime](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/type-wakatime.png)
+   ![type wakatime](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/type-wakatime.png)
 
 3. Download the latest version to a local folder.
 
 4. Click in three dots on the upper right corner then Install from VSIX...
 
-    ![install from VSIX](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/ads-install.png)
+   ![install from VSIX](https://raw.githubusercontent.com/wakatime/vscode-wakatime/master/images/ads-install.png)
 
 5. Enter your [api key](https://wakatime.com/settings?apikey=true), then press `enter`.
 
-    > (If you’re not prompted, press `F1` or `⌘ + Shift + P` then type `WakaTime API Key`.)
+   > (If you’re not prompted, press `F1` or `⌘ + Shift + P` then type `WakaTime API Key`.)
 
 6. Use Azure Data Studio and your coding activity will be displayed on your [WakaTime dashboard](https://wakatime.com)
 
@@ -41,13 +42,13 @@ For example, to hide today's coding activity in your status bar:
 
 Press `⌘ + Shift + P` then set `WakaTime: Status Bar Coding Activity` to `false`.
 
-Extension settings are stored in the INI file at `$WAKATIME_HOME/.wakatime.cfg`.
+Extension settings are stored in the INI file at `$HOME/.wakatime.cfg`.
 
 More information can be found from [wakatime-cli][wakatime-cli configs].
 
 Notes:
 
-1. `$WAKATIME_HOME` defaults to `$HOME`
+1. `$HOME` defaults to `$HOME`
 1. To disable the extension at startup add `disabled=true` to your config, this operation can also be performed by pressing `⌘ + Shift + P` and selecting `WakaTime: Disable`.
 
 ## Troubleshooting
@@ -62,7 +63,7 @@ Next, open your Developer Console to view logs and errors:
 
 `Help → Toggle Developer Tools`
 
-Errors outside the scope of vscode-wakatime go to `$WAKATIME_HOME/.wakatime.log` from [wakatime-cli][wakatime-cli help].
+Errors outside the scope of vscode-wakatime go to `$HOME/.wakatime/wakatime.log` from [wakatime-cli][wakatime-cli help].
 
 The [How to Debug Plugins][how to debug] guide shows how to check when coding activity was last received from your editor using the [Plugins Status Page][plugins status page].
 

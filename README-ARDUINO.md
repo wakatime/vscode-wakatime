@@ -17,7 +17,7 @@ Unfortunately there's no native way to install VSCODE extensions in Arduino IDE 
 3. Extract the zip file into `~/.arduinoIDE/plugins/vscode-wakatime`.
 4. Relaunch your Arduino IDE.
 5. Enter your [api key](https://wakatime.com/api-key), then press enter.
-    > (If you’re not prompted, press `F1` or `⌘ + Shift + P` then type `WakaTime API Key`.)
+   > (If you’re not prompted, press `F1` or `⌘ + Shift + P` then type `WakaTime API Key`.)
 6. Use Arduino IDE like you normally do and your coding activity will be displayed on your [WakaTime Dashboard](https://wakatime.com/).
 
 ## Usage
@@ -34,13 +34,13 @@ For example, to hide today's coding activity in your status bar:
 
 Press `⌘ + Shift + P` then set `WakaTime: Status Bar Coding Activity` to `false`.
 
-Extension settings are stored in the INI file at `$WAKATIME_HOME/.wakatime.cfg`.
+Extension settings are stored in the INI file at `$HOME/.wakatime.cfg`.
 
 More information can be found from [wakatime-cli][wakatime-cli configs].
 
 Notes:
 
-1. `$WAKATIME_HOME` defaults to `$HOME`
+1. `$HOME` defaults to `$HOME`
 1. To disable the extension at startup add `disabled=true` to your config, this operation can also be performed by pressing `⌘ + Shift + P` and selecting `WakaTime: Disable`.
 
 ## Troubleshooting
@@ -55,7 +55,7 @@ Next, open your Developer Console to view logs and errors:
 
 `Help → Toggle Developer Tools`
 
-Errors outside the scope of vscode-wakatime go to `$WAKATIME_HOME/.wakatime.log` from [wakatime-cli][wakatime-cli help].
+Errors outside the scope of vscode-wakatime go to `$HOME/.wakatime/wakatime.log` from [wakatime-cli][wakatime-cli help].
 
 The [How to Debug Plugins][how to debug] guide shows how to check when coding activity was last received from your editor using the [Plugins Status Page][plugins status page].
 
