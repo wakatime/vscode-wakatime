@@ -59,6 +59,7 @@ export class WakaTime {
   private teamDevsForFileCache = {};
   private resourcesLocation: string;
   private lastApiKeyPrompted: number = 0;
+  private isMetricsEnabled: boolean = false;
 
   constructor(extensionPath: string, logger: Logger) {
     this.extensionPath = extensionPath;
@@ -72,21 +73,26 @@ export class WakaTime {
       if (setting.value === 'true') {
         this.logger.setLevel(LogLevel.DEBUG);
       }
-
-      this.dependencies = new Dependencies(this.options, this.logger, this.resourcesLocation);
-
-      let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
-      this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
-      this.agentName = this.appNames[vscode.env.appName] || 'vscode';
-
-      this.options.getSetting('settings', 'disabled', false, (disabled: Setting) => {
-        this.disabled = disabled.value === 'true';
-        if (this.disabled) {
-          this.dispose();
-          return;
+      this.options.getSetting('settings', 'metrics', false, (metrics: Setting) => {
+        if (metrics.value === 'true') {
+          this.isMetricsEnabled = true;
         }
 
-        this.initializeDependencies();
+        this.dependencies = new Dependencies(this.options, this.logger, this.resourcesLocation);
+
+        let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
+        this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
+        this.agentName = this.appNames[vscode.env.appName] || 'vscode';
+
+        this.options.getSetting('settings', 'disabled', false, (disabled: Setting) => {
+          this.disabled = disabled.value === 'true';
+          if (this.disabled) {
+            this.dispose();
+            return;
+          }
+
+          this.initializeDependencies();
+        });
       });
     });
   }
@@ -113,11 +119,23 @@ export class WakaTime {
   public initializeDependencies(): void {
     this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
 
-    this.statusBar = vscode.window.createStatusBarItem("com.wakatime.statusbar", vscode.StatusBarAlignment.Left, 3);
+    this.statusBar = vscode.window.createStatusBarItem(
+      'com.wakatime.statusbar',
+      vscode.StatusBarAlignment.Left,
+      3,
+    );
     this.statusBar.command = COMMAND_DASHBOARD;
 
-    this.statusBarTeamYou = vscode.window.createStatusBarItem("com.wakatime.teamyou", vscode.StatusBarAlignment.Left, 2);
-    this.statusBarTeamOther = vscode.window.createStatusBarItem("com.wakatime.teamother", vscode.StatusBarAlignment.Left, 1);
+    this.statusBarTeamYou = vscode.window.createStatusBarItem(
+      'com.wakatime.teamyou',
+      vscode.StatusBarAlignment.Left,
+      2,
+    );
+    this.statusBarTeamOther = vscode.window.createStatusBarItem(
+      'com.wakatime.teamother',
+      vscode.StatusBarAlignment.Left,
+      1,
+    );
 
     this.options.getSetting('settings', 'status_bar_team', false, (statusBarTeam: Setting) => {
       this.showStatusBarTeam = statusBarTeam.value !== 'false';
@@ -531,6 +549,8 @@ export class WakaTime {
       args.push('--category', 'code reviewing');
     }
 
+    if (this.isMetricsEnabled) args.push('--metrics');
+
     const apiKey = this.options.getApiKeyFromEnv();
     if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
 
@@ -594,7 +614,8 @@ export class WakaTime {
         }
         this.logger.error(error_msg);
         let now: number = Date.now();
-        if (this.lastApiKeyPrompted < now - 86400000) { // only prompt once per day
+        if (this.lastApiKeyPrompted < now - 86400000) {
+          // only prompt once per day
           this.promptForApiKey(false);
           this.lastApiKeyPrompted = now;
         }
@@ -629,6 +650,8 @@ export class WakaTime {
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     let args = ['--today', '--output', 'json', '--plugin', Utils.quote(user_agent)];
+
+    if (this.isMetricsEnabled) args.push('--metrics');
 
     const apiKey = this.options.getApiKeyFromEnv();
     if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
@@ -747,6 +770,8 @@ export class WakaTime {
     args.push('--file-experts', Utils.quote(file));
 
     args.push('--entity', Utils.quote(file));
+
+    if (this.isMetricsEnabled) args.push('--metrics');
 
     const apiKey = this.options.getApiKeyFromEnv();
     if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
