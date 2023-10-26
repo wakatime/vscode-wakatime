@@ -37,7 +37,7 @@ export class Dependencies {
     if (osname == 'win32') osname = 'windows';
     const arch = this.architecture();
     const ext = Desktop.isWindows() ? '.exe' : '';
-    const binary = `wakatime-cli-${osname}-${arch}${ext}`);
+    const binary = `wakatime-cli-${osname}-${arch}${ext}`;
     this.cliLocation = path.join(this.resourcesLocation, binary);
 
     return this.cliLocation;
