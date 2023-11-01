@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.3.0 (2023-11-01)
+
+- More robust downloading of wakatime-cli.
+
 ## 24.2.4 (2023-11-01)
 
 - Fix wakatime-cli log location in readme.
