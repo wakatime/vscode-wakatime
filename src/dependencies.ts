@@ -18,6 +18,8 @@ export class Dependencies {
   private cliLocationGlobal?: string = undefined;
   private cliInstalled: boolean = false;
   private githubDownloadPrefix = 'https://github.com/wakatime/wakatime-cli/releases/download';
+  private githubDownloadPrefixWithoutVersion =
+    'https://github.com/wakatime/wakatime-cli/releases/latest/download';
   private githubReleasesUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
   private latestCliVersion: string = '';
 
@@ -201,8 +203,7 @@ export class Dependencies {
     this.getLatestCliVersion((version) => {
       if (!version) {
         this.logger.debug('Unable to find latest version from GitHub releases api.');
-        callback();
-        return;
+        version = 'latest';
       }
       this.logger.debug(`Downloading wakatime-cli ${version}...`);
       const url = this.cliDownloadUrl(version);
@@ -227,46 +228,58 @@ export class Dependencies {
 
   private extractCli(zipFile: string, callback: () => void): void {
     this.logger.debug(`Extracting wakatime-cli into "${this.resourcesLocation}"...`);
-    this.removeCli(() => {
-      this.unzip(zipFile, this.resourcesLocation, () => {
-        if (!Desktop.isWindows()) {
-          const cli = this.getCliLocation();
+    this.backupCli();
+    this.unzip(zipFile, this.resourcesLocation, (unzipped) => {
+      if (!unzipped) {
+        this.restoreCli();
+      } else if (!Desktop.isWindows()) {
+        this.removeCli();
+        const cli = this.getCliLocation();
+        try {
+          this.logger.debug('Chmod 755 wakatime-cli...');
+          fs.chmodSync(cli, 0o755);
+        } catch (e) {
+          this.logger.warnException(e);
+        }
+        const ext = Desktop.isWindows() ? '.exe' : '';
+        const link = path.join(this.resourcesLocation, `wakatime-cli${ext}`);
+        if (!this.isSymlink(link)) {
           try {
-            this.logger.debug('Chmod 755 wakatime-cli...');
-            fs.chmodSync(cli, 0o755);
+            this.logger.debug(`Create symlink from wakatime-cli to ${cli}`);
+            fs.symlinkSync(cli, link);
           } catch (e) {
             this.logger.warnException(e);
-          }
-          const ext = Desktop.isWindows() ? '.exe' : '';
-          const link = path.join(this.resourcesLocation, `wakatime-cli${ext}`);
-          if (!this.isSymlink(link)) {
             try {
-              this.logger.debug(`Create symlink from wakatime-cli to ${cli}`);
-              fs.symlinkSync(cli, link);
-            } catch (e) {
-              this.logger.warnException(e);
-              try {
-                fs.copyFileSync(cli, link);
-                fs.chmodSync(link, 0o755);
-              } catch (e2) {
-                this.logger.warnException(e2);
-              }
+              fs.copyFileSync(cli, link);
+              fs.chmodSync(link, 0o755);
+            } catch (e2) {
+              this.logger.warnException(e2);
             }
           }
         }
-        callback();
-      });
-      this.logger.debug('Finished extracting wakatime-cli.');
+      }
+      callback();
     });
+    this.logger.debug('Finished extracting wakatime-cli.');
   }
 
-  private removeCli(callback: () => void): void {
+  private backupCli() {
     if (fs.existsSync(this.getCliLocation())) {
-      fs.unlink(this.getCliLocation(), () => {
-        callback();
-      });
-    } else {
-      callback();
+      fs.renameSync(this.getCliLocation(), `${this.getCliLocation()}.backup`);
+    }
+  }
+
+  private restoreCli() {
+    const backup = `${this.getCliLocation()}.backup`;
+    if (fs.existsSync(backup)) {
+      fs.renameSync(backup, this.getCliLocation());
+    }
+  }
+
+  private removeCli() {
+    const backup = `${this.getCliLocation()}.backup`;
+    if (fs.existsSync(backup)) {
+      fs.unlinkSync(backup);
     }
   }
 
@@ -306,22 +319,23 @@ export class Dependencies {
     });
   }
 
-  private unzip(file: string, outputDir: string, callback: () => void): void {
+  private unzip(file: string, outputDir: string, callback: (unzipped: boolean) => void): void {
     if (fs.existsSync(file)) {
       try {
         let zip = new adm_zip(file);
         zip.extractAllTo(outputDir, true);
+        fs.unlinkSync(file);
+        callback(true);
+        return;
       } catch (e) {
-        this.logger.errorException(e);
-      } finally {
-        try {
-          fs.unlink(file, () => {
-            callback();
-          });
-        } catch (e2) {
-          callback();
-        }
+        this.logger.warnException(e);
       }
+      try {
+        fs.unlinkSync(file);
+      } catch (e2) {
+        this.logger.warnException(e2);
+      }
+      callback(false);
     }
   }
 
@@ -360,6 +374,10 @@ export class Dependencies {
     ];
     if (!validCombinations.includes(`${osname}-${arch}`))
       this.reportMissingPlatformSupport(osname, arch);
+
+    if (version === 'latest') {
+      return `${this.githubDownloadPrefixWithoutVersion}/wakatime-cli-${osname}-${arch}.zip`;
+    }
 
     return `${this.githubDownloadPrefix}/${version}/wakatime-cli-${osname}-${arch}.zip`;
   }
