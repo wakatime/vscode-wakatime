@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.4.0 (2023-11-02)
+
+- Rate limit checking for wakatime-cli updates, to avoid GitHub API quota.
+
 ## 24.3.0 (2023-11-01)
 
 - More robust downloading of wakatime-cli.
