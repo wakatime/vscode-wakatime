@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 
 import { COMMAND_DASHBOARD, LogLevel } from '../constants';
+
 import { Logger } from './logger';
-import { Utils } from '../utils';
 import { Memento } from 'vscode';
+import { Utils } from '../utils';
 
 interface FileSelection {
   selection: vscode.Position;
@@ -76,11 +77,27 @@ export class WakaTime {
   public initializeDependencies(): void {
     this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
 
-    this.statusBar = vscode.window.createStatusBarItem("com.wakatime.statusbar", vscode.StatusBarAlignment.Left, 3);
+    this.statusBar = vscode.window.createStatusBarItem(
+      'com.wakatime.statusbar',
+      vscode.StatusBarAlignment.Left,
+      3,
+    );
+    this.statusBar.name = 'WakaTime';
     this.statusBar.command = COMMAND_DASHBOARD;
 
-    this.statusBarTeamYou = vscode.window.createStatusBarItem("com.wakatime.teamyou", vscode.StatusBarAlignment.Left, 2);
-    this.statusBarTeamOther = vscode.window.createStatusBarItem("com.wakatime.teamother", vscode.StatusBarAlignment.Left, 1);
+    this.statusBarTeamYou = vscode.window.createStatusBarItem(
+      'com.wakatime.teamyou',
+      vscode.StatusBarAlignment.Left,
+      2,
+    );
+    this.statusBarTeamYou.name = 'WakaTime Top dev';
+
+    this.statusBarTeamOther = vscode.window.createStatusBarItem(
+      'com.wakatime.teamother',
+      vscode.StatusBarAlignment.Left,
+      1,
+    );
+    this.statusBarTeamOther.name = 'WakaTime Team Total';
 
     const showStatusBar = this.config.get('wakatime.status_bar_enabled');
     this.showStatusBar = showStatusBar !== 'false';
@@ -480,7 +497,8 @@ export class WakaTime {
           }
           this.logger.error(error_msg);
           let now: number = Date.now();
-          if (this.lastApiKeyPrompted < now - 86400000) { // only prompt once per day
+          if (this.lastApiKeyPrompted < now - 86400000) {
+            // only prompt once per day
             this.promptForApiKey(false);
             this.lastApiKeyPrompted = now;
           }
@@ -751,7 +769,7 @@ export class WakaTime {
     return agent;
   }
 
-  private getOperatingSystem(): string|null {
+  private getOperatingSystem(): string | null {
     if ((navigator as any).userAgentData && (navigator as any).userAgentData.platform) {
       const platform = (navigator as any).userAgentData.platform as string;
       if (platform.toLowerCase().indexOf('mac') != -1) return 'Mac';
@@ -763,7 +781,8 @@ export class WakaTime {
     }
     if (navigator.platform) {
       const platform = navigator.platform;
-      if (navigator.userAgent && navigator.userAgent.toLowerCase().indexOf('android') != -1) return 'Android';
+      if (navigator.userAgent && navigator.userAgent.toLowerCase().indexOf('android') != -1)
+        return 'Android';
       if (platform.toLowerCase().indexOf('mac') != -1) return 'Mac';
       if (platform.toLowerCase().indexOf('win') != -1) return 'Windows';
       if (platform.toLowerCase().indexOf('linux') != -1) return 'Linux';

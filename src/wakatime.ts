@@ -1,15 +1,16 @@
-import * as vscode from 'vscode';
 // import * as azdata from 'azdata';
 import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as vscode from 'vscode';
 
-import { Dependencies } from './dependencies';
 import { COMMAND_DASHBOARD, LogLevel } from './constants';
 import { Options, Setting } from './options';
+
+import { Dependencies } from './dependencies';
+import { Desktop } from './desktop';
 import { Logger } from './logger';
 import { Utils } from './utils';
-import { Desktop } from './desktop';
 
 interface FileSelection {
   selection: vscode.Position;
@@ -124,6 +125,7 @@ export class WakaTime {
       vscode.StatusBarAlignment.Left,
       3,
     );
+    this.statusBar.name = 'WakaTime';
     this.statusBar.command = COMMAND_DASHBOARD;
 
     this.statusBarTeamYou = vscode.window.createStatusBarItem(
@@ -131,11 +133,14 @@ export class WakaTime {
       vscode.StatusBarAlignment.Left,
       2,
     );
+    this.statusBarTeamYou.name = 'WakaTime Top dev';
+
     this.statusBarTeamOther = vscode.window.createStatusBarItem(
       'com.wakatime.teamother',
       vscode.StatusBarAlignment.Left,
       1,
     );
+    this.statusBarTeamOther.name = 'WakaTime Team Total';
 
     this.options.getSetting('settings', 'status_bar_team', false, (statusBarTeam: Setting) => {
       this.showStatusBarTeam = statusBarTeam.value !== 'false';
