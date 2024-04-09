@@ -239,11 +239,21 @@ export class Options {
 
   public async getApiKeyFromVaultCmd(): Promise<string> {
     try {
-      const apiKeyCmd = await this.getSettingAsync<string>('settings', 'api_key_vault_cmd');
-      if (!apiKeyCmd) return '';
+      // Use basically the same logic as wakatime-cli to interpret cmdStr
+      // https://github.com/wakatime/wakatime-cli/blob/1fd560a/cmd/params/params.go#L697
+      let cmdStr = await this.getSettingAsync<string>('settings', 'api_key_vault_cmd');
+      if (!cmdStr) return '';
+
+      cmdStr = cmdStr.trim();
+      if (cmdStr === '') return '';
+
+      const cmdParts = cmdStr.split(" ");
+      if (cmdParts.length === 0) return '';
+
+      const [cmdName, ...cmdArgs] = cmdParts;
 
       const options = Desktop.buildOptions();
-      const proc = child_process.spawn(apiKeyCmd, options);
+      const proc = child_process.spawn(cmdName, cmdArgs, options);
 
       let stdout = '';
       for await (const chunk of proc.stdout) {
