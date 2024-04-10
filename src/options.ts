@@ -1,8 +1,8 @@
-import * as path from 'path';
+import * as child_process from 'child_process';
 import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 
-import * as child_process from 'child_process';
 import { Desktop } from './desktop';
 import { Logger } from './logger';
 import { Utils } from './utils';
@@ -241,13 +241,10 @@ export class Options {
     try {
       // Use basically the same logic as wakatime-cli to interpret cmdStr
       // https://github.com/wakatime/wakatime-cli/blob/1fd560a/cmd/params/params.go#L697
-      let cmdStr = await this.getSettingAsync<string>('settings', 'api_key_vault_cmd');
+      const cmdStr = await this.getSettingAsync<string>('settings', 'api_key_vault_cmd');
       if (!cmdStr) return '';
 
-      cmdStr = cmdStr.trim();
-      if (cmdStr === '') return '';
-
-      const cmdParts = cmdStr.split(" ");
+      const cmdParts = cmdStr.trim().split(' ');
       if (cmdParts.length === 0) return '';
 
       const [cmdName, ...cmdArgs] = cmdParts;
