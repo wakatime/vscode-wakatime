@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.5.0 (2024-04-10)
+
+- Modify api_key_vault_cmd to match wakatime-cli.
+- Name status bar items.
+
 ## 24.4.0 (2023-11-02)
 
 - Rate limit checking for wakatime-cli updates, to avoid GitHub API quota.
