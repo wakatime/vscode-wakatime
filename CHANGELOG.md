@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.5.1 (2024-06-09)
+
+- Check trimmed api_key_vault_cmd before splitting.
+
 ## 24.5.0 (2024-04-10)
 
 - Modify api_key_vault_cmd to match wakatime-cli.
