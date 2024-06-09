@@ -242,7 +242,7 @@ export class Options {
       // Use basically the same logic as wakatime-cli to interpret cmdStr
       // https://github.com/wakatime/wakatime-cli/blob/1fd560a/cmd/params/params.go#L697
       const cmdStr = await this.getSettingAsync<string>('settings', 'api_key_vault_cmd');
-      if (!cmdStr) return '';
+      if (!cmdStr?.trim()) return '';
 
       const cmdParts = cmdStr.trim().split(' ');
       if (cmdParts.length === 0) return '';
