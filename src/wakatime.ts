@@ -365,17 +365,16 @@ export class WakaTime {
   public openDashboardWebsite(): void {
     this.options.getSetting('settings', 'api_url', false, (apiUrl: Setting) => {
       let url = 'https://wakatime.com/';
-      if (apiUrl.value !== undefined) {
+      if (apiUrl.value?.trim()) {
         try {
           const parsedUrl = new URL(apiUrl.value);
           url = `${parsedUrl.protocol}//${parsedUrl.hostname}${parsedUrl.port ? `:${parsedUrl.port}` : ''}`;
         } catch (e) {
           this.logger.warnException(e);
         }
-        console.log(url)
       }
       vscode.env.openExternal(vscode.Uri.parse(url));
-    })
+    });
   }
 
   public openConfigFile(): void {
