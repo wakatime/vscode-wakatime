@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.6.0 (2024-06-09)
+
+- Prefer api_url when opening WakaTime dashboard.
+  [#389](https://github.com/wakatime/vscode-wakatime/pull/389)
+
 ## 24.5.1 (2024-06-09)
 
 - Check trimmed api_key_vault_cmd before splitting.
