@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.6.1 (2024-08-30)
+
+- Support for Cursor IDE.
+
 ## 24.6.0 (2024-06-09)
 
 - Prefer api_url when opening WakaTime dashboard.
