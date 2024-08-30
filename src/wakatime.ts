@@ -25,6 +25,7 @@ export class WakaTime {
   private appNames = {
     'Arduino IDE': 'arduino',
     'Azure Data Studio': 'azdata',
+    Cursor: 'cursor',
     'SQL Operations Studio': 'sqlops',
     'Visual Studio Code': 'vscode',
     Onivim: 'onivim',
