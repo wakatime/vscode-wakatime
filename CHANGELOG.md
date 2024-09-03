@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.6.2 (2024-09-03)
+
+- Prevent sending heartbeat when vscode command changed selection.
+  [#400](https://github.com/wakatime/vscode-wakatime/issues/400)
+
 ## 24.6.1 (2024-08-30)
 
 - Support for Cursor IDE.
