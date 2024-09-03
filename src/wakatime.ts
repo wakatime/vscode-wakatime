@@ -369,7 +369,9 @@ export class WakaTime {
       if (apiUrl.value?.trim()) {
         try {
           const parsedUrl = new URL(apiUrl.value);
-          url = `${parsedUrl.protocol}//${parsedUrl.hostname}${parsedUrl.port ? `:${parsedUrl.port}` : ''}`;
+          url = `${parsedUrl.protocol}//${parsedUrl.hostname}${
+            parsedUrl.port ? `:${parsedUrl.port}` : ''
+          }`;
         } catch (e) {
           this.logger.warnException(e);
         }
@@ -417,8 +419,8 @@ export class WakaTime {
   private setupEventListeners(): void {
     // subscribe to selection change and editor activation events
     let subscriptions: vscode.Disposable[] = [];
-    vscode.window.onDidChangeTextEditorSelection(this.onChange, this, subscriptions);
-    vscode.window.onDidChangeActiveTextEditor(this.onChange, this, subscriptions);
+    vscode.window.onDidChangeTextEditorSelection(this.onChangeSelection, this, subscriptions);
+    vscode.window.onDidChangeActiveTextEditor(this.onChangeTab, this, subscriptions);
     vscode.workspace.onDidSaveTextDocument(this.onSave, this, subscriptions);
 
     vscode.tasks.onDidStartTask(this.onDidStartTask, this, subscriptions);
@@ -459,11 +461,16 @@ export class WakaTime {
     this.onEvent(false);
   }
 
-  private onChange(): void {
+  private onChangeSelection(e: vscode.TextEditorSelectionChangeEvent): void {
+    if (e.kind === vscode.TextEditorSelectionChangeKind.Command) return;
     this.onEvent(false);
   }
 
-  private onSave(): void {
+  private onChangeTab(_e: vscode.TextEditor | undefined): void {
+    this.onEvent(false);
+  }
+
+  private onSave(_e: vscode.TextDocument | undefined): void {
     this.onEvent(true);
   }
 
