@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.7.0 (2024-11-07)
+
+- Allow changing api url in web extension.
+  [#403](https://github.com/wakatime/vscode-wakatime/issues/403)
+
 ## 24.6.2 (2024-09-03)
 
 - Prevent sending heartbeat when vscode command changed selection.
