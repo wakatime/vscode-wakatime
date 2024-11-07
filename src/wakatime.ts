@@ -379,7 +379,7 @@ export class WakaTime {
   }
 
   public async openDashboardWebsite(): Promise<void> {
-    const url = (await this.options.getApiUrl()).replace('/api/v1', '');
+    const url = (await this.options.getApiUrl()).replace('/api/v1', '').replace('api.', '');
     vscode.env.openExternal(vscode.Uri.parse(url));
   }
 

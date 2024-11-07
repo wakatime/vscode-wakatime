@@ -295,7 +295,7 @@ export class WakaTime {
   }
 
   public openDashboardWebsite(): void {
-    const url = this.getApiUrl().replace('/api/v1', '');
+    const url = this.getApiUrl().replace('/api/v1', '').replace('api.', '');
     vscode.env.openExternal(vscode.Uri.parse(url));
   }
 
