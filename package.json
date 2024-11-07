@@ -66,6 +66,7 @@
     "compile:dev": "tsc -p ./",
     "watch": "webpack --mode none --watch",
     "open-in-browser": "vscode-test-web --open-devtools --quality insiders --extensionDevelopmentPath=. .",
+    "publish:web": "npx ovsx publish",
     "test": "npm run compile:dev && node ./node_modules/vscode/bin/test"
   },
   "contributes": {
