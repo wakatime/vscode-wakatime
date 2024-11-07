@@ -65,7 +65,7 @@
     "compile": "webpack --mode none",
     "compile:dev": "tsc -p ./",
     "watch": "webpack --mode none --watch",
-    "open-in-browser": "vscode-test-web --open-devtools --version sources --extensionDevelopmentPath=. .",
+    "open-in-browser": "vscode-test-web --open-devtools --quality insiders --extensionDevelopmentPath=. .",
     "test": "npm run compile:dev && node ./node_modules/vscode/bin/test"
   },
   "contributes": {
