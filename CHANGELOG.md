@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.7.1 (2024-11-07)
+
+- Fix changing api url in extension settings.
+  [#403](https://github.com/wakatime/vscode-wakatime/issues/403)
+
 ## 24.7.0 (2024-11-07)
 
 - Allow changing api url in web extension.
