@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 import {
   COMMAND_API_KEY,
+  COMMAND_API_URL,
   COMMAND_CONFIG_FILE,
   COMMAND_DASHBOARD,
   COMMAND_DEBUG,
@@ -12,6 +13,7 @@ import {
   COMMAND_STATUS_BAR_ENABLED,
   LogLevel,
 } from './constants';
+
 import { Logger } from './logger';
 import { WakaTime } from './wakatime';
 
@@ -26,6 +28,12 @@ export function activate(ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(
     vscode.commands.registerCommand(COMMAND_API_KEY, function () {
       wakatime.promptForApiKey();
+    }),
+  );
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND_API_URL, function () {
+      wakatime.promptForApiUrl();
     }),
   );
 

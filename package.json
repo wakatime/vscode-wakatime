@@ -76,6 +76,10 @@
         "title": "WakaTime: Api Key"
       },
       {
+        "command": "wakatime.apiurl",
+        "title": "WakaTime: Api Url"
+      },
+      {
         "command": "wakatime.proxy",
         "title": "WakaTime: Proxy"
       },

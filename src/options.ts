@@ -308,6 +308,27 @@ export class Options {
     return this.cache.api_key_from_env;
   }
 
+  public async getApiUrl(): Promise<string> {
+    let apiUrl = this.getApiUrlFromEnv();
+    if (!apiUrl) {
+      try {
+        apiUrl = await this.getSettingAsync<string>('settings', 'api_url');
+      } catch (err) {
+        this.logger.debug(`Exception while reading API Url from config file: ${err}`);
+      }
+    }
+    if (!apiUrl) apiUrl = 'https://api.wakatime.com/api/v1';
+
+    const suffixes = ['/', '.bulk', '/users/current/heartbeats', '/heartbeats', '/heartbeat'];
+    for (const suffix of suffixes) {
+      if (apiUrl.endsWith(suffix)) {
+        apiUrl = apiUrl.slice(0, -suffix.length);
+      }
+    }
+
+    return apiUrl;
+  }
+
   public getApiUrlFromEnv(): string {
     if (this.cache.api_url_from_env !== undefined) return this.cache.api_url_from_env;
 

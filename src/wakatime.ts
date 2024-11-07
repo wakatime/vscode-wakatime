@@ -248,6 +248,21 @@ export class WakaTime {
     });
   }
 
+  public async promptForApiUrl(): Promise<void> {
+    const apiUrl = await this.options.getApiUrl();
+    let promptOptions = {
+      prompt: 'WakaTime Api Url (Defaults to https://api.wakatime.com/api/v1)',
+      placeHolder: 'https://api.wakatime.com/api/v1',
+      value: apiUrl,
+      ignoreFocusOut: true,
+    };
+    vscode.window.showInputBox(promptOptions).then((val) => {
+      if (val) {
+        this.options.setSetting('settings', 'api_url', val, false);
+      }
+    });
+  }
+
   public promptForProxy(): void {
     this.options.getSetting('settings', 'proxy', false, (proxy: Setting) => {
       let defaultVal = proxy.value;
@@ -363,21 +378,9 @@ export class WakaTime {
     });
   }
 
-  public openDashboardWebsite(): void {
-    this.options.getSetting('settings', 'api_url', false, (apiUrl: Setting) => {
-      let url = 'https://wakatime.com/';
-      if (apiUrl.value?.trim()) {
-        try {
-          const parsedUrl = new URL(apiUrl.value);
-          url = `${parsedUrl.protocol}//${parsedUrl.hostname}${
-            parsedUrl.port ? `:${parsedUrl.port}` : ''
-          }`;
-        } catch (e) {
-          this.logger.warnException(e);
-        }
-      }
-      vscode.env.openExternal(vscode.Uri.parse(url));
-    });
+  public async openDashboardWebsite(): Promise<void> {
+    const url = (await this.options.getApiUrl()).replace('/api/v1', '');
+    vscode.env.openExternal(vscode.Uri.parse(url));
   }
 
   public openConfigFile(): void {
