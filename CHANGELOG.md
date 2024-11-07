@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.7.2 (2024-11-07)
+
+- Remove api subdomain when opening dashboard url.
+
 ## 24.7.1 (2024-11-07)
 
 - Fix changing api url in extension settings.
