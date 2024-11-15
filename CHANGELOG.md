@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.8.0 (2024-11-15)
+
+- Add api url to vscode settings json.
+
 ## 24.7.2 (2024-11-07)
 
 - Remove api subdomain when opening dashboard url.
