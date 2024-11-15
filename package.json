@@ -119,6 +119,11 @@
           "type": "string",
           "description": "Defaults to value from ~/.wakatime.cfg, unless running in browser.",
           "scope": "application"
+        },
+        "wakatime.apiUrl": {
+          "type": "string",
+          "description": "Defaults to https://api.wakatime.com/api/v1.",
+          "scope": "application"
         }
       }
     }

@@ -226,30 +226,29 @@ export class WakaTime {
     this.statusBarTeamOther.tooltip = tooltipText;
   }
 
-  public promptForApiKey(hidden: boolean = true): void {
-    this.options.getApiKey((defaultVal: string | null) => {
-      if (Utils.apiKeyInvalid(defaultVal ?? undefined)) defaultVal = '';
-      let promptOptions = {
-        prompt: 'WakaTime Api Key',
-        placeHolder: 'Enter your api key from https://wakatime.com/api-key',
-        value: defaultVal!,
-        ignoreFocusOut: true,
-        password: hidden,
-        validateInput: Utils.apiKeyInvalid.bind(this),
-      };
-      vscode.window.showInputBox(promptOptions).then((val) => {
-        if (val != undefined) {
-          let invalid = Utils.apiKeyInvalid(val);
-          if (!invalid) {
-            this.options.setSetting('settings', 'api_key', val, false);
-          } else vscode.window.setStatusBarMessage(invalid);
-        } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
-      });
+  public async promptForApiKey(hidden: boolean = true): Promise<void> {
+    let defaultVal = await this.options.getApiKey();
+    if (Utils.apiKeyInvalid(defaultVal ?? undefined)) defaultVal = '';
+    let promptOptions = {
+      prompt: 'WakaTime Api Key',
+      placeHolder: 'Enter your api key from https://wakatime.com/api-key',
+      value: defaultVal!,
+      ignoreFocusOut: true,
+      password: hidden,
+      validateInput: Utils.apiKeyInvalid.bind(this),
+    };
+    vscode.window.showInputBox(promptOptions).then((val) => {
+      if (val != undefined) {
+        let invalid = Utils.apiKeyInvalid(val);
+        if (!invalid) {
+          this.options.setSetting('settings', 'api_key', val, false);
+        } else vscode.window.setStatusBarMessage(invalid);
+      } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
     });
   }
 
   public async promptForApiUrl(): Promise<void> {
-    const apiUrl = await this.options.getApiUrl();
+    const apiUrl = await this.options.getApiUrl(true);
     let promptOptions = {
       prompt: 'WakaTime Api Url (Defaults to https://api.wakatime.com/api/v1)',
       placeHolder: 'https://api.wakatime.com/api/v1',
@@ -379,7 +378,7 @@ export class WakaTime {
   }
 
   public async openDashboardWebsite(): Promise<void> {
-    const url = (await this.options.getApiUrl()).replace('/api/v1', '').replace('api.', '');
+    const url = (await this.options.getApiUrl(true)).replace('/api/v1', '').replace('api.', '');
     vscode.env.openExternal(vscode.Uri.parse(url));
   }
 
@@ -519,31 +518,30 @@ export class WakaTime {
     }, this.debounceMs);
   }
 
-  private sendHeartbeat(
+  private async sendHeartbeat(
     doc: vscode.TextDocument,
     time: number,
     selection: vscode.Position,
     isWrite: boolean,
     isCompiling: boolean,
     isDebugging: boolean,
-  ): void {
-    this.options.getApiKey((apiKey) => {
-      if (apiKey) {
-        this._sendHeartbeat(doc, time, selection, isWrite, isCompiling, isDebugging);
-      } else {
-        this.promptForApiKey();
-      }
-    });
+  ): Promise<void> {
+    const apiKey = await this.options.getApiKey();
+    if (apiKey) {
+      await this._sendHeartbeat(doc, time, selection, isWrite, isCompiling, isDebugging);
+    } else {
+      await this.promptForApiKey();
+    }
   }
 
-  private _sendHeartbeat(
+  private async _sendHeartbeat(
     doc: vscode.TextDocument,
     time: number,
     selection: vscode.Position,
     isWrite: boolean,
     isCompiling: boolean,
     isDebugging: boolean,
-  ): void {
+  ): Promise<void> {
     if (!this.dependencies.isCliInstalled()) return;
 
     let file = doc.fileName;
@@ -580,7 +578,7 @@ export class WakaTime {
     const apiKey = this.options.getApiKeyFromEnv();
     if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
 
-    const apiUrl = this.options.getApiUrlFromEnv();
+    const apiUrl = await this.options.getApiUrl();
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
     const project = this.getProjectName(doc.uri);
@@ -612,7 +610,7 @@ export class WakaTime {
         this.logger.error(error.toString());
       }
     });
-    proc.on('close', (code, _signal) => {
+    proc.on('close', async (code, _signal) => {
       if (code == 0) {
         if (this.showStatusBar) this.getCodingActivity();
       } else if (code == 102 || code == 112) {
@@ -642,7 +640,7 @@ export class WakaTime {
         let now: number = Date.now();
         if (this.lastApiKeyPrompted < now - 86400000) {
           // only prompt once per day
-          this.promptForApiKey(false);
+          await this.promptForApiKey(false);
           this.lastApiKeyPrompted = now;
         }
       } else {
@@ -656,7 +654,7 @@ export class WakaTime {
     });
   }
 
-  private getCodingActivity() {
+  private async getCodingActivity() {
     if (!this.showStatusBar) return;
 
     const cutoff = Date.now() - this.fetchTodayInterval;
@@ -664,13 +662,13 @@ export class WakaTime {
 
     this.lastFetchToday = Date.now();
 
-    this.options.getApiKey((apiKey) => {
-      if (!apiKey) return;
-      this._getCodingActivity();
-    });
+    const apiKey = await this.options.getApiKey();
+    if (!apiKey) return;
+
+    await this._getCodingActivity();
   }
 
-  private _getCodingActivity() {
+  private async _getCodingActivity() {
     if (!this.dependencies.isCliInstalled()) return;
 
     let user_agent =
@@ -682,7 +680,7 @@ export class WakaTime {
     const apiKey = this.options.getApiKeyFromEnv();
     if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
 
-    const apiUrl = this.options.getApiUrlFromEnv();
+    const apiUrl = await this.options.getApiUrl();
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
     if (Desktop.isWindows()) {
@@ -764,7 +762,7 @@ export class WakaTime {
     }
   }
 
-  private updateTeamStatusBar(doc?: vscode.TextDocument) {
+  private async updateTeamStatusBar(doc?: vscode.TextDocument) {
     if (!this.showStatusBarTeam) return;
     if (!this.hasTeamFeatures) return;
     if (!this.dependencies.isCliInstalled()) return;
@@ -802,7 +800,7 @@ export class WakaTime {
     const apiKey = this.options.getApiKeyFromEnv();
     if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
 
-    const apiUrl = this.options.getApiUrlFromEnv();
+    const apiUrl = await this.options.getApiUrl();
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
     const project = this.getProjectName(doc.uri);

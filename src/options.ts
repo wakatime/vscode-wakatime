@@ -202,7 +202,7 @@ export class Options {
     return this.logFile;
   }
 
-  public async getApiKeyAsync(): Promise<string> {
+  public async getApiKey(): Promise<string> {
     if (!Utils.apiKeyInvalid(this.cache.api_key)) {
       return this.cache.api_key;
     }
@@ -233,6 +233,11 @@ export class Options {
       return apiKey;
     } catch (err) {
       this.logger.debug(`Exception while reading API Key from config file: ${err}`);
+      if (`${err}`.includes('spawn EPERM')) {
+        vscode.window.showErrorMessage(
+          'Microsoft Defender is blocking WakaTime. Please allow WakaTime to run so it can upload code stats to your dashboard.',
+        );
+      }
       return '';
     }
   }
@@ -275,28 +280,12 @@ export class Options {
     }
   }
 
-  public getApiKey(callback: (apiKey: string | null) => void): void {
-    this.getApiKeyAsync()
-      .then((apiKey) => {
-        if (!Utils.apiKeyInvalid(apiKey)) {
-          callback(apiKey);
-        } else {
-          callback(null);
-        }
-      })
-      .catch((err) => {
-        this.logger.warn(`Unable to get api key: ${err}`);
-        if (`${err}`.includes('spawn EPERM')) {
-          vscode.window.showErrorMessage(
-            'Microsoft Defender is blocking WakaTime. Please allow WakaTime to run so it can upload code stats to your dashboard.',
-          );
-        }
-        callback(null);
-      });
-  }
-
   private getApiKeyFromEditor(): string {
     return vscode.workspace.getConfiguration().get('wakatime.apiKey') || '';
+  }
+
+  private getApiUrlFromEditor(): string {
+    return vscode.workspace.getConfiguration().get('wakatime.apiUrl') || '';
   }
 
   // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
@@ -308,8 +297,17 @@ export class Options {
     return this.cache.api_key_from_env;
   }
 
-  public async getApiUrl(): Promise<string> {
-    let apiUrl = this.getApiUrlFromEnv();
+  public async getApiUrl(checkSettingsFile = false): Promise<string> {
+    let apiUrl = this.getApiUrlFromEditor();
+
+    if (!apiUrl) {
+      apiUrl = this.getApiUrlFromEnv();
+    }
+
+    if (!apiUrl && !checkSettingsFile) {
+      return '';
+    }
+
     if (!apiUrl) {
       try {
         apiUrl = await this.getSettingAsync<string>('settings', 'api_url');
@@ -317,6 +315,7 @@ export class Options {
         this.logger.debug(`Exception while reading API Url from config file: ${err}`);
       }
     }
+
     if (!apiUrl) apiUrl = 'https://api.wakatime.com/api/v1';
 
     const suffixes = ['/', '.bulk', '/users/current/heartbeats', '/heartbeats', '/heartbeat'];
@@ -329,7 +328,7 @@ export class Options {
     return apiUrl;
   }
 
-  public getApiUrlFromEnv(): string {
+  private getApiUrlFromEnv(): string {
     if (this.cache.api_url_from_env !== undefined) return this.cache.api_url_from_env;
 
     this.cache.api_url_from_env = process.env.WAKATIME_API_URL || '';
@@ -338,7 +337,7 @@ export class Options {
   }
 
   public hasApiKey(callback: (valid: boolean) => void): void {
-    this.getApiKeyAsync()
+    this.getApiKey()
       .then((apiKey) => callback(!Utils.apiKeyInvalid(apiKey)))
       .catch((err) => {
         this.logger.warn(`Unable to check for api key: ${err}`);
