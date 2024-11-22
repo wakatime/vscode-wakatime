@@ -145,7 +145,7 @@ export class WakaTime {
           this.setStatusBarVisibility(this.showStatusBar);
           this.updateStatusBarText('WakaTime Initializing...');
 
-          this.checkKey();
+          this.checkApiKey();
 
           this.setupEventListeners();
 
@@ -217,22 +217,22 @@ export class WakaTime {
     this.statusBarTeamOther.tooltip = tooltipText;
   }
 
-  public async promptForKey(hidden: boolean = true): Promise<void> {
-    let defaultVal = await this.options.getKey();
-    if (Utils.KeyInvalid(defaultVal ?? undefined)) defaultVal = '';
+  public async promptForApiKey(hidden: boolean = true): Promise<void> {
+    let defaultVal = await this.options.getApiKey();
+    if (Utils.apiKeyInvalid(defaultVal ?? undefined)) defaultVal = '';
     let promptOptions = {
-      prompt: 'WakaTime  Key',
-      placeHolder: 'Enter your  key from https://wakatime.com/-key',
+      prompt: 'WakaTime Api Key',
+      placeHolder: 'Enter your api key from https://wakatime.com/api-key',
       value: defaultVal!,
       ignoreFocusOut: true,
       password: hidden,
-      validateInput: Utils.KeyInvalid.bind(this),
+      validateInput: Utils.apiKeyInvalid.bind(this),
     };
     vscode.window.showInputBox(promptOptions).then((val) => {
       if (val != undefined) {
-        let invalid = Utils.KeyInvalid(val);
+        let invalid = Utils.apiKeyInvalid(val);
         if (!invalid) {
-          this.options.setSetting('settings', '_key', val, false);
+          this.options.setSetting('settings', 'api_key', val, false);
         } else vscode.window.setStatusBarMessage(invalid);
       } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
     });
