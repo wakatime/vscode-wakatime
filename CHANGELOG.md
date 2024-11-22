@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.9.0 (2024-11-22)
+
+- Support Windsurf editor and any future unknown vscode forks.
+  [#410](https://github.com/wakatime/vscode-wakatime/issues/410)
+
 ## 24.8.0 (2024-11-15)
 
 - Add api url to vscode settings json.
