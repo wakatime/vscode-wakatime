@@ -56,7 +56,7 @@ export class WakaTime {
 
     let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
     this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
-    this.agentName = 'vscode';
+    this.agentName = Utils.getEditorName();
 
     this.disabled = this.config.get('wakatime.disabled') === 'true';
     if (this.disabled) {

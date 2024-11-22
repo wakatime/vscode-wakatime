@@ -22,16 +22,6 @@ interface FileSelectionMap {
 }
 
 export class WakaTime {
-  private appNames = {
-    'Arduino IDE': 'arduino',
-    'Azure Data Studio': 'azdata',
-    Cursor: 'cursor',
-    Onivim: 'onivim',
-    'Onivim 2': 'onivim',
-    'SQL Operations Studio': 'sqlops',
-    'Visual Studio Code': 'vscode',
-    Windsurf: 'windsurf',
-  };
   private agentName: string;
   private extension: any;
   private statusBar?: vscode.StatusBarItem = undefined;
@@ -85,14 +75,7 @@ export class WakaTime {
 
         let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
         this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
-
-        if (this.appNames[vscode.env.appName]) {
-          this.agentName = this.appNames[vscode.env.appName];
-        } else if (vscode.env.appName.toLowerCase().includes('visual')) {
-          this.agentName = 'vscode';
-        } else {
-          this.agentName = vscode.env.appName.replace(/\s/g, '').toLowerCase();
-        }
+        this.agentName = Utils.getEditorName();
 
         this.options.getSetting('settings', 'disabled', false, (disabled: Setting) => {
           this.disabled = disabled.value === 'true';

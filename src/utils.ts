@@ -1,6 +1,17 @@
 import * as vscode from 'vscode';
 
 export class Utils {
+  private static appNames = {
+    'Arduino IDE': 'arduino',
+    'Azure Data Studio': 'azdata',
+    Cursor: 'cursor',
+    Onivim: 'onivim',
+    'Onivim 2': 'onivim',
+    'SQL Operations Studio': 'sqlops',
+    'Visual Studio Code': 'vscode',
+    Windsurf: 'windsurf',
+  };
+
   public static quote(str: string): string {
     if (str.includes(' ')) return `"${str.replace('"', '\\"')}"`;
     return str;
@@ -103,5 +114,15 @@ export class Utils {
   public static isPullRequest(uri: vscode.Uri): boolean {
     if (!uri) return false;
     return uri.scheme == 'pr';
+  }
+
+  public static getEditorName(): string {
+    if (this.appNames[vscode.env.appName]) {
+      return this.appNames[vscode.env.appName];
+    } else if (vscode.env.appName.toLowerCase().includes('visual')) {
+      return 'vscode';
+    } else {
+      return vscode.env.appName.replace(/\s/g, '').toLowerCase();
+    }
   }
 }
