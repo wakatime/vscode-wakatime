@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 24.9.1 (2024-11-22)
+
+- Fix opening dashboard when using custom url.
+  [#411](https://github.com/wakatime/vscode-wakatime/pull/411)
+
 ## 24.9.0 (2024-11-22)
 
 - Support Windsurf editor and any future unknown vscode forks.
