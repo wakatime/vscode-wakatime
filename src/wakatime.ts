@@ -145,7 +145,7 @@ export class WakaTime {
           this.setStatusBarVisibility(this.showStatusBar);
           this.updateStatusBarText('WakaTime Initializing...');
 
-          this.checkApiKey();
+          this.checkKey();
 
           this.setupEventListeners();
 
@@ -217,22 +217,22 @@ export class WakaTime {
     this.statusBarTeamOther.tooltip = tooltipText;
   }
 
-  public async promptForApiKey(hidden: boolean = true): Promise<void> {
-    let defaultVal = await this.options.getApiKey();
-    if (Utils.apiKeyInvalid(defaultVal ?? undefined)) defaultVal = '';
+  public async promptForKey(hidden: boolean = true): Promise<void> {
+    let defaultVal = await this.options.getKey();
+    if (Utils.KeyInvalid(defaultVal ?? undefined)) defaultVal = '';
     let promptOptions = {
-      prompt: 'WakaTime Api Key',
-      placeHolder: 'Enter your api key from https://wakatime.com/api-key',
+      prompt: 'WakaTime  Key',
+      placeHolder: 'Enter your  key from https://wakatime.com/-key',
       value: defaultVal!,
       ignoreFocusOut: true,
       password: hidden,
-      validateInput: Utils.apiKeyInvalid.bind(this),
+      validateInput: Utils.KeyInvalid.bind(this),
     };
     vscode.window.showInputBox(promptOptions).then((val) => {
       if (val != undefined) {
-        let invalid = Utils.apiKeyInvalid(val);
+        let invalid = Utils.KeyInvalid(val);
         if (!invalid) {
-          this.options.setSetting('settings', 'api_key', val, false);
+          this.options.setSetting('settings', '_key', val, false);
         } else vscode.window.setStatusBarMessage(invalid);
       } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
     });
@@ -369,8 +369,7 @@ export class WakaTime {
   }
 
   public async openDashboardWebsite(): Promise<void> {
-    const apiUrl = vscode.Uri.parse(await this.options.getApiUrl(true));
-    const url = `${apiUrl.scheme}://${apiUrl.authority.replace(/^api\./, '')}`;
+    const url = (await this.options.getApiUrl(true)).replace('/api/v1', '').replace('://api.', '://');
     vscode.env.openExternal(vscode.Uri.parse(url));
   }
 
