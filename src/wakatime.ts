@@ -831,7 +831,7 @@ export class WakaTime {
       }
       proc.on('close', (code, _signal) => {
         if (code == 0) {
-          if (output) {
+          if (output && output.trim()) {
             let jsonData;
             try {
               jsonData = JSON.parse(output);
