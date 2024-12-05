@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 24.9.2 (2024-12-05)
+
+- Prevent trying to parse empty file experts json output.
+
 ## 24.9.1 (2024-11-22)
 
 - Fix opening dashboard when using custom url.
