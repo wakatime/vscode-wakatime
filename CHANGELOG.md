@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.0.0 (2024-12-20)
+
+- Support for legacy OS X
+  [#278](https://github.com/wakatime/vscode-wakatime/issues/278)
+
 ## 24.9.2 (2024-12-05)
 
 - Prevent trying to parse empty file experts json output.
