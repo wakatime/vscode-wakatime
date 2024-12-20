@@ -4,11 +4,19 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as request from 'request';
+import * as semver from 'semver';
 import * as which from 'which';
 
 import { Options, Setting } from './options';
+
 import { Desktop } from './desktop';
 import { Logger } from './logger';
+
+enum osName {
+  darwin = 'darwin',
+  windows = 'windows',
+  linux = 'linux',
+}
 
 export class Dependencies {
   private options: Options;
@@ -19,6 +27,14 @@ export class Dependencies {
   private cliInstalled: boolean = false;
   private githubDownloadUrl = 'https://github.com/wakatime/wakatime-cli/releases/latest/download';
   private githubReleasesUrl = 'https://api.github.com/repos/wakatime/wakatime-cli/releases/latest';
+  private legacyOperatingSystems: {
+    [key in osName]?: {
+      kernelLessThan: string;
+      tag: string;
+    }[];
+  } = {
+    [osName.darwin]: [{ kernelLessThan: '17.0.0', tag: 'v1.39.1-alpha.1' }],
+  };
 
   constructor(options: Options, logger: Logger, resourcesLocation: string) {
     this.options = options;
@@ -32,8 +48,7 @@ export class Dependencies {
     this.cliLocation = this.getCliLocationGlobal();
     if (this.cliLocation) return this.cliLocation;
 
-    let osname = os.platform() as string;
-    if (osname == 'win32') osname = 'windows';
+    const osname = this.osName();
     const arch = this.architecture();
     const ext = Desktop.isWindows() ? '.exe' : '';
     const binary = `wakatime-cli-${osname}-${arch}${ext}`;
@@ -89,8 +104,14 @@ export class Dependencies {
           let currentVersion = _stdout.toString().trim() + stderr.toString().trim();
           this.logger.debug(`Current wakatime-cli version is ${currentVersion}`);
 
-          if (currentVersion.trim() === '<local-build>') {
+          if (currentVersion === '<local-build>') {
             callback(true);
+            return;
+          }
+
+          const tag = this.legacyReleaseTag();
+          if (tag && currentVersion !== tag) {
+            callback(false);
             return;
           }
 
@@ -316,6 +337,20 @@ export class Dependencies {
     }
   }
 
+  private legacyReleaseTag() {
+    const osname = this.osName() as osName;
+    const legacyOS = this.legacyOperatingSystems[osname];
+    if (!legacyOS) return;
+    const version = legacyOS.find((spec) => {
+      try {
+        return semver.lt(os.release(), spec.kernelLessThan);
+      } catch (e) {
+        return false;
+      }
+    });
+    return version?.tag;
+  }
+
   private architecture(): string {
     const arch = os.arch();
     if (arch.indexOf('32') > -1) return '386';
@@ -323,10 +358,21 @@ export class Dependencies {
     return arch;
   }
 
-  private cliDownloadUrl(): string {
+  private osName(): string {
     let osname = os.platform() as string;
     if (osname == 'win32') osname = 'windows';
+    return osname;
+  }
+
+  private cliDownloadUrl(): string {
+    const osname = this.osName();
     const arch = this.architecture();
+
+    // Use legacy wakatime-cli release to support older operating systems
+    const tag = this.legacyReleaseTag();
+    if (tag) {
+      return `https://github.com/wakatime/wakatime-cli/releases/download/${tag}/wakatime-cli-${osname}-${arch}.zip`;
+    }
 
     const validCombinations = [
       'darwin-amd64',
