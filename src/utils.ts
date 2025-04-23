@@ -8,6 +8,7 @@ export class Utils {
     Onivim: 'onivim',
     'Onivim 2': 'onivim',
     'SQL Operations Studio': 'sqlops',
+    Trae: 'trae',
     'Visual Studio Code': 'vscode',
     Windsurf: 'windsurf',
   };
