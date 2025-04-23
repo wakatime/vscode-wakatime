@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.0.1 (2025-04-23)
+
+- Support for Trae IDE
+  [#419](https://github.com/wakatime/vscode-wakatime/issues/419)
+
 ## 25.0.0 (2024-12-20)
 
 - Support for legacy OS X
