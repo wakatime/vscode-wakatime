@@ -280,7 +280,7 @@ export class Options {
     }
   }
 
-  private getApiKeyFromEditor(): string {
+  public getApiKeyFromEditor(): string {
     return vscode.workspace.getConfiguration().get('wakatime.apiKey') || '';
   }
 

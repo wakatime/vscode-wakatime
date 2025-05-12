@@ -369,7 +369,9 @@ export class WakaTime {
   }
 
   public async openDashboardWebsite(): Promise<void> {
-    const url = (await this.options.getApiUrl(true)).replace('/api/v1', '').replace('://api.', '://');
+    const url = (await this.options.getApiUrl(true))
+      .replace('/api/v1', '')
+      .replace('://api.', '://');
     vscode.env.openExternal(vscode.Uri.parse(url));
   }
 
@@ -567,7 +569,14 @@ export class WakaTime {
     if (this.isMetricsEnabled) args.push('--metrics');
 
     const apiKey = this.options.getApiKeyFromEnv();
-    if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
+    if (!Utils.apiKeyInvalid(apiKey)) {
+      args.push('--key', Utils.quote(apiKey));
+    } else {
+      const apiKeyFromSettings = this.options.getApiKeyFromEditor();
+      if (!Utils.apiKeyInvalid(apiKeyFromSettings)) {
+        args.push('--key', Utils.quote(apiKeyFromSettings));
+      }
+    }
 
     const apiUrl = await this.options.getApiUrl();
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
