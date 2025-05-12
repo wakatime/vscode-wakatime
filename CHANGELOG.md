@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.0.2 (2025-05-12)
+
+- Prevent prompting for api key when already set in settings json.
+  [#315](https://github.com/wakatime/vscode-wakatime/issues/315)
+
 ## 25.0.1 (2025-04-23)
 
 - Support for Trae IDE
