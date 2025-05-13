@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.0.3 (2025-05-13)
+
+- Always send api key to wakatime-cli.
+  [#429](https://github.com/wakatime/vscode-wakatime/issues/429)
+
 ## 25.0.2 (2025-05-12)
 
 - Prevent prompting for api key when already set in settings json.
