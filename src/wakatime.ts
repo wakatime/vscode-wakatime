@@ -568,15 +568,8 @@ export class WakaTime {
 
     if (this.isMetricsEnabled) args.push('--metrics');
 
-    const apiKey = this.options.getApiKeyFromEnv();
-    if (!Utils.apiKeyInvalid(apiKey)) {
-      args.push('--key', Utils.quote(apiKey));
-    } else {
-      const apiKeyFromSettings = this.options.getApiKeyFromEditor();
-      if (!Utils.apiKeyInvalid(apiKeyFromSettings)) {
-        args.push('--key', Utils.quote(apiKeyFromSettings));
-      }
-    }
+    const apiKey = await this.options.getApiKey();
+    if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
 
     const apiUrl = await this.options.getApiUrl();
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
@@ -677,7 +670,7 @@ export class WakaTime {
 
     if (this.isMetricsEnabled) args.push('--metrics');
 
-    const apiKey = this.options.getApiKeyFromEnv();
+    const apiKey = await this.options.getApiKey();
     if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
 
     const apiUrl = await this.options.getApiUrl();
@@ -797,7 +790,7 @@ export class WakaTime {
 
     if (this.isMetricsEnabled) args.push('--metrics');
 
-    const apiKey = this.options.getApiKeyFromEnv();
+    const apiKey = await this.options.getApiKey();
     if (!Utils.apiKeyInvalid(apiKey)) args.push('--key', Utils.quote(apiKey));
 
     const apiUrl = await this.options.getApiUrl();
