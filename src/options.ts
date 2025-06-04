@@ -207,39 +207,60 @@ export class Options {
       return this.cache.api_key;
     }
 
+    let from = '';
+
     const keyFromSettings = this.getApiKeyFromEditor();
     if (!Utils.apiKeyInvalid(keyFromSettings)) {
       this.cache.api_key = keyFromSettings;
-      return this.cache.api_key;
+      from = 'settings.json editor';
     }
 
     const keyFromEnv = this.getApiKeyFromEnv();
     if (!Utils.apiKeyInvalid(keyFromEnv)) {
+      if (this.cache.api_key && this.cache.api_key !== keyFromEnv) {
+        vscode.window.showErrorMessage(
+          `WakaTime API Key conflict. Your env key doesn't match your ${from} key.`,
+        );
+        return this.cache.api_key;
+      }
       this.cache.api_key = keyFromEnv;
-      return this.cache.api_key;
+      from = 'env var';
     }
 
     try {
       const apiKeyFromVault = await this.getApiKeyFromVaultCmd();
       if (!Utils.apiKeyInvalid(apiKeyFromVault)) {
+        if (this.cache.api_key && this.cache.api_key !== apiKeyFromVault) {
+          vscode.window.showErrorMessage(
+            `WakaTime API Key conflict. Your vault command key doesn't match your ${from} key.`,
+          );
+          return this.cache.api_key;
+        }
         this.cache.api_key = apiKeyFromVault;
-        return this.cache.api_key;
+        from = 'vault command';
       }
     } catch (err) {}
 
     try {
       const apiKey = await this.getSettingAsync<string>('settings', 'api_key');
-      if (!Utils.apiKeyInvalid(apiKey)) this.cache.api_key = apiKey;
-      return apiKey;
+      if (!Utils.apiKeyInvalid(apiKey)) {
+        if (this.cache.api_key && this.cache.api_key !== apiKey) {
+          vscode.window.showErrorMessage(
+            `WakaTime API Key conflict. Your ~/.wakatime.cfg key doesn't match your ${from} key.`,
+          );
+        }
+        this.cache.api_key = apiKey;
+      }
     } catch (err) {
       this.logger.debug(`Exception while reading API Key from config file: ${err}`);
-      if (`${err}`.includes('spawn EPERM')) {
+      if (!this.cache.api_key && `${err}`.includes('spawn EPERM')) {
         vscode.window.showErrorMessage(
           'Microsoft Defender is blocking WakaTime. Please allow WakaTime to run so it can upload code stats to your dashboard.',
         );
       }
-      return '';
     }
+
+    return this.cache.api_key ?? '';
   }
 
   public async getApiKeyFromVaultCmd(): Promise<string> {
