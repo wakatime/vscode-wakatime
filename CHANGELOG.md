@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.0.4 (2025-06-04)
+
+- Warn when api keys mismatch.
+  [#432](https://github.com/wakatime/vscode-wakatime/issues/432)
+
 ## 25.0.3 (2025-05-13)
 
 - Always send api key to wakatime-cli.
