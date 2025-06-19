@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.0.5 (2025-06-19)
+
+- Remove api path when opening dashboard.
+  [#433](https://github.com/wakatime/vscode-wakatime/pull/433)
+
 ## 25.0.4 (2025-06-04)
 
 - Warn when api keys mismatch.
