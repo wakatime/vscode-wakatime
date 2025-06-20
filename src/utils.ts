@@ -112,6 +112,15 @@ export class Utils {
     return uri.scheme == 'vscode-remote';
   }
 
+  public static apiUrlToDashboardUrl(url: string): string {
+    url = url
+      .replace('://api.', '://')
+      .replace('/api/v1', '')
+      .replace('api.', '')
+      .replace('/api', '');
+    return url;
+  }
+
   public static isPullRequest(uri: vscode.Uri): boolean {
     if (!uri) return false;
     return uri.scheme == 'pr';
