@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.0.6 (2025-06-20)
+
+- Fix bug when parsing dashboard url from api url.
+  [#433](https://github.com/wakatime/vscode-wakatime/pull/433)
+
 ## 25.0.5 (2025-06-19)
 
 - Remove api path when opening dashboard.
