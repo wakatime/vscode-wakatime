@@ -116,7 +116,7 @@ export class Utils {
     url = url
       .replace('://api.', '://')
       .replace('/api/v1', '')
-      .replace('api.', '')
+      .replace(/^api\./, '')
       .replace('/api', '');
     return url;
   }
