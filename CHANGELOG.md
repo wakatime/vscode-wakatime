@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.0.7 (2025-07-12)
+
+- Prevent mangling custom api_url subdomains.
+  [#436](https://github.com/wakatime/vscode-wakatime/issues/436)
+
 ## 25.0.6 (2025-06-20)
 
 - Fix bug when parsing dashboard url from api url.
