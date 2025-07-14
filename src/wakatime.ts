@@ -417,6 +417,9 @@ export class WakaTime {
     vscode.window.onDidChangeActiveTextEditor(this.onChangeTab, this, subscriptions);
     vscode.workspace.onDidSaveTextDocument(this.onSave, this, subscriptions);
 
+    vscode.workspace.onDidChangeNotebookDocument(this.onChangeNotebook, this, subscriptions);
+    vscode.workspace.onDidSaveNotebookDocument(this.onSaveNotebook, this, subscriptions);
+
     vscode.tasks.onDidStartTask(this.onDidStartTask, this, subscriptions);
     vscode.tasks.onDidEndTask(this.onDidEndTask, this, subscriptions);
 
@@ -465,6 +468,14 @@ export class WakaTime {
   }
 
   private onSave(_e: vscode.TextDocument | undefined): void {
+    this.onEvent(true);
+  }
+
+  private onChangeNotebook(_e: vscode.NotebookDocumentChangeEvent): void {
+    this.onEvent(false);
+  }
+
+  private onSaveNotebook(_e: vscode.NotebookDocument | undefined): void {
     this.onEvent(true);
   }
 
