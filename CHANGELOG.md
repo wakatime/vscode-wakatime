@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.1.0 (2025-07-18)
+
+- Support for AI Coding category when using Copilot, Cursor, and other inline
+  or sidebar chats.
+
 ## 25.0.7 (2025-07-12)
 
 - Prevent mangling custom api_url subdomains.
