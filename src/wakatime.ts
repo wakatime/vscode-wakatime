@@ -39,7 +39,7 @@ export class WakaTime {
   private AIDebounceTimeoutId: any = null;
   private AIdebounceMs = 1000;
   private AIdebounceCount = 0;
-  private AIpasteCount = 0;
+  private AIpasteLastTime: number = 0;
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
@@ -477,25 +477,27 @@ export class WakaTime {
     if (Utils.isAIChatSidebar(e.document?.uri)) {
       this.isAICodeGenerating = true;
       this.AIdebounceCount = 0;
-    } else if (e.contentChanges.length === 1 && e.contentChanges?.[0].text.length > 1) {
-      if (this.AIpasteCount > 1) {
+    } else if (e.contentChanges.length === 1 && e.contentChanges?.[0].text.trim().length > 2) {
+      const now = Date.now();
+      if (this.recentlyAIPasted(now)) {
         this.isAICodeGenerating = true;
         this.AIdebounceCount = 0;
       }
-      this.AIpasteCount++;
+      this.AIpasteLastTime = now;
     } else if (
       this.isAICodeGenerating &&
       e.contentChanges.length === 1 &&
-      e.contentChanges?.[0].text.length === 1 &&
-      e.contentChanges?.[0].text !== '\n' &&
-      e.contentChanges?.[0].text !== '\r'
+      ((e.contentChanges?.[0].text.trim().length === 1 &&
+        e.contentChanges?.[0].text !== '\n' &&
+        e.contentChanges?.[0].text !== '\r') ||
+        e.contentChanges?.[0].text.length === 0)
     ) {
       this.AIdebounceCount++;
       clearTimeout(this.AIDebounceTimeoutId);
       this.AIDebounceTimeoutId = setTimeout(() => {
         if (this.AIdebounceCount > 1) {
           this.isAICodeGenerating = false;
-          this.AIpasteCount = 0;
+          this.AIpasteLastTime = 0;
         }
       }, this.AIdebounceMs);
     } else if (this.isAICodeGenerating) {
@@ -964,6 +966,10 @@ export class WakaTime {
 
   private enoughTimePassed(time: number): boolean {
     return this.lastHeartbeat + 120000 < time;
+  }
+
+  private recentlyAIPasted(time: number): boolean {
+    return this.AIpasteLastTime + 100 >= time;
   }
 
   private isDuplicateHeartbeat(file: string, time: number, selection: vscode.Position): boolean {
