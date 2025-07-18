@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 25.1.1 (2025-07-18)
+
+- Reset category to coding when backspace pressed.
+
 ## 25.1.0 (2025-07-18)
 
 - Support for AI Coding category when using Copilot, Cursor, and other inline
