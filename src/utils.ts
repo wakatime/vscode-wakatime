@@ -109,7 +109,7 @@ export class Utils {
 
   public static isRemoteUri(uri: vscode.Uri): boolean {
     if (!uri) return false;
-    return uri.scheme == 'vscode-remote';
+    return uri.scheme === 'vscode-remote';
   }
 
   public static apiUrlToDashboardUrl(url: string): string {
@@ -123,7 +123,12 @@ export class Utils {
 
   public static isPullRequest(uri: vscode.Uri): boolean {
     if (!uri) return false;
-    return uri.scheme == 'pr';
+    return uri.scheme === 'pr';
+  }
+
+  public static isAIChatSidebar(uri: vscode.Uri | undefined): boolean {
+    if (!uri) return false;
+    return uri.scheme === 'vscode-chat-code-block';
   }
 
   public static getEditorName(): string {

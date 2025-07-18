@@ -32,9 +32,14 @@ export class WakaTime {
   private lastHeartbeat: number = 0;
   private lastDebug: boolean = false;
   private lastCompile: boolean = false;
+  private lastAICodeGenerating: boolean = false;
   private dedupe: FileSelectionMap = {};
   private debounceTimeoutId: any = null;
   private debounceMs = 50;
+  private AIDebounceTimeoutId: any = null;
+  private AIdebounceMs = 1000;
+  private AIdebounceCount = 0;
+  private AIpasteCount = 0;
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
@@ -48,6 +53,7 @@ export class WakaTime {
   private extensionPath: string;
   private isCompiling: boolean = false;
   private isDebugging: boolean = false;
+  private isAICodeGenerating: boolean = false;
   private currentlyFocusedFile: string;
   private teamDevsForFileCache = {};
   private resourcesLocation: string;
@@ -414,6 +420,7 @@ export class WakaTime {
     // subscribe to selection change and editor activation events
     let subscriptions: vscode.Disposable[] = [];
     vscode.window.onDidChangeTextEditorSelection(this.onChangeSelection, this, subscriptions);
+    vscode.workspace.onDidChangeTextDocument(this.onChangeTextDocument, this, subscriptions);
     vscode.window.onDidChangeActiveTextEditor(this.onChangeTab, this, subscriptions);
     vscode.workspace.onDidSaveTextDocument(this.onSave, this, subscriptions);
 
@@ -460,6 +467,42 @@ export class WakaTime {
 
   private onChangeSelection(e: vscode.TextEditorSelectionChangeEvent): void {
     if (e.kind === vscode.TextEditorSelectionChangeKind.Command) return;
+    if (Utils.isAIChatSidebar(e.textEditor?.document?.uri)) {
+      this.isAICodeGenerating = true;
+    }
+    this.onEvent(false);
+  }
+
+  private onChangeTextDocument(e: vscode.TextDocumentChangeEvent): void {
+    if (Utils.isAIChatSidebar(e.document?.uri)) {
+      this.isAICodeGenerating = true;
+      this.AIdebounceCount = 0;
+    } else if (e.contentChanges.length === 1 && e.contentChanges?.[0].text.length > 1) {
+      if (this.AIpasteCount > 1) {
+        this.isAICodeGenerating = true;
+        this.AIdebounceCount = 0;
+      }
+      this.AIpasteCount++;
+    } else if (
+      this.isAICodeGenerating &&
+      e.contentChanges.length === 1 &&
+      e.contentChanges?.[0].text.length === 1 &&
+      e.contentChanges?.[0].text !== '\n' &&
+      e.contentChanges?.[0].text !== '\r'
+    ) {
+      this.AIdebounceCount++;
+      clearTimeout(this.AIDebounceTimeoutId);
+      this.AIDebounceTimeoutId = setTimeout(() => {
+        if (this.AIdebounceCount > 1) {
+          this.isAICodeGenerating = false;
+          this.AIpasteCount = 0;
+        }
+      }, this.AIdebounceMs);
+    } else if (this.isAICodeGenerating) {
+      this.AIdebounceCount = 0;
+      clearTimeout(this.AIDebounceTimeoutId);
+    }
+    if (!this.isAICodeGenerating) return;
     this.onEvent(false);
   }
 
@@ -500,7 +543,8 @@ export class WakaTime {
               this.enoughTimePassed(time) ||
               this.lastFile !== file ||
               this.lastDebug !== this.isDebugging ||
-              this.lastCompile !== this.isCompiling
+              this.lastCompile !== this.isCompiling ||
+              this.lastAICodeGenerating !== this.isAICodeGenerating
             ) {
               this.sendHeartbeat(
                 doc,
@@ -509,11 +553,13 @@ export class WakaTime {
                 isWrite,
                 this.isCompiling,
                 this.isDebugging,
+                this.isAICodeGenerating,
               );
               this.lastFile = file;
               this.lastHeartbeat = time;
               this.lastDebug = this.isDebugging;
               this.lastCompile = this.isCompiling;
+              this.lastAICodeGenerating = this.isAICodeGenerating;
             }
           }
         }
@@ -528,10 +574,19 @@ export class WakaTime {
     isWrite: boolean,
     isCompiling: boolean,
     isDebugging: boolean,
+    isAICoding: boolean,
   ): Promise<void> {
     const apiKey = await this.options.getApiKey();
     if (apiKey) {
-      await this._sendHeartbeat(doc, time, selection, isWrite, isCompiling, isDebugging);
+      await this._sendHeartbeat(
+        doc,
+        time,
+        selection,
+        isWrite,
+        isCompiling,
+        isDebugging,
+        isAICoding,
+      );
     } else {
       await this.promptForApiKey();
     }
@@ -544,6 +599,7 @@ export class WakaTime {
     isWrite: boolean,
     isCompiling: boolean,
     isDebugging: boolean,
+    isAICoding: boolean,
   ): Promise<void> {
     if (!this.dependencies.isCliInstalled()) return;
 
@@ -572,6 +628,8 @@ export class WakaTime {
       args.push('--category', 'debugging');
     } else if (isCompiling) {
       args.push('--category', 'building');
+    } else if (isAICoding) {
+      args.push('--category', 'ai coding');
     } else if (Utils.isPullRequest(doc.uri)) {
       args.push('--category', 'code reviewing');
     }
