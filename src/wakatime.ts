@@ -39,7 +39,7 @@ export class WakaTime {
   private AIDebounceTimeoutId: any = null;
   private AIdebounceMs = 1000;
   private AIdebounceCount = 0;
-  private AIpasteLastTime: number = 0;
+  private AIrecentPastes: number[] = [];
   private dependencies: Dependencies;
   private options: Options;
   private logger: Logger;
@@ -483,7 +483,7 @@ export class WakaTime {
         this.isAICodeGenerating = true;
         this.AIdebounceCount = 0;
       }
-      this.AIpasteLastTime = now;
+      this.AIrecentPastes.push(now);
     } else if (
       this.isAICodeGenerating &&
       e.contentChanges.length === 1 &&
@@ -497,7 +497,7 @@ export class WakaTime {
       this.AIDebounceTimeoutId = setTimeout(() => {
         if (this.AIdebounceCount > 1) {
           this.isAICodeGenerating = false;
-          this.AIpasteLastTime = 0;
+          this.AIrecentPastes = [];
         }
       }, this.AIdebounceMs);
     } else if (this.isAICodeGenerating) {
@@ -969,7 +969,8 @@ export class WakaTime {
   }
 
   private recentlyAIPasted(time: number): boolean {
-    return this.AIpasteLastTime + 100 >= time;
+    this.AIrecentPastes = this.AIrecentPastes.filter((x) => x + 500 >= time);
+    return this.AIrecentPastes.length > 3;
   }
 
   private isDuplicateHeartbeat(file: string, time: number, selection: vscode.Position): boolean {
