@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.1.2 (2025-07-19)
+
+- Only count AI Coding when streaming multiple inserts.
+  [#440](https://github.com/wakatime/vscode-wakatime/issues/440)
+
 ## 25.1.1 (2025-07-18)
 
 - Reset category to coding when backspace pressed.
