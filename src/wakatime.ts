@@ -477,29 +477,24 @@ export class WakaTime {
     if (Utils.isAIChatSidebar(e.document?.uri)) {
       this.isAICodeGenerating = true;
       this.AIdebounceCount = 0;
-    } else if (e.contentChanges.length === 1 && e.contentChanges?.[0].text.trim().length > 2) {
+    } else if (Utils.isPossibleAICodeInsert(e)) {
       const now = Date.now();
       if (this.recentlyAIPasted(now)) {
         this.isAICodeGenerating = true;
         this.AIdebounceCount = 0;
       }
       this.AIrecentPastes.push(now);
-    } else if (
-      this.isAICodeGenerating &&
-      e.contentChanges.length === 1 &&
-      ((e.contentChanges?.[0].text.trim().length === 1 &&
-        e.contentChanges?.[0].text !== '\n' &&
-        e.contentChanges?.[0].text !== '\r') ||
-        e.contentChanges?.[0].text.length === 0)
-    ) {
-      this.AIdebounceCount++;
-      clearTimeout(this.AIDebounceTimeoutId);
-      this.AIDebounceTimeoutId = setTimeout(() => {
-        if (this.AIdebounceCount > 1) {
-          this.isAICodeGenerating = false;
-          this.AIrecentPastes = [];
-        }
-      }, this.AIdebounceMs);
+    } else if (Utils.isPossibleHumanCodeInsert(e)) {
+      this.AIrecentPastes = [];
+      if (this.isAICodeGenerating) {
+        this.AIdebounceCount++;
+        clearTimeout(this.AIDebounceTimeoutId);
+        this.AIDebounceTimeoutId = setTimeout(() => {
+          if (this.AIdebounceCount > 1) {
+            this.isAICodeGenerating = false;
+          }
+        }, this.AIdebounceMs);
+      }
     } else if (this.isAICodeGenerating) {
       this.AIdebounceCount = 0;
       clearTimeout(this.AIDebounceTimeoutId);

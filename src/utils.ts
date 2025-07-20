@@ -131,6 +131,22 @@ export class Utils {
     return uri.scheme === 'vscode-chat-code-block';
   }
 
+  public static isPossibleAICodeInsert(e: vscode.TextDocumentChangeEvent): boolean {
+    return e.contentChanges.length === 1 && e.contentChanges?.[0].text.trim().length > 2;
+  }
+
+  public static isPossibleHumanCodeInsert(e: vscode.TextDocumentChangeEvent): boolean {
+    if (e.contentChanges.length !== 1) return false;
+    if (
+      e.contentChanges?.[0].text.trim().length === 1 &&
+      e.contentChanges?.[0].text !== '\n' &&
+      e.contentChanges?.[0].text !== '\r'
+    )
+      return true;
+    if (e.contentChanges?.[0].text.length === 0) return true;
+    return false;
+  }
+
   public static getEditorName(): string {
     if (this.appNames[vscode.env.appName]) {
       return this.appNames[vscode.env.appName];
