@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { TIME_BETWEEN_HEARTBEATS_MS } from './constants';
 
 export class Utils {
   private static appNames = {
@@ -119,6 +120,10 @@ export class Utils {
       .replace(/^api\./, '')
       .replace('/api', '');
     return url;
+  }
+
+  public static enoughTimePassed(lastHeartbeat: number, now: number): boolean {
+    return lastHeartbeat + TIME_BETWEEN_HEARTBEATS_MS < now;
   }
 
   public static isPullRequest(uri: vscode.Uri): boolean {

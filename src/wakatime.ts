@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { COMMAND_DASHBOARD, LogLevel } from './constants';
+import { AI_RECENT_PASTES_TIME_MS, COMMAND_DASHBOARD, LogLevel } from './constants';
 import { Options, Setting } from './options';
 
 import { Dependencies } from './dependencies';
@@ -537,7 +537,7 @@ export class WakaTime {
             let time: number = Date.now();
             if (
               isWrite ||
-              this.enoughTimePassed(time) ||
+              Utils.enoughTimePassed(this.lastHeartbeat, time) ||
               this.lastFile !== file ||
               this.lastDebug !== this.isDebugging ||
               this.lastCompile !== this.isCompiling ||
@@ -959,12 +959,8 @@ export class WakaTime {
     }
   }
 
-  private enoughTimePassed(time: number): boolean {
-    return this.lastHeartbeat + 120000 < time;
-  }
-
   private recentlyAIPasted(time: number): boolean {
-    this.AIrecentPastes = this.AIrecentPastes.filter((x) => x + 500 >= time);
+    this.AIrecentPastes = this.AIrecentPastes.filter((x) => x + AI_RECENT_PASTES_TIME_MS >= time);
     return this.AIrecentPastes.length > 3;
   }
 

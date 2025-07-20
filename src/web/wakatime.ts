@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { COMMAND_DASHBOARD, LogLevel } from '../constants';
+import { AI_RECENT_PASTES_TIME_MS, COMMAND_DASHBOARD, LogLevel } from '../constants';
 
 import { Logger } from './logger';
 import { Memento } from 'vscode';
@@ -26,9 +26,14 @@ export class WakaTime {
   private lastHeartbeat: number = 0;
   private lastDebug: boolean = false;
   private lastCompile: boolean = false;
+  private lastAICodeGenerating: boolean = false;
   private dedupe: FileSelectionMap = {};
   private debounceTimeoutId: any = null;
   private debounceMs = 50;
+  private AIDebounceTimeoutId: any = null;
+  private AIdebounceMs = 1000;
+  private AIdebounceCount = 0;
+  private AIrecentPastes: number[] = [];
   private logger: Logger;
   private config: Memento;
   private fetchTodayInterval: number = 60000;
@@ -40,6 +45,7 @@ export class WakaTime {
   private disabled: boolean = true;
   private isCompiling: boolean = false;
   private isDebugging: boolean = false;
+  private isAICodeGenerating: boolean = false;
   private currentlyFocusedFile: string;
   private teamDevsForFileCache = {};
   private lastApiKeyPrompted: number = 0;
@@ -329,8 +335,12 @@ export class WakaTime {
     // subscribe to selection change and editor activation events
     let subscriptions: vscode.Disposable[] = [];
     vscode.window.onDidChangeTextEditorSelection(this.onChangeSelection, this, subscriptions);
+    vscode.workspace.onDidChangeTextDocument(this.onChangeTextDocument, this, subscriptions);
     vscode.window.onDidChangeActiveTextEditor(this.onChangeTab, this, subscriptions);
     vscode.workspace.onDidSaveTextDocument(this.onSave, this, subscriptions);
+
+    vscode.workspace.onDidChangeNotebookDocument(this.onChangeNotebook, this, subscriptions);
+    vscode.workspace.onDidSaveNotebookDocument(this.onSaveNotebook, this, subscriptions);
 
     vscode.tasks.onDidStartTask(this.onDidStartTask, this, subscriptions);
     vscode.tasks.onDidEndTask(this.onDidEndTask, this, subscriptions);
@@ -375,11 +385,49 @@ export class WakaTime {
     this.onEvent(false);
   }
 
+  private onChangeTextDocument(e: vscode.TextDocumentChangeEvent): void {
+    if (Utils.isAIChatSidebar(e.document?.uri)) {
+      this.isAICodeGenerating = true;
+      this.AIdebounceCount = 0;
+    } else if (Utils.isPossibleAICodeInsert(e)) {
+      const now = Date.now();
+      if (this.recentlyAIPasted(now)) {
+        this.isAICodeGenerating = true;
+        this.AIdebounceCount = 0;
+      }
+      this.AIrecentPastes.push(now);
+    } else if (Utils.isPossibleHumanCodeInsert(e)) {
+      this.AIrecentPastes = [];
+      if (this.isAICodeGenerating) {
+        this.AIdebounceCount++;
+        clearTimeout(this.AIDebounceTimeoutId);
+        this.AIDebounceTimeoutId = setTimeout(() => {
+          if (this.AIdebounceCount > 1) {
+            this.isAICodeGenerating = false;
+          }
+        }, this.AIdebounceMs);
+      }
+    } else if (this.isAICodeGenerating) {
+      this.AIdebounceCount = 0;
+      clearTimeout(this.AIDebounceTimeoutId);
+    }
+    if (!this.isAICodeGenerating) return;
+    this.onEvent(false);
+  }
+
   private onChangeTab(_e: vscode.TextEditor | undefined): void {
     this.onEvent(false);
   }
 
   private onSave(_e: vscode.TextDocument | undefined): void {
+    this.onEvent(true);
+  }
+
+  private onChangeNotebook(_e: vscode.NotebookDocumentChangeEvent): void {
+    this.onEvent(false);
+  }
+
+  private onSaveNotebook(_e: vscode.NotebookDocument | undefined): void {
     this.onEvent(true);
   }
 
@@ -402,10 +450,11 @@ export class WakaTime {
             let time: number = Date.now();
             if (
               isWrite ||
-              this.enoughTimePassed(time) ||
+              Utils.enoughTimePassed(this.lastHeartbeat, time) ||
               this.lastFile !== file ||
               this.lastDebug !== this.isDebugging ||
-              this.lastCompile !== this.isCompiling
+              this.lastCompile !== this.isCompiling ||
+              this.lastAICodeGenerating !== this.isAICodeGenerating
             ) {
               this.sendHeartbeat(
                 doc,
@@ -414,11 +463,13 @@ export class WakaTime {
                 isWrite,
                 this.isCompiling,
                 this.isDebugging,
+                this.isAICodeGenerating,
               );
               this.lastFile = file;
               this.lastHeartbeat = time;
               this.lastDebug = this.isDebugging;
               this.lastCompile = this.isCompiling;
+              this.lastAICodeGenerating = this.isAICodeGenerating;
             }
           }
         }
@@ -433,10 +484,11 @@ export class WakaTime {
     isWrite: boolean,
     isCompiling: boolean,
     isDebugging: boolean,
+    isAICoding: boolean,
   ): void {
     this.hasApiKey((hasApiKey) => {
       if (hasApiKey) {
-        this._sendHeartbeat(doc, time, selection, isWrite, isCompiling, isDebugging);
+        this._sendHeartbeat(doc, time, selection, isWrite, isCompiling, isDebugging, isAICoding);
       } else {
         this.promptForApiKey();
       }
@@ -450,6 +502,7 @@ export class WakaTime {
     isWrite: boolean,
     isCompiling: boolean,
     isDebugging: boolean,
+    isAICoding: boolean,
   ) {
     let file = doc.fileName;
     if (Utils.isRemoteUri(doc.uri)) {
@@ -487,6 +540,8 @@ export class WakaTime {
       payload['category'] = 'debugging';
     } else if (isCompiling) {
       payload['category'] = 'building';
+    } else if (isAICoding) {
+      payload['category'] = 'ai coding';
     } else if (Utils.isPullRequest(doc.uri)) {
       payload['category'] = 'code reviewing';
     }
@@ -741,8 +796,9 @@ export class WakaTime {
     }
   }
 
-  private enoughTimePassed(time: number): boolean {
-    return this.lastHeartbeat + 120000 < time;
+  private recentlyAIPasted(time: number): boolean {
+    this.AIrecentPastes = this.AIrecentPastes.filter((x) => x + AI_RECENT_PASTES_TIME_MS >= time);
+    return this.AIrecentPastes.length > 3;
   }
 
   private isDuplicateHeartbeat(file: string, time: number, selection: vscode.Position): boolean {
