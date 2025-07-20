@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.2.0 (2025-07-20)
+
+- Improve AI Coding detection.
+- Support AI Coding category on web extension.
+
 ## 25.1.2 (2025-07-19)
 
 - Only count AI Coding when streaming multiple inserts.
