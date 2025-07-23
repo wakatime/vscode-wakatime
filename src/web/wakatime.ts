@@ -411,7 +411,6 @@ export class WakaTime {
       this.AIdebounceCount = 0;
       clearTimeout(this.AIDebounceTimeoutId);
     }
-    if (!this.isAICodeGenerating) return;
     this.onEvent(false);
   }
 
@@ -544,11 +543,18 @@ export class WakaTime {
       payload['category'] = 'ai coding';
     } else if (Utils.isPullRequest(doc.uri)) {
       payload['category'] = 'code reviewing';
+    } else {
+      payload['category'] = 'coding';
     }
 
     this.logger.debug(`Sending heartbeat: ${JSON.stringify(payload)}`);
 
-    const apiKey = this.config.get('wakatime.apiKey');
+    const apiKey: string = this.config.get('wakatime.apiKey') || '';
+    if (Utils.apiKeyInvalid(apiKey)) {
+      this.logger.error('Invalid API key, cannot send heartbeat');
+      return;
+    }
+    
     const apiUrl = this.getApiUrl();
     const url = `${apiUrl}/users/current/heartbeats?api_key=${apiKey}`;
 
@@ -615,7 +621,12 @@ export class WakaTime {
 
   private async _getCodingActivity() {
     this.logger.debug('Fetching coding activity for Today from api.');
-    const apiKey = this.config.get('wakatime.apiKey');
+    const apiKey: string = this.config.get('wakatime.apiKey') || '';
+    if (Utils.apiKeyInvalid(apiKey)) {
+      this.logger.error('Invalid API key, cannot fetch coding activity');
+      return;
+    }
+    
     const apiUrl = this.getApiUrl();
     const url = `${apiUrl}/users/current/statusbar/today?api_key=${apiKey}`;
     try {

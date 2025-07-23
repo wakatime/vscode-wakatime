@@ -499,7 +499,6 @@ export class WakaTime {
       this.AIdebounceCount = 0;
       clearTimeout(this.AIDebounceTimeoutId);
     }
-    if (!this.isAICodeGenerating) return;
     this.onEvent(false);
   }
 
@@ -629,6 +628,8 @@ export class WakaTime {
       args.push('--category', 'ai coding');
     } else if (Utils.isPullRequest(doc.uri)) {
       args.push('--category', 'code reviewing');
+    } else {
+      args.push('--category', 'coding');
     }
 
     if (this.isMetricsEnabled) args.push('--metrics');
