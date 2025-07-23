@@ -123,8 +123,30 @@ export class Options {
         contents.push(this.removeNulls(key + ' = ' + val));
       }
 
-      fs.writeFile(configFile as string, contents.join('\n'), (err) => {
-        if (err) throw err;
+      const newContent = contents.join('\n');
+      // Prevent overwriting with empty content
+      if (newContent.trim() === '') {
+        this.logger.error(`Aborted writing empty config to ${configFile}`);
+        vscode.window.showErrorMessage(`WakaTime: Aborted writing empty config to ${configFile}`);
+        return;
+      }
+
+      // Backup existing config
+      if (fs.existsSync(configFile)) {
+        const backupFile = configFile + '.bak';
+        try {
+          fs.copyFileSync(configFile, backupFile);
+          this.logger.debug(`Backed up config file to ${backupFile}`);
+        } catch (backupErr) {
+          this.logger.error(`Failed to backup config file: ${backupErr}`);
+        }
+      }
+
+      fs.writeFile(configFile as string, newContent, (err) => {
+        if (err) {
+          this.logger.error(`Failed to write config file: ${err}`);
+          vscode.window.showErrorMessage(`WakaTime: Failed to write config file: ${err}`);
+        }
       });
     });
   }
@@ -188,8 +210,30 @@ export class Options {
         }
       });
 
-      fs.writeFile(configFile as string, contents.join('\n'), (err) => {
-        if (err) throw err;
+      const newContent = contents.join('\n');
+      // Prevent overwriting with empty content
+      if (newContent.trim() === '') {
+        this.logger.error(`Aborted writing empty config to ${configFile}`);
+        vscode.window.showErrorMessage(`WakaTime: Aborted writing empty config to ${configFile}`);
+        return;
+      }
+
+      // Backup existing config
+      if (fs.existsSync(configFile)) {
+        const backupFile = configFile + '.bak';
+        try {
+          fs.copyFileSync(configFile, backupFile);
+          this.logger.debug(`Backed up config file to ${backupFile}`);
+        } catch (backupErr) {
+          this.logger.error(`Failed to backup config file: ${backupErr}`);
+        }
+      }
+
+      fs.writeFile(configFile as string, newContent, (err) => {
+        if (err) {
+          this.logger.error(`Failed to write config file: ${err}`);
+          vscode.window.showErrorMessage(`WakaTime: Failed to write config file: ${err}`);
+        }
       });
     });
   }
