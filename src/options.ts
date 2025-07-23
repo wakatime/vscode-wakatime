@@ -248,6 +248,7 @@ export class Options {
           vscode.window.showErrorMessage(
             `WakaTime API Key conflict. Your ~/.wakatime.cfg key doesn't match your ${from} key.`,
           );
+          return this.cache.api_key;
         }
         this.cache.api_key = apiKey;
       }
