@@ -544,6 +544,8 @@ export class WakaTime {
       payload['category'] = 'ai coding';
     } else if (Utils.isPullRequest(doc.uri)) {
       payload['category'] = 'code reviewing';
+    } else {
+      payload['category'] = 'coding';
     }
 
     this.logger.debug(`Sending heartbeat: ${JSON.stringify(payload)}`);

@@ -629,6 +629,8 @@ export class WakaTime {
       args.push('--category', 'ai coding');
     } else if (Utils.isPullRequest(doc.uri)) {
       args.push('--category', 'code reviewing');
+    } else {
+      args.push('--category', 'coding');
     }
 
     if (this.isMetricsEnabled) args.push('--metrics');
