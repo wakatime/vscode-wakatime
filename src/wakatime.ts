@@ -4,7 +4,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { AI_RECENT_PASTES_TIME_MS, COMMAND_DASHBOARD, LogLevel } from './constants';
+import {
+  AI_RECENT_PASTES_TIME_MS,
+  COMMAND_DASHBOARD,
+  LogLevel,
+  SEND_BUFFER_SECONDS,
+} from './constants';
 import { Options, Setting } from './options';
 
 import { Dependencies } from './dependencies';
@@ -19,6 +24,19 @@ interface FileSelection {
 
 interface FileSelectionMap {
   [key: string]: FileSelection;
+}
+
+interface Heartbeat {
+  time: number;
+  entity: string;
+  is_write: boolean;
+  lineno: number;
+  cursorpos: number;
+  lines_in_file: number;
+  alternate_project?: string;
+  project_folder?: string;
+  category?: 'debugging' | 'ai coding' | 'building' | 'code reviewing';
+  is_unsaved_entity?: boolean;
 }
 
 export class WakaTime {
@@ -59,6 +77,8 @@ export class WakaTime {
   private resourcesLocation: string;
   private lastApiKeyPrompted: number = 0;
   private isMetricsEnabled: boolean = false;
+  private heartbeats: Heartbeat[] = [];
+  private lastSent: number = 0;
 
   constructor(extensionPath: string, logger: Logger) {
     this.extensionPath = extensionPath;
@@ -97,6 +117,7 @@ export class WakaTime {
   }
 
   public dispose() {
+    this.sendHeartbeats();
     this.statusBar?.dispose();
     this.statusBarTeamYou?.dispose();
     this.statusBarTeamOther?.dispose();
@@ -520,6 +541,10 @@ export class WakaTime {
   }
 
   private onEvent(isWrite: boolean): void {
+    if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
+      this.sendHeartbeats();
+    }
+
     clearTimeout(this.debounceTimeoutId);
     this.debounceTimeoutId = setTimeout(() => {
       if (this.disabled) return;
@@ -543,7 +568,7 @@ export class WakaTime {
               this.lastCompile !== this.isCompiling ||
               this.lastAICodeGenerating !== this.isAICodeGenerating
             ) {
-              this.sendHeartbeat(
+              this.appendHeartbeat(
                 doc,
                 time,
                 editor.selection.start,
@@ -564,32 +589,7 @@ export class WakaTime {
     }, this.debounceMs);
   }
 
-  private async sendHeartbeat(
-    doc: vscode.TextDocument,
-    time: number,
-    selection: vscode.Position,
-    isWrite: boolean,
-    isCompiling: boolean,
-    isDebugging: boolean,
-    isAICoding: boolean,
-  ): Promise<void> {
-    const apiKey = await this.options.getApiKey();
-    if (apiKey) {
-      await this._sendHeartbeat(
-        doc,
-        time,
-        selection,
-        isWrite,
-        isCompiling,
-        isDebugging,
-        isAICoding,
-      );
-    } else {
-      await this.promptForApiKey();
-    }
-  }
-
-  private async _sendHeartbeat(
+  private async appendHeartbeat(
     doc: vscode.TextDocument,
     time: number,
     selection: vscode.Position,
@@ -610,25 +610,75 @@ export class WakaTime {
     // prevent sending the same heartbeat (https://github.com/wakatime/vscode-wakatime/issues/163)
     if (isWrite && this.isDuplicateHeartbeat(file, time, selection)) return;
 
+    const now = Date.now();
+
+    const heartbeat: Heartbeat = {
+      entity: file,
+      time: now / 1000,
+      is_write: isWrite,
+      lineno: selection.line + 1,
+      cursorpos: selection.character + 1,
+      lines_in_file: doc.lineCount,
+    };
+
+    if (isDebugging) {
+      heartbeat.category = 'debugging';
+    } else if (isCompiling) {
+      heartbeat.category = 'building';
+    } else if (isAICoding) {
+      heartbeat.category = 'ai coding';
+    } else if (Utils.isPullRequest(doc.uri)) {
+      heartbeat.category = 'code reviewing';
+    }
+
+    const project = this.getProjectName(doc.uri);
+    if (project) heartbeat.alternate_project = project;
+
+    const folder = this.getProjectFolder(doc.uri);
+    if (folder) heartbeat.project_folder = folder;
+
+    if (doc.isUntitled) heartbeat.is_unsaved_entity = true;
+
+    this.logger.debug(`Appending heartbeat to local buffer: ${JSON.stringify(heartbeat, null, 2)}`);
+    this.heartbeats.push(heartbeat);
+
+    if (now - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
+      await this.sendHeartbeats();
+    }
+  }
+
+  private async sendHeartbeats(): Promise<void> {
+    const apiKey = await this.options.getApiKey();
+    if (apiKey) {
+      await this._sendHeartbeats();
+    } else {
+      await this.promptForApiKey();
+    }
+  }
+
+  private async _sendHeartbeats(): Promise<void> {
+    if (!this.dependencies.isCliInstalled()) return;
+
+    const heartbeat = this.heartbeats.shift();
+    if (!heartbeat) return;
+
+    this.lastSent = Date.now();
+
     let args: string[] = [];
 
-    args.push('--entity', Utils.quote(file));
+    args.push('--entity', Utils.quote(heartbeat.entity));
+
+    args.push('--time', String(heartbeat.time));
 
     let user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     args.push('--plugin', Utils.quote(user_agent));
 
-    args.push('--lineno', String(selection.line + 1));
-    args.push('--cursorpos', String(selection.character + 1));
-    args.push('--lines-in-file', String(doc.lineCount));
-    if (isDebugging) {
-      args.push('--category', 'debugging');
-    } else if (isCompiling) {
-      args.push('--category', 'building');
-    } else if (isAICoding) {
-      args.push('--category', 'ai coding');
-    } else if (Utils.isPullRequest(doc.uri)) {
-      args.push('--category', 'code reviewing');
+    args.push('--lineno', String(heartbeat.lineno));
+    args.push('--cursorpos', String(heartbeat.cursorpos));
+    args.push('--lines-in-file', String(heartbeat.lines_in_file));
+    if (heartbeat.category) {
+      args.push('--category', heartbeat.category);
     }
 
     if (this.isMetricsEnabled) args.push('--metrics');
@@ -639,13 +689,15 @@ export class WakaTime {
     const apiUrl = await this.options.getApiUrl();
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
-    const project = this.getProjectName(doc.uri);
-    if (project) args.push('--alternate-project', Utils.quote(project));
+    if (heartbeat.alternate_project) {
+      args.push('--alternate-project', Utils.quote(heartbeat.alternate_project));
+    }
 
-    const folder = this.getProjectFolder(doc.uri);
-    if (folder) args.push('--project-folder', Utils.quote(folder));
+    if (heartbeat.project_folder) {
+      args.push('--project-folder', Utils.quote(heartbeat.project_folder));
+    }
 
-    if (isWrite) args.push('--write');
+    if (heartbeat.is_write) args.push('--write');
 
     if (Desktop.isWindows() || Desktop.isPortable()) {
       args.push(
@@ -656,11 +708,14 @@ export class WakaTime {
       );
     }
 
-    if (doc.isUntitled) args.push('--is-unsaved-entity');
+    if (heartbeat.is_unsaved_entity) args.push('--is-unsaved-entity');
+
+    const extraHeartbeats = this.getExtraHeartbeats();
+    if (extraHeartbeats.length > 0) args.push('--extra-heartbeats');
 
     const binary = this.dependencies.getCliLocation();
     this.logger.debug(`Sending heartbeat: ${Utils.formatArguments(binary, args)}`);
-    const options = Desktop.buildOptions();
+    const options = Desktop.buildOptions(extraHeartbeats.length > 0);
     let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
@@ -668,6 +723,17 @@ export class WakaTime {
         this.logger.error(error.toString());
       }
     });
+
+    // send any extra heartbeats
+    if (proc.stdin) {
+      proc.stdin.write(JSON.stringify(extraHeartbeats));
+      proc.stdin.write('\n');
+      proc.stdin.end();
+    } else if (extraHeartbeats.length > 0) {
+      this.logger.error('Unable to set stdio[0] to pipe');
+      this.heartbeats.push(...extraHeartbeats);
+    }
+
     proc.on('close', async (code, _signal) => {
       if (code == 0) {
         if (this.showStatusBar) this.getCodingActivity();
@@ -710,6 +776,15 @@ export class WakaTime {
         this.logger.error(error_msg);
       }
     });
+  }
+
+  private getExtraHeartbeats() {
+    const heartbeats: Heartbeat[] = [];
+    while (true) {
+      const h = this.heartbeats.shift();
+      if (!h) return heartbeats;
+      heartbeats.push(h);
+    }
   }
 
   private async getCodingActivity() {

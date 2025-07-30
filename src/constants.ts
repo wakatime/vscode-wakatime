@@ -17,3 +17,4 @@ export enum LogLevel {
 
 export const AI_RECENT_PASTES_TIME_MS = 500;
 export const TIME_BETWEEN_HEARTBEATS_MS = 120000;
+export const SEND_BUFFER_SECONDS = 30;
