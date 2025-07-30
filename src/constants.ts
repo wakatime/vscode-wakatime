@@ -18,3 +18,18 @@ export enum LogLevel {
 export const AI_RECENT_PASTES_TIME_MS = 500;
 export const TIME_BETWEEN_HEARTBEATS_MS = 120000;
 export const SEND_BUFFER_SECONDS = 30;
+
+export interface Heartbeat {
+  time: number;
+  entity: string;
+  is_write: boolean;
+  lineno: number;
+  cursorpos: number;
+  lines_in_file: number;
+  alternate_project?: string;
+  project_folder?: string;
+  project_root_count?: number;
+  language?: string;
+  category?: 'debugging' | 'ai coding' | 'building' | 'code reviewing';
+  is_unsaved_entity?: boolean;
+}

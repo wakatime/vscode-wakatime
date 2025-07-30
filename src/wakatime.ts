@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import {
   AI_RECENT_PASTES_TIME_MS,
   COMMAND_DASHBOARD,
+  Heartbeat,
   LogLevel,
   SEND_BUFFER_SECONDS,
 } from './constants';
@@ -24,19 +25,6 @@ interface FileSelection {
 
 interface FileSelectionMap {
   [key: string]: FileSelection;
-}
-
-interface Heartbeat {
-  time: number;
-  entity: string;
-  is_write: boolean;
-  lineno: number;
-  cursorpos: number;
-  lines_in_file: number;
-  alternate_project?: string;
-  project_folder?: string;
-  category?: 'debugging' | 'ai coding' | 'building' | 'code reviewing';
-  is_unsaved_entity?: boolean;
 }
 
 export class WakaTime {
@@ -544,45 +532,45 @@ export class WakaTime {
     if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
       this.sendHeartbeats();
     }
-
     clearTimeout(this.debounceTimeoutId);
     this.debounceTimeoutId = setTimeout(() => {
       if (this.disabled) return;
-      let editor = vscode.window.activeTextEditor;
+      const editor = vscode.window.activeTextEditor;
       if (editor) {
-        let doc = editor.document;
+        const doc = editor.document;
         if (doc) {
-          let file: string = doc.fileName;
-          if (file) {
-            if (this.currentlyFocusedFile !== file) {
-              this.updateTeamStatusBarFromJson();
-              this.updateTeamStatusBar(doc);
-            }
+          const file = Utils.getFocusedFile(doc);
+          if (!file) {
+            return;
+          }
+          if (this.currentlyFocusedFile !== file) {
+            this.updateTeamStatusBarFromJson();
+            this.updateTeamStatusBar(doc);
+          }
 
-            let time: number = Date.now();
-            if (
-              isWrite ||
-              Utils.enoughTimePassed(this.lastHeartbeat, time) ||
-              this.lastFile !== file ||
-              this.lastDebug !== this.isDebugging ||
-              this.lastCompile !== this.isCompiling ||
-              this.lastAICodeGenerating !== this.isAICodeGenerating
-            ) {
-              this.appendHeartbeat(
-                doc,
-                time,
-                editor.selection.start,
-                isWrite,
-                this.isCompiling,
-                this.isDebugging,
-                this.isAICodeGenerating,
-              );
-              this.lastFile = file;
-              this.lastHeartbeat = time;
-              this.lastDebug = this.isDebugging;
-              this.lastCompile = this.isCompiling;
-              this.lastAICodeGenerating = this.isAICodeGenerating;
-            }
+          const time: number = Date.now();
+          if (
+            isWrite ||
+            Utils.enoughTimePassed(this.lastHeartbeat, time) ||
+            this.lastFile !== file ||
+            this.lastDebug !== this.isDebugging ||
+            this.lastCompile !== this.isCompiling ||
+            this.lastAICodeGenerating !== this.isAICodeGenerating
+          ) {
+            this.appendHeartbeat(
+              doc,
+              time,
+              editor.selection.start,
+              isWrite,
+              this.isCompiling,
+              this.isDebugging,
+              this.isAICodeGenerating,
+            );
+            this.lastFile = file;
+            this.lastHeartbeat = time;
+            this.lastDebug = this.isDebugging;
+            this.lastCompile = this.isCompiling;
+            this.lastAICodeGenerating = this.isAICodeGenerating;
           }
         }
       }
@@ -600,12 +588,8 @@ export class WakaTime {
   ): Promise<void> {
     if (!this.dependencies.isCliInstalled()) return;
 
-    let file = doc.fileName;
-    if (Utils.isRemoteUri(doc.uri)) {
-      file = `${doc.uri.authority}${doc.uri.path}`;
-      file = file.replace('ssh-remote+', 'ssh://');
-      // TODO: how to support 'dev-container', 'attached-container', 'wsl', and 'codespaces' schemes?
-    }
+    const file = Utils.getFocusedFile(doc);
+    if (!file) return;
 
     // prevent sending the same heartbeat (https://github.com/wakatime/vscode-wakatime/issues/163)
     if (isWrite && this.isDuplicateHeartbeat(file, time, selection)) return;
@@ -905,11 +889,9 @@ export class WakaTime {
       if (!doc) return;
     }
 
-    let file = doc.fileName;
-    if (Utils.isRemoteUri(doc.uri)) {
-      file = `${doc.uri.authority}${doc.uri.path}`;
-      file = file.replace('ssh-remote+', 'ssh://');
-      // TODO: how to support 'dev-container', 'attached-container', 'wsl', and 'codespaces' schemes?
+    const file = Utils.getFocusedFile(doc);
+    if (!file) {
+      return;
     }
 
     this.currentlyFocusedFile = file;

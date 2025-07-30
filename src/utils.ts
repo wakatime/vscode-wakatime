@@ -140,6 +140,18 @@ export class Utils {
     return e.contentChanges.length === 1 && e.contentChanges?.[0].text.trim().length > 2;
   }
 
+  public static getFocusedFile(document?: vscode.TextDocument): string | undefined {
+    const doc = document ?? vscode.window.activeTextEditor?.document;
+    if (doc) {
+      const file = doc.fileName;
+      if (Utils.isRemoteUri(doc.uri)) {
+        return `${doc.uri.authority}${doc.uri.path}`.replace('ssh-remote+', 'ssh://');
+        // TODO: how to support 'dev-container', 'attached-container', 'wsl', and 'codespaces' schemes?
+      }
+      return file;
+    }
+  }
+
   public static isPossibleHumanCodeInsert(e: vscode.TextDocumentChangeEvent): boolean {
     if (e.contentChanges.length !== 1) return false;
     if (
