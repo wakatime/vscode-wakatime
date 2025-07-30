@@ -68,7 +68,7 @@ export class WakaTime {
       this.logger.setLevel(LogLevel.DEBUG);
     }
 
-    let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
+    const extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
     this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
     this.agentName = Utils.getEditorName();
 
@@ -187,7 +187,7 @@ export class WakaTime {
   public promptForApiKey(hidden: boolean = true): void {
     let defaultVal: string = this.config.get('wakatime.apiKey') || '';
     if (Utils.apiKeyInvalid(defaultVal)) defaultVal = '';
-    let promptOptions = {
+    const promptOptions = {
       prompt: 'WakaTime Api Key',
       placeHolder: 'Enter your api key from https://wakatime.com/api-key',
       value: defaultVal,
@@ -197,7 +197,7 @@ export class WakaTime {
     };
     vscode.window.showInputBox(promptOptions).then((val) => {
       if (val != undefined) {
-        let invalid = Utils.apiKeyInvalid(val);
+        const invalid = Utils.apiKeyInvalid(val);
         if (!invalid) this.config.update('wakatime.apiKey', val);
         else vscode.window.setStatusBarMessage(invalid);
       } else vscode.window.setStatusBarMessage('WakaTime api key not provided');
@@ -206,7 +206,7 @@ export class WakaTime {
 
   public promptForApiUrl(): void {
     const defaultVal: string = this.config.get('wakatime.apiUrl') || '';
-    let promptOptions = {
+    const promptOptions = {
       prompt: 'WakaTime Api Url (Defaults to https://api.wakatime.com/api/v1)',
       placeHolder: 'https://api.wakatime.com/api/v1',
       value: defaultVal,
@@ -222,8 +222,8 @@ export class WakaTime {
   public promptForDebug(): void {
     let defaultVal: string = this.config.get('wakatime.debug') || '';
     if (!defaultVal || defaultVal !== 'true') defaultVal = 'false';
-    let items: string[] = ['true', 'false'];
-    let promptOptions = {
+    const items: string[] = ['true', 'false'];
+    const promptOptions = {
       placeHolder: `true or false (current value \"${defaultVal}\")`,
       value: defaultVal,
       ignoreFocusOut: true,
@@ -244,9 +244,9 @@ export class WakaTime {
     const previousValue = this.disabled;
     let currentVal = this.config.get('wakatime.disabled');
     if (!currentVal || currentVal !== 'true') currentVal = 'false';
-    let items: string[] = ['disable', 'enable'];
+    const items: string[] = ['disable', 'enable'];
     const helperText = currentVal === 'true' ? 'disabled' : 'enabled';
-    let promptOptions = {
+    const promptOptions = {
       placeHolder: `disable or enable (extension is currently "${helperText}")`,
       ignoreFocusOut: true,
     };
@@ -269,8 +269,8 @@ export class WakaTime {
   public promptStatusBarIcon(): void {
     let defaultVal: string = this.config.get('wakatime.status_bar_enabled') || '';
     if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
-    let items: string[] = ['true', 'false'];
-    let promptOptions = {
+    const items: string[] = ['true', 'false'];
+    const promptOptions = {
       placeHolder: `true or false (current value \"${defaultVal}\")`,
       value: defaultVal,
       ignoreFocusOut: true,
@@ -286,8 +286,8 @@ export class WakaTime {
   public promptStatusBarCodingActivity(): void {
     let defaultVal: string = this.config.get('wakatime.status_bar_coding_activity') || '';
     if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
-    let items: string[] = ['true', 'false'];
-    let promptOptions = {
+    const items: string[] = ['true', 'false'];
+    const promptOptions = {
       placeHolder: `true or false (current value \"${defaultVal}\")`,
       value: defaultVal,
       ignoreFocusOut: true,
@@ -342,7 +342,7 @@ export class WakaTime {
 
   private setupEventListeners(): void {
     // subscribe to selection change and editor activation events
-    let subscriptions: vscode.Disposable[] = [];
+    const subscriptions: vscode.Disposable[] = [];
     vscode.window.onDidChangeTextEditorSelection(this.onChangeSelection, this, subscriptions);
     vscode.workspace.onDidChangeTextDocument(this.onChangeTextDocument, this, subscriptions);
     vscode.window.onDidChangeActiveTextEditor(this.onChangeTab, this, subscriptions);
@@ -594,20 +594,20 @@ export class WakaTime {
       } else {
         this.logger.warn(`API Error ${response.status}: ${parsedJSON}`);
         if (response && response.status == 401) {
-          let error_msg = 'Invalid WakaTime Api Key';
+          const error_msg = 'Invalid WakaTime Api Key';
           if (this.showStatusBar) {
             this.updateStatusBarText('WakaTime Error');
             this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
           }
           this.logger.error(error_msg);
-          let now: number = Date.now();
+          const now: number = Date.now();
           if (this.lastApiKeyPrompted < now - 86400000) {
             // only prompt once per day
             this.promptForApiKey(false);
             this.lastApiKeyPrompted = now;
           }
         } else {
-          let error_msg = `Error sending heartbeats (${response.status}); Check your browser console for more details.`;
+          const error_msg = `Error sending heartbeats (${response.status}); Check your browser console for more details.`;
           if (this.showStatusBar) {
             this.updateStatusBarText('WakaTime Error');
             this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
@@ -617,7 +617,7 @@ export class WakaTime {
       }
     } catch (ex) {
       this.logger.warn(`API Error: ${ex}`);
-      let error_msg = `Error sending heartbeats; Check your browser console for more details.`;
+      const error_msg = `Error sending heartbeats; Check your browser console for more details.`;
       if (this.showStatusBar) {
         this.updateStatusBarText('WakaTime Error');
         this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
@@ -685,14 +685,14 @@ export class WakaTime {
       } else {
         this.logger.warn(`API Error ${response.status}: ${parsedJSON}`);
         if (response && response.status == 401) {
-          let error_msg = 'Invalid WakaTime Api Key';
+          const error_msg = 'Invalid WakaTime Api Key';
           if (this.showStatusBar) {
             this.updateStatusBarText('WakaTime Error');
             this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
           }
           this.logger.error(error_msg);
         } else {
-          let error_msg = `Error fetching code stats for status bar (${response.status}); Check your browser console for more details.`;
+          const error_msg = `Error fetching code stats for status bar (${response.status}); Check your browser console for more details.`;
           this.logger.debug(error_msg);
         }
       }
@@ -786,7 +786,7 @@ export class WakaTime {
         if (response && response.status == 401) {
           this.logger.error('Invalid WakaTime Api Key');
         } else {
-          let error_msg = `Error fetching devs for currently focused file (${response.status}); Check your browser console for more details.`;
+          const error_msg = `Error fetching devs for currently focused file (${response.status}); Check your browser console for more details.`;
           this.logger.debug(error_msg);
         }
       }
@@ -828,8 +828,8 @@ export class WakaTime {
 
   private isDuplicateHeartbeat(file: string, time: number, selection: vscode.Position): boolean {
     let duplicate = false;
-    let minutes = 30;
-    let milliseconds = minutes * 60000;
+    const minutes = 30;
+    const milliseconds = minutes * 60000;
     if (
       this.dedupe[file] &&
       this.dedupe[file].lastHeartbeatAt + milliseconds < time &&

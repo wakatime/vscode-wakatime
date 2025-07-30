@@ -87,7 +87,7 @@ export class WakaTime {
 
         this.dependencies = new Dependencies(this.options, this.logger, this.resourcesLocation);
 
-        let extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
+        const extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
         this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
         this.agentName = Utils.getEditorName();
 
@@ -235,7 +235,7 @@ export class WakaTime {
   public async promptForApiKey(hidden: boolean = true): Promise<void> {
     let defaultVal = await this.options.getApiKey();
     if (Utils.apiKeyInvalid(defaultVal ?? undefined)) defaultVal = '';
-    let promptOptions = {
+    const promptOptions = {
       prompt: 'WakaTime Api Key',
       placeHolder: 'Enter your api key from https://wakatime.com/api-key',
       value: defaultVal!,
@@ -245,7 +245,7 @@ export class WakaTime {
     };
     vscode.window.showInputBox(promptOptions).then((val) => {
       if (val != undefined) {
-        let invalid = Utils.apiKeyInvalid(val);
+        const invalid = Utils.apiKeyInvalid(val);
         if (!invalid) {
           this.options.setSetting('settings', 'api_key', val, false);
         } else vscode.window.setStatusBarMessage(invalid);
@@ -255,7 +255,7 @@ export class WakaTime {
 
   public async promptForApiUrl(): Promise<void> {
     const apiUrl = await this.options.getApiUrl(true);
-    let promptOptions = {
+    const promptOptions = {
       prompt: 'WakaTime Api Url (Defaults to https://api.wakatime.com/api/v1)',
       placeHolder: 'https://api.wakatime.com/api/v1',
       value: apiUrl,
@@ -272,7 +272,7 @@ export class WakaTime {
     this.options.getSetting('settings', 'proxy', false, (proxy: Setting) => {
       let defaultVal = proxy.value;
       if (!defaultVal) defaultVal = '';
-      let promptOptions = {
+      const promptOptions = {
         prompt: 'WakaTime Proxy',
         placeHolder: `Proxy format is https://user:pass@host:port (current value \"${defaultVal}\")`,
         value: defaultVal,
@@ -289,8 +289,8 @@ export class WakaTime {
     this.options.getSetting('settings', 'debug', false, (debug: Setting) => {
       let defaultVal = debug.value;
       if (!defaultVal || defaultVal !== 'true') defaultVal = 'false';
-      let items: string[] = ['true', 'false'];
-      let promptOptions = {
+      const items: string[] = ['true', 'false'];
+      const promptOptions = {
         placeHolder: `true or false (current value \"${defaultVal}\")`,
         value: defaultVal,
         ignoreFocusOut: true,
@@ -313,9 +313,9 @@ export class WakaTime {
       const previousValue = this.disabled;
       let currentVal = setting.value;
       if (!currentVal || currentVal !== 'true') currentVal = 'false';
-      let items: string[] = ['disable', 'enable'];
+      const items: string[] = ['disable', 'enable'];
       const helperText = currentVal === 'true' ? 'disabled' : 'enabled';
-      let promptOptions = {
+      const promptOptions = {
         placeHolder: `disable or enable (extension is currently "${helperText}")`,
         ignoreFocusOut: true,
       };
@@ -340,8 +340,8 @@ export class WakaTime {
     this.options.getSetting('settings', 'status_bar_enabled', false, (setting: Setting) => {
       let defaultVal = setting.value;
       if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
-      let items: string[] = ['true', 'false'];
-      let promptOptions = {
+      const items: string[] = ['true', 'false'];
+      const promptOptions = {
         placeHolder: `true or false (current value \"${defaultVal}\")`,
         value: defaultVal,
         ignoreFocusOut: true,
@@ -359,8 +359,8 @@ export class WakaTime {
     this.options.getSetting('settings', 'status_bar_coding_activity', false, (setting: Setting) => {
       let defaultVal = setting.value;
       if (!defaultVal || defaultVal !== 'false') defaultVal = 'true';
-      let items: string[] = ['true', 'false'];
-      let promptOptions = {
+      const items: string[] = ['true', 'false'];
+      const promptOptions = {
         placeHolder: `true or false (current value \"${defaultVal}\")`,
         value: defaultVal,
         ignoreFocusOut: true,
@@ -390,17 +390,17 @@ export class WakaTime {
   }
 
   public openConfigFile(): void {
-    let path = this.options.getConfigFile(false);
+    const path = this.options.getConfigFile(false);
     if (path) {
-      let uri = vscode.Uri.file(path);
+      const uri = vscode.Uri.file(path);
       vscode.window.showTextDocument(uri);
     }
   }
 
   public openLogFile(): void {
-    let path = this.options.getLogFile();
+    const path = this.options.getLogFile();
     if (path) {
-      let uri = vscode.Uri.file(path);
+      const uri = vscode.Uri.file(path);
       vscode.window.showTextDocument(uri);
     }
   }
@@ -427,7 +427,7 @@ export class WakaTime {
 
   private setupEventListeners(): void {
     // subscribe to selection change and editor activation events
-    let subscriptions: vscode.Disposable[] = [];
+    const subscriptions: vscode.Disposable[] = [];
     vscode.window.onDidChangeTextEditorSelection(this.onChangeSelection, this, subscriptions);
     vscode.workspace.onDidChangeTextDocument(this.onChangeTextDocument, this, subscriptions);
     vscode.window.onDidChangeActiveTextEditor(this.onChangeTab, this, subscriptions);
@@ -648,13 +648,13 @@ export class WakaTime {
 
     this.lastSent = Date.now();
 
-    let args: string[] = [];
+    const args: string[] = [];
 
     args.push('--entity', Utils.quote(heartbeat.entity));
 
     args.push('--time', String(heartbeat.time));
 
-    let user_agent =
+    const user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     args.push('--plugin', Utils.quote(user_agent));
 
@@ -700,7 +700,7 @@ export class WakaTime {
     const binary = this.dependencies.getCliLocation();
     this.logger.debug(`Sending heartbeat: ${Utils.formatArguments(binary, args)}`);
     const options = Desktop.buildOptions(extraHeartbeats.length > 0);
-    let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
+    const proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
       if (error != null) {
         if (stderr && stderr.toString() != '') this.logger.error(stderr.toString());
         if (stdout && stdout.toString() != '') this.logger.error(stdout.toString());
@@ -732,27 +732,27 @@ export class WakaTime {
           `Working offline (${code}); Check your ${this.options.getLogFile()} file for more details`,
         );
       } else if (code == 103) {
-        let error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
+        const error_msg = `Config parsing error (103); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
           this.updateStatusBarText('WakaTime Error');
           this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
         }
         this.logger.error(error_msg);
       } else if (code == 104) {
-        let error_msg = 'Invalid Api Key (104); Make sure your Api Key is correct!';
+        const error_msg = 'Invalid Api Key (104); Make sure your Api Key is correct!';
         if (this.showStatusBar) {
           this.updateStatusBarText('WakaTime Error');
           this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
         }
         this.logger.error(error_msg);
-        let now: number = Date.now();
+        const now: number = Date.now();
         if (this.lastApiKeyPrompted < now - 86400000) {
           // only prompt once per day
           await this.promptForApiKey(false);
           this.lastApiKeyPrompted = now;
         }
       } else {
-        let error_msg = `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
+        const error_msg = `Unknown Error (${code}); Check your ${this.options.getLogFile()} file for more details`;
         if (this.showStatusBar) {
           this.updateStatusBarText('WakaTime Error');
           this.updateStatusBarTooltip(`WakaTime: ${error_msg}`);
@@ -788,9 +788,9 @@ export class WakaTime {
   private async _getCodingActivity() {
     if (!this.dependencies.isCliInstalled()) return;
 
-    let user_agent =
+    const user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-    let args = ['--today', '--output', 'json', '--plugin', Utils.quote(user_agent)];
+    const args = ['--today', '--output', 'json', '--plugin', Utils.quote(user_agent)];
 
     if (this.isMetricsEnabled) args.push('--metrics');
 
@@ -816,7 +816,7 @@ export class WakaTime {
     const options = Desktop.buildOptions();
 
     try {
-      let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
+      const proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
         if (error != null) {
           if (stderr && stderr.toString() != '') this.logger.debug(stderr.toString());
           if (stdout && stdout.toString() != '') this.logger.debug(stdout.toString());
@@ -902,9 +902,9 @@ export class WakaTime {
       return;
     }
 
-    let user_agent =
+    const user_agent =
       this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-    let args = ['--output', 'json', '--plugin', Utils.quote(user_agent)];
+    const args = ['--output', 'json', '--plugin', Utils.quote(user_agent)];
 
     args.push('--file-experts', Utils.quote(file));
 
@@ -940,7 +940,7 @@ export class WakaTime {
     const options = Desktop.buildOptions();
 
     try {
-      let proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
+      const proc = child_process.execFile(binary, args, options, (error, stdout, stderr) => {
         if (error != null) {
           if (stderr && stderr.toString() != '') this.logger.debug(stderr.toString());
           if (stdout && stdout.toString() != '') this.logger.debug(stdout.toString());
@@ -1023,8 +1023,8 @@ export class WakaTime {
 
   private isDuplicateHeartbeat(file: string, time: number, selection: vscode.Position): boolean {
     let duplicate = false;
-    let minutes = 30;
-    let milliseconds = minutes * 60000;
+    const minutes = 30;
+    const milliseconds = minutes * 60000;
     if (
       this.dedupe[file] &&
       this.dedupe[file].lastHeartbeatAt + milliseconds < time &&
