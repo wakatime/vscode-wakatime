@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 25.2.1 (2025-07-30)
+
+- Buffer heartbeats and only send to API once every 30 seconds.
+
 ## 25.2.0 (2025-07-20)
 
 - Improve AI Coding detection.
