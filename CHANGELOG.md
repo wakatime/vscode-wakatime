@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 25.2.2 (2025-07-30)
+
+- Buffer heartbeats and use bulk api endpoint on web extension.
+
 ## 25.2.1 (2025-07-30)
 
 - Buffer heartbeats and only send to API once every 30 seconds.
