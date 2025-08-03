@@ -16,16 +16,7 @@ import { Options, Setting } from './options';
 import { Dependencies } from './dependencies';
 import { Desktop } from './desktop';
 import { Logger } from './logger';
-import { Utils } from './utils';
-
-interface FileSelection {
-  selection: vscode.Position;
-  lastHeartbeatAt: number;
-}
-
-interface FileSelectionMap {
-  [key: string]: FileSelection;
-}
+import { FileSelectionMap, LineCounts, Lines, Utils } from './utils';
 
 export class WakaTime {
   private agentName: string;
@@ -40,9 +31,9 @@ export class WakaTime {
   private lastCompile: boolean = false;
   private lastAICodeGenerating: boolean = false;
   private dedupe: FileSelectionMap = {};
-  private debounceTimeoutId: any = null;
+  private debounceId: any = null;
   private debounceMs = 50;
-  private AIDebounceTimeoutId: any = null;
+  private AIDebounceId: any = null;
   private AIdebounceMs = 1000;
   private AIdebounceCount = 0;
   private AIrecentPastes: number[] = [];
@@ -67,6 +58,8 @@ export class WakaTime {
   private isMetricsEnabled: boolean = false;
   private heartbeats: Heartbeat[] = [];
   private lastSent: number = 0;
+  private linesInFiles: Lines = {};
+  private lineChanges: LineCounts = { ai: {}, human: {} };
 
   constructor(extensionPath: string, logger: Logger) {
     this.extensionPath = extensionPath;
@@ -449,16 +442,19 @@ export class WakaTime {
   }
 
   private onDebuggingChanged(): void {
+    this.updateLineNumbers();
     this.onEvent(false);
   }
 
   private onDidStartDebugSession(): void {
     this.isDebugging = true;
+    this.updateLineNumbers();
     this.onEvent(false);
   }
 
   private onDidTerminateDebugSession(): void {
     this.isDebugging = false;
+    this.updateLineNumbers();
     this.onEvent(false);
   }
 
@@ -466,11 +462,13 @@ export class WakaTime {
     if (e.execution.task.isBackground) return;
     if (e.execution.task.detail && e.execution.task.detail.indexOf('watch') !== -1) return;
     this.isCompiling = true;
+    this.updateLineNumbers();
     this.onEvent(false);
   }
 
   private onDidEndTask(): void {
     this.isCompiling = false;
+    this.updateLineNumbers();
     this.onEvent(false);
   }
 
@@ -479,6 +477,7 @@ export class WakaTime {
     if (Utils.isAIChatSidebar(e.textEditor?.document?.uri)) {
       this.isAICodeGenerating = true;
     }
+    this.updateLineNumbers();
     this.onEvent(false);
   }
 
@@ -497,8 +496,8 @@ export class WakaTime {
       this.AIrecentPastes = [];
       if (this.isAICodeGenerating) {
         this.AIdebounceCount++;
-        clearTimeout(this.AIDebounceTimeoutId);
-        this.AIDebounceTimeoutId = setTimeout(() => {
+        clearTimeout(this.AIDebounceId);
+        this.AIDebounceId = setTimeout(() => {
           if (this.AIdebounceCount > 1) {
             this.isAICodeGenerating = false;
           }
@@ -506,34 +505,62 @@ export class WakaTime {
       }
     } else if (this.isAICodeGenerating) {
       this.AIdebounceCount = 0;
-      clearTimeout(this.AIDebounceTimeoutId);
+      clearTimeout(this.AIDebounceId);
+      this.updateLineNumbers();
     }
+
     if (!this.isAICodeGenerating) return;
+
     this.onEvent(false);
   }
 
   private onChangeTab(_e: vscode.TextEditor | undefined): void {
+    this.updateLineNumbers();
     this.onEvent(false);
   }
 
   private onSave(_e: vscode.TextDocument | undefined): void {
+    this.updateLineNumbers();
     this.onEvent(true);
   }
 
   private onChangeNotebook(_e: vscode.NotebookDocumentChangeEvent): void {
+    this.updateLineNumbers();
     this.onEvent(false);
   }
 
   private onSaveNotebook(_e: vscode.NotebookDocument | undefined): void {
+    this.updateLineNumbers();
     this.onEvent(true);
+  }
+
+  private updateLineNumbers(): void {
+    const doc = vscode.window.activeTextEditor?.document;
+    if (!doc) return;
+    const file = Utils.getFocusedFile(doc);
+    if (!file) return;
+
+    const current = doc.lineCount;
+    if (this.linesInFiles[file] === undefined) {
+      this.linesInFiles[file] = current;
+    }
+
+    const prev = this.linesInFiles[file] ?? current;
+    const delta = current - prev;
+
+    const changes = this.isAICodeGenerating ? this.lineChanges.ai : this.lineChanges.human;
+    changes[file] = (changes[file] ?? 0) + delta;
+
+    this.linesInFiles[file] = current;
   }
 
   private onEvent(isWrite: boolean): void {
     if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
       this.sendHeartbeats();
     }
-    clearTimeout(this.debounceTimeoutId);
-    this.debounceTimeoutId = setTimeout(() => {
+
+    clearTimeout(this.debounceId);
+    this.debounceId = setTimeout(() => {
       if (this.disabled) return;
       const editor = vscode.window.activeTextEditor;
       if (editor) {
@@ -603,7 +630,11 @@ export class WakaTime {
       lineno: selection.line + 1,
       cursorpos: selection.character + 1,
       lines_in_file: doc.lineCount,
+      ai_line_changes: this.lineChanges.ai[file],
+      human_line_changes: this.lineChanges.human[file],
     };
+
+    this.lineChanges = { ai: {}, human: {} };
 
     if (isDebugging) {
       heartbeat.category = 'debugging';
@@ -663,6 +694,13 @@ export class WakaTime {
     args.push('--lines-in-file', String(heartbeat.lines_in_file));
     if (heartbeat.category) {
       args.push('--category', heartbeat.category);
+    }
+
+    if (heartbeat.ai_line_changes) {
+      args.push('--ai-line-changes', String(heartbeat.ai_line_changes));
+    }
+    if (heartbeat.human_line_changes) {
+      args.push('--human-line-changes', String(heartbeat.human_line_changes));
     }
 
     if (this.isMetricsEnabled) args.push('--metrics');
