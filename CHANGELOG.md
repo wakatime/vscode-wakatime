@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 25.3.0 (2025-08-02)
+
+- Track line additions and deletions by AI vs Human.
+
 ## 25.2.2 (2025-07-30)
 
 - Buffer heartbeats and use bulk api endpoint on web extension.
