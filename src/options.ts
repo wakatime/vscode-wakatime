@@ -138,7 +138,7 @@ export class Options {
       let contents: string[] = [];
       let currentSection = '';
 
-      const found = {};
+      const found: Record<string, boolean> = {};
       let lines = content.split('\n');
       for (var i = 0; i < lines.length; i++) {
         let line = lines[i];
