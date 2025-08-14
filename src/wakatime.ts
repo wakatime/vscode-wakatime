@@ -644,6 +644,8 @@ export class WakaTime {
       heartbeat.category = 'ai coding';
     } else if (Utils.isPullRequest(doc.uri)) {
       heartbeat.category = 'code reviewing';
+    } else if (Utils.isTestFile(doc.fileName)) {
+      heartbeat.category = 'writing tests';
     }
 
     const project = this.getProjectName(doc.uri);

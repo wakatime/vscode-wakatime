@@ -30,7 +30,7 @@ export interface Heartbeat {
   project_folder?: string;
   project_root_count?: number;
   language?: string;
-  category?: 'debugging' | 'ai coding' | 'building' | 'code reviewing';
+  category?: 'debugging' | 'ai coding' | 'building' | 'code reviewing' | 'writing tests';
   ai_line_changes?: number;
   human_line_changes?: number;
   is_unsaved_entity?: boolean;

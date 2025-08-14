@@ -173,6 +173,43 @@ export class Utils {
       return vscode.env.appName.replace(/\s/g, '').toLowerCase();
     }
   }
+
+  public static isTestFile(fileName: string): boolean {
+    const testPatterns = [
+      // Common patterns for test files, can easily be extended later in case I forgot any
+      '.test.',
+      '.tests.',
+      'test.',
+      'tests.',
+      '.spec.',
+      '.specs.',
+      'spec.',
+      'specs.',
+      '.check.',
+      'check.',
+      '.unit.',
+      'unit.',
+      '.integration.',
+      'integration.',
+      '.e2e.',
+      'e2e.',
+      'test_',
+      'tests_',
+      'spec_',
+      'specs_',
+      '_test.',
+      '_tests.',
+      '_spec.',
+      '_specs.',
+      '_check.',
+      '_unit.',
+      '_integration.',
+      '_e2e.',
+    ];
+
+    const fileNameLowercase = fileName.toLowerCase();
+    return testPatterns.some((pattern) => fileNameLowercase.includes(pattern));
+  }
 }
 
 interface FileSelection {
