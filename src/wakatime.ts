@@ -482,17 +482,20 @@ export class WakaTime {
   }
 
   private onChangeTextDocument(e: vscode.TextDocumentChangeEvent): void {
+    const experimentalAIDetectionEnabled = this.options.isExperimentalAIDetectionEnabled();
+
+
     if (Utils.isAIChatSidebar(e.document?.uri)) {
       this.isAICodeGenerating = true;
       this.AIdebounceCount = 0;
-    } else if (Utils.isPossibleAICodeInsert(e)) {
+    } else if (experimentalAIDetectionEnabled && Utils.isPossibleAICodeInsert(e)) {
       const now = Date.now();
       if (this.recentlyAIPasted(now)) {
         this.isAICodeGenerating = true;
         this.AIdebounceCount = 0;
       }
       this.AIrecentPastes.push(now);
-    } else if (Utils.isPossibleHumanCodeInsert(e)) {
+    } else if (!experimentalAIDetectionEnabled || Utils.isPossibleHumanCodeInsert(e)) {
       this.AIrecentPastes = [];
       if (this.isAICodeGenerating) {
         this.AIdebounceCount++;

@@ -124,6 +124,11 @@
           "type": "string",
           "description": "Defaults to https://api.wakatime.com/api/v1.",
           "scope": "application"
+        },
+        "wakatime.experimentalAIDetection": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable experimental AI detection on copy pasting from unknown sources. Using Copilot chat will always count as AI"
         }
       }
     }

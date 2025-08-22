@@ -309,6 +309,12 @@ export class Options {
     return vscode.workspace.getConfiguration().get('wakatime.apiUrl') || '';
   }
 
+  public isExperimentalAIDetectionEnabled(): boolean {
+    return (
+      vscode.workspace.getConfiguration().get<boolean>('wakatime.experimentalAIDetection') ?? true
+    );
+  }
+
   // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
   public getApiKeyFromEnv(): string {
     if (this.cache.api_key_from_env !== undefined) return this.cache.api_key_from_env;
