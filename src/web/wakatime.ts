@@ -43,6 +43,7 @@ export class WakaTime {
   private isCompiling: boolean = false;
   private isDebugging: boolean = false;
   private isAICodeGenerating: boolean = false;
+  private hasAICapabilities: boolean = false;
   private currentlyFocusedFile: string;
   private teamDevsForFileCache = {};
   private lastApiKeyPrompted: number = 0;
@@ -64,6 +65,8 @@ export class WakaTime {
     const extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
     this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
     this.agentName = Utils.getEditorName();
+
+    this.hasAICapabilities = Utils.checkAICapabilities();
 
     this.disabled = this.config.get('wakatime.disabled') === 'true';
     if (this.disabled) {
@@ -399,7 +402,7 @@ export class WakaTime {
       this.AIdebounceCount = 0;
     } else if (Utils.isPossibleAICodeInsert(e)) {
       const now = Date.now();
-      if (this.recentlyAIPasted(now)) {
+      if (this.recentlyAIPasted(now) && this.hasAICapabilities) {
         this.isAICodeGenerating = true;
         this.AIdebounceCount = 0;
       }

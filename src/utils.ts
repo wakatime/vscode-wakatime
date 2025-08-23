@@ -175,6 +175,35 @@ export class Utils {
       return vscode.env.appName.replace(/\s/g, '').toLowerCase();
     }
   }
+
+  public static isAICapableEditor(): boolean {
+    const editorName = vscode.env.appName.toLowerCase();
+    return editorName.includes('cursor') || editorName.includes('windsurf');
+  }
+
+  public static hasAIExtensions(): boolean {
+    const commonAIExtensions = [
+      'anthropic.claude-code',
+      'codeium.codeium',
+      'continue.continue',
+      'github.copilot-chat',
+      'github.copilot',
+      'ms-vscode.vscode-ai-toolkit',
+      'openai.openai-gpt-vscode',
+      'sourcegraph.cody-ai',
+      'supermaven.supermaven',
+      'tabnine.tabnine-vscode',
+    ];
+
+    return commonAIExtensions.some((extensionId) => {
+      const extension = vscode.extensions.getExtension(extensionId);
+      return extension && extension.isActive;
+    });
+  }
+
+  public static checkAICapabilities(): boolean {
+    return this.isAICapableEditor() || this.hasAIExtensions();
+  }
 }
 
 interface FileSelection {
