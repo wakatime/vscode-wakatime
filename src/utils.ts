@@ -133,10 +133,12 @@ export class Utils {
 
   public static isAIChatSidebar(uri: vscode.Uri | undefined): boolean {
     if (!uri) return false;
+    if (uri.fsPath.endsWith('.log')) return false;
     return uri.scheme === 'vscode-chat-code-block';
   }
 
   public static isPossibleAICodeInsert(e: vscode.TextDocumentChangeEvent): boolean {
+    if (e.document.fileName.endsWith('.log')) return false;
     return e.contentChanges.length === 1 && e.contentChanges?.[0].text.trim().length > 2;
   }
 
