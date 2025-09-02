@@ -451,6 +451,7 @@ export class WakaTime {
 
   private onDidStartDebugSession(): void {
     this.isDebugging = true;
+    this.isAICodeGenerating = false;
     this.updateLineNumbers();
     this.onEvent(false);
   }
@@ -465,6 +466,7 @@ export class WakaTime {
     if (e.execution.task.isBackground) return;
     if (e.execution.task.detail && e.execution.task.detail.indexOf('watch') !== -1) return;
     this.isCompiling = true;
+    this.isAICodeGenerating = false;
     this.updateLineNumbers();
     this.onEvent(false);
   }
@@ -518,11 +520,13 @@ export class WakaTime {
   }
 
   private onChangeTab(_e: vscode.TextEditor | undefined): void {
+    this.isAICodeGenerating = false;
     this.updateLineNumbers();
     this.onEvent(false);
   }
 
   private onSave(_e: vscode.TextDocument | undefined): void {
+    this.isAICodeGenerating = false;
     this.updateLineNumbers();
     this.onEvent(true);
   }
@@ -1108,5 +1112,4 @@ export class WakaTime {
     }
     return '';
   }
-
 }
