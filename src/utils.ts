@@ -139,7 +139,13 @@ export class Utils {
 
   public static isPossibleAICodeInsert(e: vscode.TextDocumentChangeEvent): boolean {
     if (e.document.fileName.endsWith('.log')) return false;
-    return e.contentChanges.length === 1 && e.contentChanges?.[0].text.trim().length > 2;
+    if (e.contentChanges.length !== 1) return false;
+
+    const text = e.contentChanges?.[0].text.trim();
+    if (text.length <= 2) return false;
+
+    // inserted text must be 2+ lines or single line 50+ chars long to qualify as AI
+    return (text.match(/[\n\r]/g) || []).length > 2 || text.length > 50;
   }
 
   public static getFocusedFile(document?: vscode.TextDocument): string | undefined {
