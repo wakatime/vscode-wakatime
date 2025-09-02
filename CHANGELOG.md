@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.3.2 (2025-09-02)
+
+- Improve AI coding detection heuristic.
+  [#440](https://github.com/wakatime/vscode-wakatime/issues/440)
+
 ## 25.3.1 (2025-08-23)
 
 - Only allow AI Coding category when an AI extension is installed.
