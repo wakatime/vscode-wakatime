@@ -66,6 +66,9 @@
     "compile:dev": "tsc -p ./",
     "watch": "webpack --mode none --watch",
     "open-in-browser": "vscode-test-web --open-devtools --quality insiders --extensionDevelopmentPath=. .",
+    "publish:major": "vsce publish --allow-star-activation major && npm run publish:web",
+    "publish:minor": "vsce publish --allow-star-activation minor && npm run publish:web",
+    "publish:patch": "vsce publish --allow-star-activation patch && npm run publish:web",
     "publish:web": "npx ovsx publish",
     "test": "npm run compile:dev && node ./node_modules/vscode/bin/test"
   },
