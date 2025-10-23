@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 25.3.3 (2025-10-23)
+
+- Validate api_url setting before using.
+
 ## 25.3.2 (2025-09-02)
 
 - Improve AI coding detection heuristic.
