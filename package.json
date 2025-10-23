@@ -69,7 +69,7 @@
     "publish:major": "vsce publish --allow-star-activation major && npm run publish:web",
     "publish:minor": "vsce publish --allow-star-activation minor && npm run publish:web",
     "publish:patch": "vsce publish --allow-star-activation patch && npm run publish:web",
-    "publish:web": "npx ovsx publish",
+    "publish:web": "npx ovsx publish --allow-star-activation",
     "test": "npm run compile:dev && node ./node_modules/vscode/bin/test"
   },
   "contributes": {
