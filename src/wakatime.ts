@@ -256,6 +256,7 @@ export class WakaTime {
       placeHolder: 'https://api.wakatime.com/api/v1',
       value: apiUrl,
       ignoreFocusOut: true,
+      validateInput: Utils.validateApiUrl.bind(this),
     };
     vscode.window.showInputBox(promptOptions).then((val) => {
       if (val) {

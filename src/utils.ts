@@ -30,6 +30,12 @@ export class Utils {
     return '';
   }
 
+  public static validateApiUrl(url: string): string {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url.trim();
+    return '';
+  }
+
   public static validateProxy(proxy: string): string {
     if (!proxy) return '';
     let re;

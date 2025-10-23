@@ -329,6 +329,9 @@ export class Options {
       return '';
     }
 
+    // people often accidentally enter their API Key into the API Url settings input
+    if (!Utils.validateApiUrl(apiUrl)) apiUrl = '';
+
     if (!apiUrl) {
       try {
         apiUrl = await this.getSettingAsync<string>('settings', 'api_url');
