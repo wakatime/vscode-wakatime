@@ -310,19 +310,19 @@ export class Options {
   }
 
   public getStatusBarAlignment(): vscode.StatusBarAlignment {
-    const align: string = vscode.workspace.getConfiguration().get('wakatime.align') as string
+    const align: string = vscode.workspace.getConfiguration().get('wakatime.align') ?? '';
     switch (align) {
       case 'left':
-        return vscode.StatusBarAlignment.Left
+        return vscode.StatusBarAlignment.Left;
       case 'right':
-        return vscode.StatusBarAlignment.Right
+        return vscode.StatusBarAlignment.Right;
       default:
-        return vscode.StatusBarAlignment.Left
+        return vscode.StatusBarAlignment.Left;
     }
   }
 
   public getStatusBarPriority(): number {
-    const priority = vscode.workspace.getConfiguration().get('wakatime.alignPriority') as number;
+    const priority = vscode.workspace.getConfiguration().get('wakatime.alignPriority');
     return typeof priority === 'number' ? priority : 1;
   }
 

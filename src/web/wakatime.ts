@@ -88,25 +88,28 @@ export class WakaTime {
   public initializeDependencies(): void {
     this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
 
+    const align = this.getStatusBarAlignment();
+    const priority = this.getStatusBarPriority();
+
     this.statusBar = vscode.window.createStatusBarItem(
       'com.wakatime.statusbar',
-      vscode.StatusBarAlignment.Left,
-      3,
+      align,
+      priority + 2,
     );
     this.statusBar.name = 'WakaTime';
     this.statusBar.command = COMMAND_DASHBOARD;
 
     this.statusBarTeamYou = vscode.window.createStatusBarItem(
       'com.wakatime.teamyou',
-      vscode.StatusBarAlignment.Left,
-      2,
+      align,
+      priority + 1,
     );
     this.statusBarTeamYou.name = 'WakaTime Top dev';
 
     this.statusBarTeamOther = vscode.window.createStatusBarItem(
       'com.wakatime.teamother',
-      vscode.StatusBarAlignment.Left,
-      1,
+      align,
+      priority,
     );
     this.statusBarTeamOther.name = 'WakaTime Team Total';
 
@@ -320,6 +323,23 @@ export class WakaTime {
   private hasApiKey(callback: (arg0: boolean) => void): void {
     const apiKey: string = this.config.get('wakatime.apiKey') || '';
     callback(!Utils.apiKeyInvalid(apiKey));
+  }
+
+  private getStatusBarAlignment(): vscode.StatusBarAlignment {
+    const align: string = this.config.get('wakatime.align') ?? '';
+    switch (align) {
+      case 'left':
+        return vscode.StatusBarAlignment.Left;
+      case 'right':
+        return vscode.StatusBarAlignment.Right;
+      default:
+        return vscode.StatusBarAlignment.Left;
+    }
+  }
+
+  private getStatusBarPriority(): number {
+    const priority = this.config.get('wakatime.alignPriority');
+    return typeof priority === 'number' ? priority : 1;
   }
 
   private setStatusBarVisibility(isVisible: boolean): void {
