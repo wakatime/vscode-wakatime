@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 25.4.0 (2025-10-24)
+
+- Ability to customize status bar item position.
+  [#463](https://github.com/wakatime/vscode-wakatime/pull/463)
+
 ## 25.3.3 (2025-10-23)
 
 - Validate api_url setting before using.
