@@ -36,6 +36,15 @@ For example, to hide today's coding activity in your status bar:
 
 Press `⌘ + Shift + P` then set `WakaTime: Status Bar Coding Activity` to `false`.
 
+### Status Bar Alignment
+
+You can customize the position and priority of the WakaTime status bar item:
+
+- **Alignment**: Set `wakatime.align` to `left` or `right` to control which side of the status bar shows the WakaTime item
+- **Priority**: Set `wakatime.alignPriority` to a number to control the order (higher values appear more to the left)
+
+Both settings require restarting VS Code to take effect.
+
 Extension settings are stored in the INI file at `$HOME/.wakatime.cfg`.
 
 More information can be found from [wakatime-cli][wakatime-cli configs].

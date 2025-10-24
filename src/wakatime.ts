@@ -123,25 +123,28 @@ export class WakaTime {
   public initializeDependencies(): void {
     this.logger.debug(`Initializing WakaTime v${this.extension.version}`);
 
+    const align = this.options.getStatusBarAlignment();
+    const priority = this.options.getStatusBarPriority();
+
     this.statusBar = vscode.window.createStatusBarItem(
       'com.wakatime.statusbar',
-      vscode.StatusBarAlignment.Left,
-      3,
+      align,
+      priority + 2,
     );
     this.statusBar.name = 'WakaTime';
     this.statusBar.command = COMMAND_DASHBOARD;
 
     this.statusBarTeamYou = vscode.window.createStatusBarItem(
       'com.wakatime.teamyou',
-      vscode.StatusBarAlignment.Left,
-      2,
+      align,
+      priority + 1,
     );
     this.statusBarTeamYou.name = 'WakaTime Top dev';
 
     this.statusBarTeamOther = vscode.window.createStatusBarItem(
       'com.wakatime.teamother',
-      vscode.StatusBarAlignment.Left,
-      1,
+      align,
+      priority,
     );
     this.statusBarTeamOther.name = 'WakaTime Team Total';
 

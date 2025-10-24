@@ -309,6 +309,23 @@ export class Options {
     return vscode.workspace.getConfiguration().get('wakatime.apiUrl') || '';
   }
 
+  public getStatusBarAlignment(): vscode.StatusBarAlignment {
+    const align: string = vscode.workspace.getConfiguration().get('wakatime.align') as string
+    switch (align) {
+      case 'left':
+        return vscode.StatusBarAlignment.Left
+      case 'right':
+        return vscode.StatusBarAlignment.Right
+      default:
+        return vscode.StatusBarAlignment.Left
+    }
+  }
+
+  public getStatusBarPriority(): number {
+    const priority = vscode.workspace.getConfiguration().get('wakatime.alignPriority') as number;
+    return typeof priority === 'number' ? priority : 1;
+  }
+
   // Support for gitpod.io https://github.com/wakatime/vscode-wakatime/pull/220
   public getApiKeyFromEnv(): string {
     if (this.cache.api_key_from_env !== undefined) return this.cache.api_key_from_env;

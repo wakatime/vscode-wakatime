@@ -127,6 +127,20 @@
           "type": "string",
           "description": "Defaults to https://api.wakatime.com/api/v1.",
           "scope": "application"
+        },
+        "wakatime.align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "right"
+          ],
+          "default": "left",
+          "description": "Defines the alignment of the status bar item, requires restart of VS Code"
+        },
+        "wakatime.alignPriority": {
+          "type": "number",
+          "default": 1,
+          "description": "Defines priority of the status bar item. Higher values mean the item should be shown more to the left, requires restart of VS Code"
         }
       }
     }
