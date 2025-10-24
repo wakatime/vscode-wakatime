@@ -152,7 +152,7 @@
     "@types/node": "^24.9.1",
     "@types/request": "^2.48.13",
     "@types/semver": "^7.7.1",
-    "@types/vscode": "^1.105.0",
+    "@types/vscode": "^1.89.0",
     "@types/webpack": "^5.28.5",
     "@types/which": "^3.0.4",
     "@vscode/test-web": "^0.0.74",
