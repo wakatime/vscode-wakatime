@@ -138,9 +138,19 @@ export class Utils {
   }
 
   public static isAIChatSidebar(uri: vscode.Uri | undefined): boolean {
+    // first check if the active tab is the Claude Code sidebar
+    const activeTab = vscode.window.tabGroups?.activeTabGroup?.activeTab;
+    const viewType = (activeTab?.input as { viewType?: string } | undefined)?.viewType;
+    if (viewType?.includes('claude') && activeTab?.label.toLowerCase().includes('claude')) {
+      return true;
+    }
+
+    // second, check if the active uri has an AI sidebar scheme
     if (!uri) return false;
     if (uri.fsPath.endsWith('.log')) return false;
-    return uri.scheme === 'vscode-chat-code-block';
+    if (uri.scheme === 'vscode-chat-code-block') return true;
+    if (uri.scheme === 'openai-codex') return true;
+    return false;
   }
 
   public static isPossibleAICodeInsert(e: vscode.TextDocumentChangeEvent): boolean {
@@ -202,6 +212,7 @@ export class Utils {
       'github.copilot',
       'ms-vscode.vscode-ai-toolkit',
       'openai.openai-gpt-vscode',
+      'openai.chatgpt',
       'sourcegraph.cody-ai',
       'supermaven.supermaven',
       'tabnine.tabnine-vscode',
