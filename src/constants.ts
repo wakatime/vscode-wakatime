@@ -22,6 +22,7 @@ export const SEND_BUFFER_SECONDS = 30;
 export interface Heartbeat {
   time: number;
   entity: string;
+  local_file?: string;
   is_write: boolean;
   lineno: number;
   cursorpos: number;

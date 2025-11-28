@@ -2,6 +2,7 @@
 import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import * as vscode from 'vscode';
 
 import {
@@ -671,6 +672,22 @@ export class WakaTime {
 
     if (doc.isUntitled) heartbeat.is_unsaved_entity = true;
 
+    if (Utils.isRemoteUri(doc.uri)) {
+      try {
+        const tmpFile = path.join(
+          os.tmpdir(),
+          `wakatime-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        );
+        await fs.promises.writeFile(tmpFile, doc.getText(), {
+          encoding: doc.encoding as BufferEncoding,
+        });
+        heartbeat.local_file = tmpFile;
+        heartbeat.entity = doc.fileName;
+      } catch (e) {
+        this.logger.debugException(e);
+      }
+    }
+
     this.logger.debug(`Appending heartbeat to local buffer: ${JSON.stringify(heartbeat, null, 2)}`);
     this.heartbeats.push(heartbeat);
 
@@ -749,6 +766,13 @@ export class WakaTime {
 
     if (heartbeat.is_unsaved_entity) args.push('--is-unsaved-entity');
 
+    const cleanup: string[] = [];
+    if (heartbeat.local_file) {
+      args.push('--local-file');
+      args.push(Utils.quote(heartbeat.local_file));
+      cleanup.push(heartbeat.local_file);
+    }
+
     const extraHeartbeats = this.getExtraHeartbeats();
     if (extraHeartbeats.length > 0) args.push('--extra-heartbeats');
 
@@ -768,6 +792,7 @@ export class WakaTime {
       proc.stdin.write(JSON.stringify(extraHeartbeats));
       proc.stdin.write('\n');
       proc.stdin.end();
+      cleanup.push(...(extraHeartbeats.map((h) => h.local_file).filter(Boolean) as string[]));
     } else if (extraHeartbeats.length > 0) {
       this.logger.error('Unable to set stdio[0] to pipe');
       this.heartbeats.push(...extraHeartbeats);
@@ -814,6 +839,8 @@ export class WakaTime {
         }
         this.logger.error(error_msg);
       }
+
+      cleanup.map((tmpfile) => fs.unlinkSync(tmpfile));
     });
   }
 
