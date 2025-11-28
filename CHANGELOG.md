@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 25.5.0 (2025-11-28)
+
+- Improve support for remote ssh workspaces and containers.
+
 ## 25.4.0 (2025-10-24)
 
 - Ability to customize status bar item position.
