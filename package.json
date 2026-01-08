@@ -2,7 +2,7 @@
   "name": "vscode-wakatime",
   "displayName": "WakaTime",
   "description": "Metrics, insights, and time tracking automatically generated from your programming activity.",
-  "version": "25.5.1",
+  "version": "25.5.2",
   "publisher": "WakaTime",
   "author": {
     "name": "WakaTime"
@@ -123,10 +123,15 @@
           "description": "Defaults to value from ~/.wakatime.cfg, unless running in browser.",
           "scope": "application"
         },
-        "wakatime.apiUrl": {
-          "type": "string",
-          "description": "Defaults to https://api.wakatime.com/api/v1.",
-          "scope": "application"
+        "wakatime.apiUrls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "List of API URLs to send heartbeats to. Defaults to https://api.wakatime.com/api/v1. When set, heartbeats will be sent to all URLs in this list.",
+          "scope": "application",
+          "editPresentation": "multilineText"
         },
         "wakatime.align": {
           "type": "string",

@@ -309,6 +309,23 @@ export class Options {
     return vscode.workspace.getConfiguration().get('wakatime.apiUrl') || '';
   }
 
+  private getApiUrlsFromEditor(): string[] {
+    const singleUrl = vscode.workspace.getConfiguration().get<string>('wakatime.apiUrl');
+    const multipleUrls = vscode.workspace.getConfiguration().get<string[]>('wakatime.apiUrls');
+    
+    const urls: string[] = [];
+    
+    if (multipleUrls && Array.isArray(multipleUrls) && multipleUrls.length > 0) {
+      urls.push(...multipleUrls);
+    }
+    
+    if (singleUrl) {
+      urls.push(singleUrl);
+    }
+    
+    return urls;
+  }
+
   public getStatusBarAlignment(): vscode.StatusBarAlignment {
     const align: string = vscode.workspace.getConfiguration().get('wakatime.align') ?? '';
     switch (align) {
@@ -367,6 +384,56 @@ export class Options {
     }
 
     return apiUrl;
+  }
+
+  public async getApiUrls(checkSettingsFile = false): Promise<string[]> {
+    let apiUrls = this.getApiUrlsFromEditor();
+
+    // If no URLs from editor, try environment variable
+    if (apiUrls.length === 0) {
+      const envUrl = this.getApiUrlFromEnv();
+      if (envUrl) {
+        apiUrls.push(envUrl);
+      }
+    }
+
+    // If still no URLs and should check settings file, try to get from settings
+    if (apiUrls.length === 0 && checkSettingsFile) {
+      try {
+        const settingsUrl = await this.getSettingAsync<string>('settings', 'api_url');
+        if (settingsUrl) {
+          apiUrls.push(settingsUrl);
+        }
+      } catch (err) {
+        this.logger.debug(`Exception while reading API Url from config file: ${err}`);
+      }
+    }
+
+    // Default to wakatime if no URLs found
+    if (apiUrls.length === 0) {
+      apiUrls.push('https://api.wakatime.com/api/v1');
+    }
+
+    // Validate and clean URLs
+    const suffixes = ['/', '.bulk', '/users/current/heartbeats', '/heartbeats', '/heartbeat'];
+    apiUrls = apiUrls
+      .filter(url => Utils.validateApiUrl(url))
+      .map(url => {
+        let cleanUrl = url;
+        for (const suffix of suffixes) {
+          if (cleanUrl.endsWith(suffix)) {
+            cleanUrl = cleanUrl.slice(0, -suffix.length);
+          }
+        }
+        return cleanUrl;
+      });
+
+    // If all URLs were invalid, return default
+    if (apiUrls.length === 0) {
+      apiUrls.push('https://api.wakatime.com/api/v1');
+    }
+
+    return apiUrls;
   }
 
   private getApiUrlFromEnv(): string {

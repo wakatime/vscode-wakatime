@@ -254,17 +254,12 @@ export class WakaTime {
   }
 
   public async promptForApiUrl(): Promise<void> {
-    const apiUrl = await this.options.getApiUrl(true);
-    const promptOptions = {
-      prompt: 'WakaTime Api Url (Defaults to https://api.wakatime.com/api/v1)',
-      placeHolder: 'https://api.wakatime.com/api/v1',
-      value: apiUrl,
-      ignoreFocusOut: true,
-      validateInput: Utils.validateApiUrl.bind(this),
-    };
-    vscode.window.showInputBox(promptOptions).then((val) => {
-      if (val) {
-        this.options.setSetting('settings', 'api_url', val, false);
+    const apiUrls = await this.options.getApiUrls(true);
+    const message = `Current API URL(s): ${apiUrls.join(', ')}\n\nTo configure multiple API URLs, please edit your settings.json file.`;
+    
+    vscode.window.showInformationMessage(message, 'Edit in settings.json').then((selection) => {
+      if (selection === 'Edit in settings.json') {
+        vscode.commands.executeCommand('workbench.action.openSettings', 'wakatime.apiUrls');
       }
     });
   }
