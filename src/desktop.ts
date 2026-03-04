@@ -37,7 +37,7 @@ export class Desktop {
 
   public static getInstalledAIAssistantExtensions(): AIExtension[] {
     const installedExtensionIds = new Set(Utils.getInstalledExtensionIds());
-    const home = Desktop.getHomeDirectory();
+    const home = Desktop.getHomeDirectory().replace(/\/$/, '');
 
     return COMMON_AI_EXTENSIONS.filter((assistant) =>
       assistant.extensionIds.some((id) => {
@@ -47,7 +47,9 @@ export class Desktop {
       }),
     ).map((assistant) => ({
       ...assistant,
-      transcriptLogGlobs: assistant.transcriptLogGlobs.map((glob) => glob.replace(/\$HOME/g, home)),
+      transcriptLogGlobs: assistant.transcriptLogGlobs.map((glob) =>
+        glob.replace(/~/g, home).replace(/\$HOME/g, home),
+      ),
     }));
   }
 }

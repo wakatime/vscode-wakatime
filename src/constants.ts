@@ -2,12 +2,12 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
   {
     name: 'claude',
     extensionIds: ['anthropic.claude-code'],
-    transcriptLogGlobs: ['$HOME/.claude/projects/**/transcript.jsonl'],
+    transcriptLogGlobs: ['~/.claude/projects/**/transcript.jsonl'],
   },
   {
     name: 'codex',
     extensionIds: ['openai.chatgpt', 'openai.openai-gpt-vscode'],
-    transcriptLogGlobs: [],
+    transcriptLogGlobs: ['~/.codex/sessions/**/rollout-*.jsonl'],
   },
   {
     name: 'copilot',
