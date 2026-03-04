@@ -1,3 +1,51 @@
+export const COMMON_AI_EXTENSIONS: AIExtension[] = [
+  {
+    name: 'claude',
+    extensionIds: ['anthropic.claude-code'],
+    transcriptLogGlobs: ['$HOME/.claude/projects/**/transcript.jsonl'],
+  },
+  {
+    name: 'codex',
+    extensionIds: ['openai.chatgpt', 'openai.openai-gpt-vscode'],
+    transcriptLogGlobs: [],
+  },
+  {
+    name: 'copilot',
+    extensionIds: ['github.copilot', 'github.copilot-chat'],
+    transcriptLogGlobs: [],
+  },
+  {
+    name: 'codeium',
+    extensionIds: ['codeium.codeium'],
+    transcriptLogGlobs: [],
+  },
+  {
+    name: 'continue',
+    extensionIds: ['continue.continue'],
+    transcriptLogGlobs: [],
+  },
+  {
+    name: 'cody',
+    extensionIds: ['sourcegraph.cody-ai'],
+    transcriptLogGlobs: [],
+  },
+  {
+    name: 'supermaven',
+    extensionIds: ['supermaven.supermaven'],
+    transcriptLogGlobs: [],
+  },
+  {
+    name: 'tabnine',
+    extensionIds: ['tabnine.tabnine-vscode'],
+    transcriptLogGlobs: [],
+  },
+  {
+    name: 'vscode-ai-toolkit',
+    extensionIds: ['ms-vscode.vscode-ai-toolkit'],
+    transcriptLogGlobs: [],
+  },
+];
+
 export const COMMAND_API_KEY = 'wakatime.apikey';
 export const COMMAND_API_URL = 'wakatime.apiurl';
 export const COMMAND_CONFIG_FILE = 'wakatime.config_file';
@@ -35,4 +83,10 @@ export interface Heartbeat {
   ai_line_changes?: number;
   human_line_changes?: number;
   is_unsaved_entity?: boolean;
+}
+
+export interface AIExtension {
+  name: string;
+  extensionIds: string[];
+  transcriptLogGlobs: string[];
 }

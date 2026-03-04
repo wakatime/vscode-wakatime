@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { TIME_BETWEEN_HEARTBEATS_MS } from './constants';
+import { COMMON_AI_EXTENSIONS, TIME_BETWEEN_HEARTBEATS_MS } from './constants';
 
 export class Utils {
   private static appNames = {
@@ -202,25 +202,16 @@ export class Utils {
     const editorName = vscode.env.appName.toLowerCase();
     return editorName.includes('cursor') || editorName.includes('windsurf');
   }
+  public static getInstalledExtensionIds(): string[] {
+    return vscode.extensions.all.map((extension) => extension.id.toLowerCase());
+  }
 
   public static hasAIExtensions(): boolean {
-    const commonAIExtensions = [
-      'anthropic.claude-code',
-      'codeium.codeium',
-      'continue.continue',
-      'github.copilot-chat',
-      'github.copilot',
-      'ms-vscode.vscode-ai-toolkit',
-      'openai.openai-gpt-vscode',
-      'openai.chatgpt',
-      'sourcegraph.cody-ai',
-      'supermaven.supermaven',
-      'tabnine.tabnine-vscode',
-    ];
-
-    return commonAIExtensions.some((extensionId) => {
-      const extension = vscode.extensions.getExtension(extensionId);
-      return extension && extension.isActive;
+    return COMMON_AI_EXTENSIONS.some((assistant) => {
+      return assistant.extensionIds.some((id) => {
+        const extension = vscode.extensions.getExtension(id);
+        return extension && extension.isActive;
+      });
     });
   }
 
