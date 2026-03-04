@@ -11,13 +11,14 @@ import {
   Heartbeat,
   LogLevel,
   SEND_BUFFER_SECONDS,
+  TranscriptEntity,
 } from './constants';
 import { Options, Setting } from './options';
 
 import { Dependencies } from './dependencies';
 import { Desktop } from './desktop';
 import { Logger } from './logger';
-import { TranscriptEntity, TranscriptWatcher } from './transcript-watcher';
+import { TranscriptWatcher } from './transcript-watcher';
 import { FileSelectionMap, LineCounts, Lines, Utils } from './utils';
 
 export class WakaTime {
@@ -457,11 +458,11 @@ export class WakaTime {
 
   private setupTranscriptWatcher(): void {
     this.transcriptWatcher = new TranscriptWatcher(this.logger);
-    this.transcriptWatcher.onActivity(this.onAIActivity);
+    this.transcriptWatcher.onActivity(this.onAITranscriptActivity.bind(this));
     this.transcriptWatcher.start();
   }
 
-  private onAIActivity(aiName: string, entities: TranscriptEntity[]) {
+  private onAITranscriptActivity(aiName: string, entities: TranscriptEntity[]) {
     const now = Date.now() / 1000;
     for (const entity of entities) {
       const heartbeat: Heartbeat = {
@@ -475,10 +476,11 @@ export class WakaTime {
         ai_line_changes: entity.lineChanges,
         project_folder: entity.projectFolder,
         agent: aiName,
+        user_agent: Utils.buildUserAgentString(this.editorName, this.extension.version, aiName),
       };
       this.heartbeats.push(heartbeat);
+      delete this.linesInFiles[entity.filePath];
     }
-    this.isAICodeGenerating = true;
     if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
       this.sendHeartbeats();
     }
@@ -600,6 +602,7 @@ export class WakaTime {
   }
 
   private updateLineNumbers(): void {
+    this.transcriptWatcher?.poll();
     const doc = vscode.window.activeTextEditor?.document;
     if (!doc) return;
     const file = Utils.getFocusedFile(doc);

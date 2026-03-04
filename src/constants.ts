@@ -108,6 +108,7 @@ export interface Heartbeat {
   ai_line_changes?: number;
   human_line_changes?: number;
   agent?: string;
+  user_agent?: string;
   is_unsaved_entity?: boolean;
 }
 
@@ -115,4 +116,22 @@ export interface AIExtension {
   name: string;
   extensionIds: string[];
   transcriptLogGlobs: string[];
+}
+
+export interface ParsedGlob {
+  aiName: string;
+  baseDir: string;
+  filePattern: RegExp;
+}
+
+export interface TrackedFile {
+  aiName: string;
+  lastReadOffset: number;
+  projectFolder?: string;
+}
+
+export interface TranscriptEntity {
+  filePath: string;
+  lineChanges: number;
+  projectFolder?: string;
 }

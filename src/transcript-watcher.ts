@@ -1,26 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { TRANSCRIPT_ACTIVITY_TIMEOUT, TRANSCRIPT_POLL_INTERVAL } from './constants';
+import {
+  ParsedGlob,
+  TrackedFile,
+  TRANSCRIPT_ACTIVITY_TIMEOUT,
+  TRANSCRIPT_POLL_INTERVAL,
+  TranscriptEntity,
+} from './constants';
 import { Logger } from './logger';
 import { Desktop } from './desktop';
-
-interface ParsedGlob {
-  aiName: string;
-  baseDir: string;
-  filePattern: RegExp;
-}
-
-interface TrackedFile {
-  aiName: string;
-  lastReadOffset: number;
-  projectFolder?: string;
-}
-
-export interface TranscriptEntity {
-  filePath: string;
-  lineChanges: number;
-  projectFolder?: string;
-}
 
 export class TranscriptWatcher {
   private globs: ParsedGlob[] = [];
@@ -72,7 +60,7 @@ export class TranscriptWatcher {
     }
   }
 
-  private poll(): void {
+  public poll(): void {
     for (const glob of this.globs) {
       try {
         if (!fs.existsSync(glob.baseDir)) continue;
