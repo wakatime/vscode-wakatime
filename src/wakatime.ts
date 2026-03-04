@@ -469,14 +469,15 @@ export class WakaTime {
         entity: entity.filePath,
         time: now,
         is_write: false,
-        lineno: 0,
-        cursorpos: 0,
-        lines_in_file: 0,
         category: 'ai coding',
         ai_line_changes: entity.lineChanges,
-        project_folder: entity.projectFolder,
+        project_folder:
+          entity.projectFolder ??
+          (vscode.window.activeTextEditor?.document.uri
+            ? this.getProjectFolder(vscode.window.activeTextEditor.document.uri)
+            : undefined),
         agent: aiName,
-        user_agent: Utils.buildUserAgentString(this.editorName, this.extension.version, aiName),
+        plugin: Utils.buildUserAgentString(this.editorName, this.extension.version, aiName),
       };
       this.heartbeats.push(heartbeat);
       delete this.linesInFiles[entity.filePath];
@@ -769,16 +770,20 @@ export class WakaTime {
 
     args.push('--time', String(heartbeat.time));
 
-    args.push(
-      '--plugin',
-      Utils.quote(
-        Utils.buildUserAgentString(this.editorName, this.extension.version, heartbeat.agent),
-      ),
-    );
+    if (heartbeat.plugin) {
+      args.push('--plugin', Utils.quote(heartbeat.plugin));
+    } else {
+      args.push(
+        '--plugin',
+        Utils.quote(
+          Utils.buildUserAgentString(this.editorName, this.extension.version, heartbeat.agent),
+        ),
+      );
+    }
 
-    args.push('--lineno', String(heartbeat.lineno));
-    args.push('--cursorpos', String(heartbeat.cursorpos));
-    args.push('--lines-in-file', String(heartbeat.lines_in_file));
+    if (heartbeat.lineno) args.push('--lineno', String(heartbeat.lineno));
+    if (heartbeat.cursorpos) args.push('--cursorpos', String(heartbeat.cursorpos));
+    if (heartbeat.lines_in_file) args.push('--lines-in-file', String(heartbeat.lines_in_file));
     if (heartbeat.category) {
       args.push('--category', heartbeat.category);
     }

@@ -97,9 +97,9 @@ export interface Heartbeat {
   entity: string;
   local_file?: string;
   is_write: boolean;
-  lineno: number;
-  cursorpos: number;
-  lines_in_file: number;
+  lineno?: number;
+  cursorpos?: number;
+  lines_in_file?: number;
   alternate_project?: string;
   project_folder?: string;
   project_root_count?: number;
@@ -108,7 +108,7 @@ export interface Heartbeat {
   ai_line_changes?: number;
   human_line_changes?: number;
   agent?: string;
-  user_agent?: string;
+  plugin?: string;
   is_unsaved_entity?: boolean;
 }
 

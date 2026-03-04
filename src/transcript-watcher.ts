@@ -110,16 +110,13 @@ export class TranscriptWatcher {
         });
 
         if (entities.length > 0 && this.activityCallback) {
-          this.logger.debug(
-            `Transcript ${aiName}: ${entities.length} file(s) modified from ${path.basename(filePath)}`,
-          );
           this.activityCallback(aiName, entities);
         }
       } finally {
         fs.closeSync(fd);
       }
     } catch (e) {
-      this.logger.debug(`Error processing transcript ${filePath}: ${e}`);
+      this.logger.warn(`Error processing transcript ${filePath}: ${e}`);
     }
   }
 
@@ -144,8 +141,12 @@ export class TranscriptWatcher {
         const results = this.extractFileEntity(aiName, entry);
         if (results) {
           for (const result of results) {
-            const prev = entityMap.get(result.filePath) ?? 0;
-            entityMap.set(result.filePath, prev + result.lineChanges);
+            const filePath =
+              path.isAbsolute(result.filePath) || !projectFolder
+                ? result.filePath
+                : path.resolve(projectFolder, result.filePath);
+            const prev = entityMap.get(filePath) ?? 0;
+            entityMap.set(filePath, prev + result.lineChanges);
           }
         }
       } catch {
