@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 26.0.0 (2026-03-04)
+
+- Detect AI coding from Codex and Claude transcript logs.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
 ## 25.5.1 (2025-12-14)
 
 - Prevent long running terminal command from triggering heartbeats.
