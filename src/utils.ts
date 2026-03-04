@@ -218,6 +218,15 @@ export class Utils {
   public static checkAICapabilities(): boolean {
     return this.isAICapableEditor() || this.hasAIExtensions();
   }
+
+  public static buildUserAgentString(
+    editorName: string,
+    extensionVersion: string,
+    aiName: string | undefined = undefined,
+  ): string {
+    const ai = aiName ? ` ${aiName}` : '';
+    return editorName + '/' + vscode.version + ai + ' vscode-wakatime/' + extensionVersion;
+  }
 }
 
 interface FileSelection {

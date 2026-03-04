@@ -17,10 +17,11 @@ import { Options, Setting } from './options';
 import { Dependencies } from './dependencies';
 import { Desktop } from './desktop';
 import { Logger } from './logger';
+import { TranscriptEntity, TranscriptWatcher } from './transcript-watcher';
 import { FileSelectionMap, LineCounts, Lines, Utils } from './utils';
 
 export class WakaTime {
-  private agentName: string;
+  private editorName: string;
   private extension: any;
   private statusBar?: vscode.StatusBarItem = undefined;
   private statusBarTeamYou?: vscode.StatusBarItem = undefined;
@@ -53,6 +54,7 @@ export class WakaTime {
   private isDebugging: boolean = false;
   private isAICodeGenerating: boolean = false;
   private hasAICapabilities: boolean = false;
+  private transcriptWatcher: TranscriptWatcher | null = null;
   private currentlyFocusedFile: string;
   private teamDevsForFileCache = {};
   private resourcesLocation: string;
@@ -84,7 +86,7 @@ export class WakaTime {
 
         const extension = vscode.extensions.getExtension('WakaTime.vscode-wakatime');
         this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
-        this.agentName = Utils.getEditorName();
+        this.editorName = Utils.getEditorName();
 
         this.hasAICapabilities = Utils.checkAICapabilities();
 
@@ -103,6 +105,7 @@ export class WakaTime {
 
   public dispose() {
     this.sendHeartbeats();
+    this.transcriptWatcher?.stop();
     this.statusBar?.dispose();
     this.statusBarTeamYou?.dispose();
     this.statusBarTeamOther?.dispose();
@@ -448,6 +451,37 @@ export class WakaTime {
 
     // create a combined disposable for all event subscriptions
     this.disposable = vscode.Disposable.from(...subscriptions);
+
+    this.setupTranscriptWatcher();
+  }
+
+  private setupTranscriptWatcher(): void {
+    this.transcriptWatcher = new TranscriptWatcher(this.logger);
+    this.transcriptWatcher.onActivity(this.onAIActivity);
+    this.transcriptWatcher.start();
+  }
+
+  private onAIActivity(aiName: string, entities: TranscriptEntity[]) {
+    const now = Date.now() / 1000;
+    for (const entity of entities) {
+      const heartbeat: Heartbeat = {
+        entity: entity.filePath,
+        time: now,
+        is_write: false,
+        lineno: 0,
+        cursorpos: 0,
+        lines_in_file: 0,
+        category: 'ai coding',
+        ai_line_changes: entity.lineChanges,
+        project_folder: entity.projectFolder,
+        agent: aiName,
+      };
+      this.heartbeats.push(heartbeat);
+    }
+    this.isAICodeGenerating = true;
+    if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
+      this.sendHeartbeats();
+    }
   }
 
   private onDebuggingChanged(): void {
@@ -732,9 +766,12 @@ export class WakaTime {
 
     args.push('--time', String(heartbeat.time));
 
-    const user_agent =
-      this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
-    args.push('--plugin', Utils.quote(user_agent));
+    args.push(
+      '--plugin',
+      Utils.quote(
+        Utils.buildUserAgentString(this.editorName, this.extension.version, heartbeat.agent),
+      ),
+    );
 
     args.push('--lineno', String(heartbeat.lineno));
     args.push('--cursorpos', String(heartbeat.cursorpos));
@@ -884,7 +921,7 @@ export class WakaTime {
     if (!this.dependencies.isCliInstalled()) return;
 
     const user_agent =
-      this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
+      this.editorName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     const args = ['--today', '--output', 'json', '--plugin', Utils.quote(user_agent)];
 
     if (this.isMetricsEnabled) args.push('--metrics');
@@ -998,7 +1035,7 @@ export class WakaTime {
     }
 
     const user_agent =
-      this.agentName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
+      this.editorName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     const args = ['--output', 'json', '--plugin', Utils.quote(user_agent)];
 
     args.push('--file-experts', Utils.quote(file));

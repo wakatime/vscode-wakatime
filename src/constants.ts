@@ -12,6 +12,11 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
   {
     name: 'copilot',
     extensionIds: ['github.copilot', 'github.copilot-chat'],
+    transcriptLogGlobs: ['~/.copilot/session-state/*.jsonl'],
+  },
+  {
+    name: 'gemini',
+    extensionIds: [],
     transcriptLogGlobs: [],
   },
   {
@@ -44,6 +49,24 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
     extensionIds: ['ms-vscode.vscode-ai-toolkit'],
     transcriptLogGlobs: [],
   },
+  {
+    name: 'factory',
+    extensionIds: [],
+    transcriptLogGlobs: ['~/.factory/sessions/**/*.jsonl', '~/.factory/projects/**/*.jsonl'],
+  },
+  {
+    name: 'opencode',
+    extensionIds: [],
+    transcriptLogGlobs: ['~/.local/share/opencode/storage/session/ses_*.json'],
+  },
+  {
+    name: 'openclaw',
+    extensionIds: [],
+    transcriptLogGlobs: [
+      '~/.openclaw/agents/**/sessions/*.jsonl',
+      '~/.clawdbot/agents/**/sessions/*.jsonl',
+    ],
+  },
 ];
 
 export const COMMAND_API_KEY = 'wakatime.apikey';
@@ -66,6 +89,8 @@ export enum LogLevel {
 export const AI_RECENT_PASTES_TIME_MS = 500;
 export const TIME_BETWEEN_HEARTBEATS_MS = 120000;
 export const SEND_BUFFER_SECONDS = 30;
+export const TRANSCRIPT_POLL_INTERVAL = 15; // seconds
+export const TRANSCRIPT_ACTIVITY_TIMEOUT = 3600; // seconds
 
 export interface Heartbeat {
   time: number;
@@ -82,6 +107,7 @@ export interface Heartbeat {
   category?: 'debugging' | 'ai coding' | 'building' | 'code reviewing';
   ai_line_changes?: number;
   human_line_changes?: number;
+  agent?: string;
   is_unsaved_entity?: boolean;
 }
 

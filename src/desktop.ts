@@ -1,10 +1,8 @@
 import * as fs from 'fs';
-import * as vscode from 'vscode';
 import * as os from 'os';
 import * as child_process from 'child_process';
 import { StdioOptions } from 'child_process';
 import { AIExtension, COMMON_AI_EXTENSIONS } from './constants';
-import { Utils } from './utils';
 
 export class Desktop {
   public static isWindows(): boolean {
@@ -35,21 +33,15 @@ export class Desktop {
     return options;
   }
 
-  public static getInstalledAIAssistantExtensions(): AIExtension[] {
-    const installedExtensionIds = new Set(Utils.getInstalledExtensionIds());
+  public static getAIExtensionsWithTranscriptLogs(): AIExtension[] {
     const home = Desktop.getHomeDirectory().replace(/\/$/, '');
-
-    return COMMON_AI_EXTENSIONS.filter((assistant) =>
-      assistant.extensionIds.some((id) => {
-        if (!installedExtensionIds.has(id.toLowerCase())) return false;
-        const extension = vscode.extensions.getExtension(id);
-        return extension && extension.isActive;
+    return COMMON_AI_EXTENSIONS.filter((assistant) => assistant.transcriptLogGlobs.length > 0).map(
+      (assistant) => ({
+        ...assistant,
+        transcriptLogGlobs: assistant.transcriptLogGlobs.map((glob) =>
+          glob.replace(/~/g, home).replace(/\$HOME/g, home),
+        ),
       }),
-    ).map((assistant) => ({
-      ...assistant,
-      transcriptLogGlobs: assistant.transcriptLogGlobs.map((glob) =>
-        glob.replace(/~/g, home).replace(/\$HOME/g, home),
-      ),
-    }));
+    );
   }
 }
