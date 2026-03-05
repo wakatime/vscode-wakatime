@@ -6,6 +6,7 @@ export class Utils {
     'Arduino IDE': 'arduino',
     'Azure Data Studio': 'azdata',
     Cursor: 'cursor',
+    Kiro: 'kiro',
     Onivim: 'onivim',
     'Onivim 2': 'onivim',
     'SQL Operations Studio': 'sqlops',
@@ -200,8 +201,11 @@ export class Utils {
 
   public static isAICapableEditor(): boolean {
     const editorName = vscode.env.appName.toLowerCase();
-    return editorName.includes('cursor') || editorName.includes('windsurf');
+    return editorName.includes('cursor') || 
+           editorName.includes('kiro') ||     // 新增：识别 Kiro 为 AI 能力编辑器
+           editorName.includes('windsurf');
   }
+
   public static getInstalledExtensionIds(): string[] {
     return vscode.extensions.all.map((extension) => extension.id.toLowerCase());
   }
