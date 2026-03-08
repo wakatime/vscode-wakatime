@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 26.0.4 (2026-03-08)
+
+- Respect WakaTime Claude Code cli plugin state file to prevent duplicate stats.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
 ## 26.0.3 (2026-03-08)
 
 - Fix AI time tracking for Claude Code.
