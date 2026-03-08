@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 26.0.2 (2026-03-08)
+
+- Fix AI time tracking for Codex.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
 ## 26.0.1 (2026-03-08)
 
 - Rewrite buffered heartbeats to AI category when transcript logs contain matching entity file paths.
