@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 26.0.1 (2026-03-08)
+
+- Rewrite buffered heartbeats to AI category when transcript logs contain matching entity file paths.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
 ## 26.0.0 (2026-03-04)
 
 - Detect AI coding from Codex and Claude transcript logs.
