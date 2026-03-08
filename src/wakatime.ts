@@ -465,6 +465,16 @@ export class WakaTime {
   private onAITranscriptActivity(aiName: string, heartbeats: TranscriptHeartbeat[]) {
     const now = Date.now() / 1000;
     for (const heartbeat of heartbeats) {
+      heartbeat.projectFolder =
+        heartbeat.projectFolder ??
+        (vscode.window.activeTextEditor?.document.uri
+          ? this.getProjectFolder(vscode.window.activeTextEditor.document.uri)
+          : undefined);
+
+      if (!path.isAbsolute(heartbeat.filePath) && heartbeat.projectFolder) {
+        heartbeat.filePath = path.resolve(heartbeat.projectFolder, heartbeat.filePath);
+      }
+
       // Find matching buffered heartbeats for this file
       const matching = this.heartbeats.filter((h) => h.entity === heartbeat.filePath);
       if (matching.length > 0) {
@@ -488,11 +498,7 @@ export class WakaTime {
           is_write: false,
           category: 'ai coding',
           ai_line_changes: heartbeat.lineChanges,
-          project_folder:
-            heartbeat.projectFolder ??
-            (vscode.window.activeTextEditor?.document.uri
-              ? this.getProjectFolder(vscode.window.activeTextEditor.document.uri)
-              : undefined),
+          project_folder: heartbeat.projectFolder,
           agent: aiName,
           plugin: Utils.buildUserAgentString(this.editorName, this.extension.version, aiName),
         };
@@ -527,7 +533,7 @@ export class WakaTime {
   }
 
   private onDidStartTask(e: vscode.TaskStartEvent): void {
-    this.logger.debug('onDidTerminateDebugSession');
+    this.logger.debug('onDidStartTask');
     if (e.execution.task.isBackground) return;
     if (e.execution.task.detail && e.execution.task.detail.indexOf('watch') !== -1) return;
     this.isCompiling = true;
@@ -916,7 +922,11 @@ export class WakaTime {
         this.logger.error(error_msg);
       }
 
-      cleanup.map((tmpfile) => fs.unlinkSync(tmpfile));
+      cleanup.map((tmpfile) => {
+        try {
+          fs.unlinkSync(tmpfile);
+        } catch (_) {}
+      });
     });
   }
 
@@ -1181,11 +1191,11 @@ export class WakaTime {
 
   private isDuplicateHeartbeat(file: string, time: number, selection: vscode.Position): boolean {
     let duplicate = false;
-    const minutes = 30;
+    const minutes = 10;
     const milliseconds = minutes * 60000;
     if (
       this.dedupe[file] &&
-      this.dedupe[file].lastHeartbeatAt + milliseconds < time &&
+      this.dedupe[file].lastHeartbeatAt + milliseconds > time &&
       this.dedupe[file].selection.line == selection.line &&
       this.dedupe[file].selection.character == selection.character
     ) {

@@ -90,8 +90,9 @@ export class TranscriptWatcher {
       if (Math.max(stat.mtimeMs, stat.birthtimeMs) < cutoff) return;
 
       // No new content since last read
-      const lastOffset = tracked?.lastReadOffset ?? 0;
-      if (stat.size <= lastOffset) return;
+      let lastOffset = tracked?.lastReadOffset ?? 0;
+      if (stat.size < lastOffset) lastOffset = 0;
+      if (stat.size == lastOffset) return;
 
       const fd = fs.openSync(filePath, 'r');
       try {
@@ -144,7 +145,7 @@ export class TranscriptWatcher {
         }
 
         if (entry.timestamp) {
-          const ts = new Date(entry.timestamp).getTime();
+          const ts = new Date(entry.timestamp ?? Date.now()).getTime();
           if (ts < cutoff) continue;
         }
 
@@ -276,8 +277,8 @@ export class TranscriptWatcher {
     if (result.diff && typeof result.diff === 'string') {
       const lines = result.diff.split('\n');
       return (
-        lines.filter((l: string) => l.startsWith('+')).length -
-        lines.filter((l: string) => l.startsWith('-')).length
+        lines.filter((l: string) => l.startsWith('+') && !l.startsWith('+++')).length -
+        lines.filter((l: string) => l.startsWith('-') && !l.startsWith('---')).length
       );
     }
     return 0;
