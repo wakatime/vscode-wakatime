@@ -15,7 +15,7 @@ export class Utils {
   };
 
   public static quote(str: string): string {
-    if (str.includes(' ')) return `"${str.replace('"', '\\"')}"`;
+    if (str.includes(' ')) return `"${str.replace(/"/g, '\\"')}"`;
     return str;
   }
 
