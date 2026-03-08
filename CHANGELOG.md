@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 27.0.0 (2026-03-08)
+
+- Support Cursor IDE by parsing project transcript jsonl files.
+
 ## 26.0.5 (2026-03-08)
 
 - Skip human heartbeats when any AI activity detected.
