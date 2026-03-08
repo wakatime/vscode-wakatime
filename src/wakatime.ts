@@ -509,9 +509,7 @@ export class WakaTime {
       delete this.linesInFiles[heartbeat.filePath];
     }
     this.lineChanges = { ai: {}, human: {} };
-    if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
-      this.sendHeartbeats();
-    }
+    this.sendHeartbeatsIfNecessary();
   }
 
   private onDebuggingChanged(): void {
@@ -651,9 +649,7 @@ export class WakaTime {
   }
 
   private onEvent(isWrite: boolean): void {
-    if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
-      this.sendHeartbeats();
-    }
+    this.sendHeartbeatsIfNecessary();
 
     clearTimeout(this.debounceId);
     this.debounceId = setTimeout(() => {
@@ -769,7 +765,11 @@ export class WakaTime {
     this.logger.debug(`Appending heartbeat to local buffer: ${JSON.stringify(heartbeat, null, 2)}`);
     this.heartbeats.push(heartbeat);
 
-    if (now - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
+    await this.sendHeartbeatsIfNecessary();
+  }
+
+  private async sendHeartbeatsIfNecessary() {
+    if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
       await this.sendHeartbeats();
     }
   }

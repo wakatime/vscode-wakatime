@@ -88,7 +88,7 @@ export class TranscriptWatcher {
       const stat = fs.statSync(filePath);
 
       const tracked = this.trackedFiles.get(filePath);
-      const cutoff = tracked?.lastReadTime ?? this.initializedAt;
+      let cutoff = tracked?.lastReadTime ?? this.initializedAt;
 
       // Only read transcripts modified since we last read them
       if (Math.max(stat.mtimeMs, stat.birthtimeMs) < cutoff) return false;
@@ -98,11 +98,22 @@ export class TranscriptWatcher {
       if (stat.size < lastOffset) lastOffset = 0;
       if (stat.size == lastOffset) return false;
 
+      const now = Date.now();
+
       const fd = fs.openSync(filePath, 'r');
       try {
         const buffer = Buffer.alloc(stat.size - lastOffset);
         fs.readSync(fd, buffer, 0, buffer.length, lastOffset);
         const content = buffer.toString('utf-8');
+
+        const cliLastHeartbeatAt =
+          aiName == 'claude' ? this.readCliStateLastHeartbeatAt(filePath) : undefined;
+        if (cliLastHeartbeatAt && cliLastHeartbeatAt * 1000 > cutoff) {
+          cutoff = cliLastHeartbeatAt * 1000;
+        }
+        if (aiName == 'claude') {
+          this.writeCliStateLastHeartbeatAt(filePath, now);
+        }
 
         const { heartbeats, projectFolder } = this.parseContent(
           aiName,
@@ -114,7 +125,7 @@ export class TranscriptWatcher {
         this.trackedFiles.set(filePath, {
           aiName,
           lastReadOffset: stat.size,
-          lastReadTime: Date.now(),
+          lastReadTime: now,
           projectFolder: projectFolder ?? tracked?.projectFolder,
         });
 
@@ -126,9 +137,34 @@ export class TranscriptWatcher {
         fs.closeSync(fd);
       }
     } catch (e) {
-      this.logger.warn(`Error processing transcript ${filePath}: ${e}`);
+      this.logger.warn(`Error processing transcript: ${filePath}`);
+      this.logger.warnException(e);
     }
     return false;
+  }
+
+  private readCliStateLastHeartbeatAt(transcriptPath: string): number | undefined {
+    const stateFile = transcriptPath + '.wakatime';
+    try {
+      if (!fs.existsSync(stateFile)) return undefined;
+      const raw = fs.readFileSync(stateFile, 'utf-8');
+      const state = JSON.parse(raw);
+      if (typeof state.lastHeartbeatAt === 'number') return state.lastHeartbeatAt;
+    } catch (e) {
+      this.logger.debug(`Claude state file unreadable: ${stateFile}`);
+      this.logger.debugException(e);
+    }
+    return undefined;
+  }
+
+  private writeCliStateLastHeartbeatAt(transcriptPath: string, now: number): void {
+    const stateFile = transcriptPath + '.wakatime';
+    try {
+      fs.writeFileSync(stateFile, JSON.stringify({ lastHeartbeatAt: now / 1000 }, null, 2));
+    } catch (e) {
+      this.logger.debug(`Claude state file unwritable: ${stateFile}`);
+      this.logger.debugException(e);
+    }
   }
 
   private parseContent(
@@ -168,8 +204,8 @@ export class TranscriptWatcher {
             });
           }
         }
-      } catch {
-        // not valid JSON, skip
+      } catch (e) {
+        this.logger.debugException(e);
       }
     }
 
