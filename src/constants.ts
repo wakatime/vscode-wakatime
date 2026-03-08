@@ -90,7 +90,6 @@ export const AI_RECENT_PASTES_TIME_MS = 500;
 export const TIME_BETWEEN_HEARTBEATS_MS = 120000;
 export const SEND_BUFFER_SECONDS = 30;
 export const TRANSCRIPT_POLL_INTERVAL = 15; // seconds
-export const TRANSCRIPT_ACTIVITY_TIMEOUT = 3600; // seconds
 
 export interface Heartbeat {
   time: number;
@@ -127,10 +126,11 @@ export interface ParsedGlob {
 export interface TrackedFile {
   aiName: string;
   lastReadOffset: number;
+  lastReadTime: number;
   projectFolder?: string;
 }
 
-export interface TranscriptEntity {
+export interface TranscriptHeartbeat {
   filePath: string;
   lineChanges: number;
   projectFolder?: string;

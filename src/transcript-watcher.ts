@@ -3,9 +3,8 @@ import * as path from 'path';
 import {
   ParsedGlob,
   TrackedFile,
-  TRANSCRIPT_ACTIVITY_TIMEOUT,
   TRANSCRIPT_POLL_INTERVAL,
-  TranscriptEntity,
+  TranscriptHeartbeat,
 } from './constants';
 import { Logger } from './logger';
 import { Desktop } from './desktop';
@@ -14,15 +13,16 @@ export class TranscriptWatcher {
   private globs: ParsedGlob[] = [];
   private trackedFiles: Map<string, TrackedFile> = new Map();
   private pollTimer: ReturnType<typeof setInterval> | null = null;
-  private activityCallback: ((aiName: string, entities: TranscriptEntity[]) => void) | null = null;
+  private activityCallback: ((aiName: string, entities: TranscriptHeartbeat[]) => void) | null =
+    null;
   private logger: Logger;
   private pollIntervalMs: number;
-  private activityTimeoutMs: number;
+  private initializedAt: number;
 
   constructor(logger: Logger) {
     this.logger = logger;
     this.pollIntervalMs = TRANSCRIPT_POLL_INTERVAL * 1000;
-    this.activityTimeoutMs = TRANSCRIPT_ACTIVITY_TIMEOUT * 1000;
+    this.initializedAt = Date.now();
 
     const aiExtensions = Desktop.getAIExtensionsWithTranscriptLogs();
     if (aiExtensions.length === 0) return;
@@ -41,7 +41,9 @@ export class TranscriptWatcher {
     );
   }
 
-  public onActivity(callback: (aiName: string, entities: TranscriptEntity[]) => void): void {
+  public onActivityHandler(
+    callback: (aiName: string, entities: TranscriptHeartbeat[]) => void,
+  ): void {
     this.activityCallback = callback;
   }
 
@@ -81,14 +83,14 @@ export class TranscriptWatcher {
 
       const stat = fs.statSync(filePath);
 
-      // Only read recently modified or created files
-      const recency = Date.now() - Math.max(stat.mtimeMs, stat.birthtimeMs);
-      if (recency > this.activityTimeoutMs) return;
-
       const tracked = this.trackedFiles.get(filePath);
-      const lastOffset = tracked?.lastReadOffset ?? 0;
+      const cutoff = tracked?.lastReadTime ?? this.initializedAt;
+
+      // Only read transcripts modified since we last read them
+      if (Math.max(stat.mtimeMs, stat.birthtimeMs) < cutoff) return;
 
       // No new content since last read
+      const lastOffset = tracked?.lastReadOffset ?? 0;
       if (stat.size <= lastOffset) return;
 
       const fd = fs.openSync(filePath, 'r');
@@ -97,7 +99,7 @@ export class TranscriptWatcher {
         fs.readSync(fd, buffer, 0, buffer.length, lastOffset);
         const content = buffer.toString('utf-8');
 
-        const { entities, projectFolder } = this.parseContent(
+        const { heartbeats, projectFolder } = this.parseContent(
           aiName,
           content,
           tracked?.projectFolder,
@@ -106,11 +108,12 @@ export class TranscriptWatcher {
         this.trackedFiles.set(filePath, {
           aiName,
           lastReadOffset: stat.size,
+          lastReadTime: Date.now(),
           projectFolder: projectFolder ?? tracked?.projectFolder,
         });
 
-        if (entities.length > 0 && this.activityCallback) {
-          this.activityCallback(aiName, entities);
+        if (heartbeats.length > 0 && this.activityCallback) {
+          this.activityCallback(aiName, heartbeats);
         }
       } finally {
         fs.closeSync(fd);
@@ -124,7 +127,7 @@ export class TranscriptWatcher {
     aiName: string,
     content: string,
     currentProjectFolder?: string,
-  ): { entities: TranscriptEntity[]; projectFolder?: string } {
+  ): { heartbeats: TranscriptHeartbeat[]; projectFolder?: string } {
     const entityMap = new Map<string, number>();
     let projectFolder = currentProjectFolder;
 
@@ -154,11 +157,11 @@ export class TranscriptWatcher {
       }
     }
 
-    const entities: TranscriptEntity[] = [];
+    const heartbeats: TranscriptHeartbeat[] = [];
     for (const [filePath, lineChanges] of entityMap) {
-      entities.push({ filePath, lineChanges, projectFolder });
+      heartbeats.push({ filePath, lineChanges, projectFolder });
     }
-    return { entities, projectFolder };
+    return { heartbeats, projectFolder };
   }
 
   private extractFileEntity(

@@ -11,7 +11,7 @@ import {
   Heartbeat,
   LogLevel,
   SEND_BUFFER_SECONDS,
-  TranscriptEntity,
+  TranscriptHeartbeat,
 } from './constants';
 import { Options, Setting } from './options';
 
@@ -458,29 +458,47 @@ export class WakaTime {
 
   private setupTranscriptWatcher(): void {
     this.transcriptWatcher = new TranscriptWatcher(this.logger);
-    this.transcriptWatcher.onActivity(this.onAITranscriptActivity.bind(this));
+    this.transcriptWatcher.onActivityHandler(this.onAITranscriptActivity.bind(this));
     this.transcriptWatcher.start();
   }
 
-  private onAITranscriptActivity(aiName: string, entities: TranscriptEntity[]) {
+  private onAITranscriptActivity(aiName: string, heartbeats: TranscriptHeartbeat[]) {
     const now = Date.now() / 1000;
-    for (const entity of entities) {
-      const heartbeat: Heartbeat = {
-        entity: entity.filePath,
-        time: now,
-        is_write: false,
-        category: 'ai coding',
-        ai_line_changes: entity.lineChanges,
-        project_folder:
-          entity.projectFolder ??
-          (vscode.window.activeTextEditor?.document.uri
-            ? this.getProjectFolder(vscode.window.activeTextEditor.document.uri)
-            : undefined),
-        agent: aiName,
-        plugin: Utils.buildUserAgentString(this.editorName, this.extension.version, aiName),
-      };
-      this.heartbeats.push(heartbeat);
-      delete this.linesInFiles[entity.filePath];
+    for (const heartbeat of heartbeats) {
+      // Find matching buffered heartbeats for this file
+      const matching = this.heartbeats.filter((h) => h.entity === heartbeat.filePath);
+      if (matching.length > 0) {
+        for (const existing of matching) {
+          existing.category = 'ai coding';
+          existing.human_line_changes = 0;
+          existing.ai_line_changes = heartbeat.lineChanges;
+          heartbeat.lineChanges = 0;
+          existing.agent = aiName;
+          existing.plugin = Utils.buildUserAgentString(
+            this.editorName,
+            this.extension.version,
+            aiName,
+          );
+        }
+      } else {
+        // No buffered heartbeat for this file, push a new one
+        const h: Heartbeat = {
+          entity: heartbeat.filePath,
+          time: now,
+          is_write: false,
+          category: 'ai coding',
+          ai_line_changes: heartbeat.lineChanges,
+          project_folder:
+            heartbeat.projectFolder ??
+            (vscode.window.activeTextEditor?.document.uri
+              ? this.getProjectFolder(vscode.window.activeTextEditor.document.uri)
+              : undefined),
+          agent: aiName,
+          plugin: Utils.buildUserAgentString(this.editorName, this.extension.version, aiName),
+        };
+        this.heartbeats.push(h);
+      }
+      delete this.linesInFiles[heartbeat.filePath];
     }
     if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
       this.sendHeartbeats();
@@ -603,7 +621,6 @@ export class WakaTime {
   }
 
   private updateLineNumbers(): void {
-    this.transcriptWatcher?.poll();
     const doc = vscode.window.activeTextEditor?.document;
     if (!doc) return;
     const file = Utils.getFocusedFile(doc);
@@ -748,6 +765,7 @@ export class WakaTime {
   }
 
   private async sendHeartbeats(): Promise<void> {
+    this.transcriptWatcher?.poll();
     const apiKey = await this.options.getApiKey();
     if (apiKey) {
       await this._sendHeartbeats();
