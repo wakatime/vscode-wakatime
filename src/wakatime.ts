@@ -463,7 +463,7 @@ export class WakaTime {
   }
 
   private onAITranscriptActivity(aiName: string, heartbeats: TranscriptHeartbeat[]) {
-    const now = Date.now() / 1000;
+    this.isAICodeGenerating = true;
     for (const heartbeat of heartbeats) {
       heartbeat.projectFolder =
         heartbeat.projectFolder ??
@@ -475,26 +475,27 @@ export class WakaTime {
         heartbeat.filePath = path.resolve(heartbeat.projectFolder, heartbeat.filePath);
       }
 
-      // Find matching buffered heartbeats for this file
-      const matching = this.heartbeats.filter((h) => h.entity === heartbeat.filePath);
+      // Find matching buffered heartbeats
+      const matching = this.heartbeats.filter(
+        (h) => h.entity === heartbeat.filePath && Utils.withinSeconds(heartbeat.time, h.time, 3),
+      );
       if (matching.length > 0) {
-        for (const existing of matching) {
-          existing.category = 'ai coding';
-          existing.human_line_changes = 0;
-          existing.ai_line_changes = heartbeat.lineChanges;
-          heartbeat.lineChanges = 0;
-          existing.agent = aiName;
-          existing.plugin = Utils.buildUserAgentString(
-            this.editorName,
-            this.extension.version,
-            aiName,
-          );
-        }
+        this.logger.debug(`Found ${matching.length} matching existing heartbeats in buffer`);
+        const existing = matching[matching.length - 1];
+        existing.category = 'ai coding';
+        existing.agent = aiName;
+        existing.plugin = Utils.buildUserAgentString(
+          this.editorName,
+          this.extension.version,
+          aiName,
+        );
+        existing.human_line_changes = 0;
+        existing.ai_line_changes = heartbeat.lineChanges;
       } else {
-        // No buffered heartbeat for this file, push a new one
+        // No buffered heartbeat, push a new one
         const h: Heartbeat = {
           entity: heartbeat.filePath,
-          time: now,
+          time: heartbeat.time,
           is_write: false,
           category: 'ai coding',
           ai_line_changes: heartbeat.lineChanges,
@@ -503,9 +504,11 @@ export class WakaTime {
           plugin: Utils.buildUserAgentString(this.editorName, this.extension.version, aiName),
         };
         this.heartbeats.push(h);
+        this.logger.debug(`Appending AI heartbeat to local buffer: ${JSON.stringify(h, null, 2)}`);
       }
       delete this.linesInFiles[heartbeat.filePath];
     }
+    this.lineChanges = { ai: {}, human: {} };
     if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
       this.sendHeartbeats();
     }
@@ -555,6 +558,7 @@ export class WakaTime {
     if (Utils.isAIChatSidebar(e.textEditor?.document?.uri)) {
       this.isAICodeGenerating = true;
     }
+    if (this.transcriptWatcher?.poll()) return;
     this.updateLineNumbers();
     this.onEvent(false);
   }

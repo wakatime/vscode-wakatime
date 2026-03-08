@@ -62,24 +62,28 @@ export class TranscriptWatcher {
     }
   }
 
-  public poll(): void {
+  public poll(): boolean {
+    let found = false;
     for (const glob of this.globs) {
       try {
         if (!fs.existsSync(glob.baseDir)) continue;
         const files = this.findFiles(glob.baseDir, '', glob.filePattern, 0, 10);
         for (const file of files) {
-          this.processFile(file, glob.aiName);
+          if (this.processFile(file, glob.aiName)) {
+            found = true;
+          }
         }
       } catch {
         // directory may not exist or not be readable
       }
     }
+    return found;
   }
 
-  private processFile(filePath: string, aiName: string): void {
+  private processFile(filePath: string, aiName: string): boolean {
     try {
       // Only support jsonl transcripts for now
-      if (!filePath.endsWith('.jsonl')) return;
+      if (!filePath.endsWith('.jsonl')) return false;
 
       const stat = fs.statSync(filePath);
 
@@ -87,12 +91,12 @@ export class TranscriptWatcher {
       const cutoff = tracked?.lastReadTime ?? this.initializedAt;
 
       // Only read transcripts modified since we last read them
-      if (Math.max(stat.mtimeMs, stat.birthtimeMs) < cutoff) return;
+      if (Math.max(stat.mtimeMs, stat.birthtimeMs) < cutoff) return false;
 
       // No new content since last read
       let lastOffset = tracked?.lastReadOffset ?? 0;
       if (stat.size < lastOffset) lastOffset = 0;
-      if (stat.size == lastOffset) return;
+      if (stat.size == lastOffset) return false;
 
       const fd = fs.openSync(filePath, 'r');
       try {
@@ -116,6 +120,7 @@ export class TranscriptWatcher {
 
         if (heartbeats.length > 0 && this.activityCallback) {
           this.activityCallback(aiName, heartbeats);
+          return true;
         }
       } finally {
         fs.closeSync(fd);
@@ -123,6 +128,7 @@ export class TranscriptWatcher {
     } catch (e) {
       this.logger.warn(`Error processing transcript ${filePath}: ${e}`);
     }
+    return false;
   }
 
   private parseContent(
@@ -131,7 +137,7 @@ export class TranscriptWatcher {
     cutoff: number,
     currentProjectFolder?: string,
   ): { heartbeats: TranscriptHeartbeat[]; projectFolder?: string } {
-    const entityMap = new Map<string, number>();
+    const entityMap = new Map<string, { lineChanges: number; timestamp: Date }>();
     let projectFolder = currentProjectFolder;
 
     for (const line of content.split('\n')) {
@@ -144,10 +150,9 @@ export class TranscriptWatcher {
           projectFolder = entry.cwd;
         }
 
-        if (entry.timestamp) {
-          const ts = new Date(entry.timestamp ?? Date.now()).getTime();
-          if (ts < cutoff) continue;
-        }
+        if (!entry.timestamp) continue;
+        const ts = new Date(entry.timestamp);
+        if (ts.getTime() < cutoff) continue;
 
         const results = this.extractFileEntity(aiName, entry);
         if (results) {
@@ -156,8 +161,11 @@ export class TranscriptWatcher {
               path.isAbsolute(result.filePath) || !projectFolder
                 ? result.filePath
                 : path.resolve(projectFolder, result.filePath);
-            const prev = entityMap.get(filePath) ?? 0;
-            entityMap.set(filePath, prev + result.lineChanges);
+            const prev = entityMap.get(filePath);
+            entityMap.set(filePath, {
+              lineChanges: (prev?.lineChanges ?? 0) + result.lineChanges,
+              timestamp: ts,
+            });
           }
         }
       } catch {
@@ -166,8 +174,13 @@ export class TranscriptWatcher {
     }
 
     const heartbeats: TranscriptHeartbeat[] = [];
-    for (const [filePath, lineChanges] of entityMap) {
-      heartbeats.push({ filePath, lineChanges, projectFolder });
+    for (const [filePath, data] of entityMap) {
+      heartbeats.push({
+        filePath,
+        lineChanges: data.lineChanges,
+        time: data.timestamp.getTime() / 1000,
+        projectFolder,
+      });
     }
     return { heartbeats, projectFolder };
   }

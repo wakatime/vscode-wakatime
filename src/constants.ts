@@ -133,5 +133,6 @@ export interface TrackedFile {
 export interface TranscriptHeartbeat {
   filePath: string;
   lineChanges: number;
+  time: number;
   projectFolder?: string;
 }

@@ -227,6 +227,14 @@ export class Utils {
     const ai = aiName ? ` ${aiName}` : '';
     return editorName + '/' + vscode.version + ai + ' vscode-wakatime/' + extensionVersion;
   }
+
+  public static withinSeconds(
+    relativeTo: number,
+    compareTo: number,
+    withinSeconds: number,
+  ): boolean {
+    return Math.abs(relativeTo - compareTo) <= withinSeconds;
+  }
 }
 
 interface FileSelection {
