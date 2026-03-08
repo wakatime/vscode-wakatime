@@ -2,7 +2,7 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
   {
     name: 'claude',
     extensionIds: ['anthropic.claude-code'],
-    transcriptLogGlobs: ['~/.claude/projects/**/transcript.jsonl'],
+    transcriptLogGlobs: ['~/.claude/projects/*/*.jsonl'],
   },
   {
     name: 'codex',
