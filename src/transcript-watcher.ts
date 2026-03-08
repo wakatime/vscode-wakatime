@@ -15,6 +15,7 @@ export class TranscriptWatcher {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private activityCallback: ((aiName: string, entities: TranscriptHeartbeat[]) => void) | null =
     null;
+  private anyActivityCallback: ((timestampMs: number) => void) | null = null;
   private logger: Logger;
   private pollIntervalMs: number;
   private initializedAt: number;
@@ -41,10 +42,14 @@ export class TranscriptWatcher {
     );
   }
 
-  public onActivityHandler(
+  public onAICodingActivityHandler(
     callback: (aiName: string, entities: TranscriptHeartbeat[]) => void,
   ): void {
     this.activityCallback = callback;
+  }
+
+  public onAnyActivityHandler(callback: (timestampMs: number) => void): void {
+    this.anyActivityCallback = callback;
   }
 
   public start(): void {
@@ -105,6 +110,7 @@ export class TranscriptWatcher {
         const buffer = Buffer.alloc(stat.size - lastOffset);
         fs.readSync(fd, buffer, 0, buffer.length, lastOffset);
         const content = buffer.toString('utf-8');
+        this.anyActivityCallback?.(now);
 
         const cliLastHeartbeatAt =
           aiName == 'claude' ? this.readCliStateLastHeartbeatAt(filePath) : undefined;

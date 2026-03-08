@@ -30,6 +30,7 @@ export class WakaTime {
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
+  private lastAIActivityAt: number = 0;
   private lastDebug: boolean = false;
   private lastCompile: boolean = false;
   private lastAICodeGenerating: boolean = false;
@@ -458,8 +459,13 @@ export class WakaTime {
 
   private setupTranscriptWatcher(): void {
     this.transcriptWatcher = new TranscriptWatcher(this.logger);
-    this.transcriptWatcher.onActivityHandler(this.onAITranscriptActivity.bind(this));
+    this.transcriptWatcher.onAnyActivityHandler(this.onAnyAITranscriptActivity.bind(this));
+    this.transcriptWatcher.onAICodingActivityHandler(this.onAITranscriptActivity.bind(this));
     this.transcriptWatcher.start();
+  }
+
+  private onAnyAITranscriptActivity(ts: number) {
+    this.lastAIActivityAt = ts;
   }
 
   private onAITranscriptActivity(aiName: string, heartbeats: TranscriptHeartbeat[]) {
@@ -557,6 +563,7 @@ export class WakaTime {
       this.isAICodeGenerating = true;
     }
     if (this.transcriptWatcher?.poll()) return;
+    if (this.hasRecentAITranscriptActivity()) return;
     this.updateLineNumbers();
     this.onEvent(false);
   }
@@ -591,12 +598,16 @@ export class WakaTime {
     }
 
     if (!this.isAICodeGenerating) return;
+    if (this.transcriptWatcher?.poll()) return;
+    if (this.hasRecentAITranscriptActivity()) return;
 
     this.onEvent(false);
   }
 
   private onChangeTab(_e: vscode.TextEditor | undefined): void {
     this.logger.debug('onChangeTab');
+    if (this.transcriptWatcher?.poll()) return;
+    if (this.hasRecentAITranscriptActivity()) return;
     this.isAICodeGenerating = false;
     this.updateLineNumbers();
     this.onEvent(false);
@@ -605,6 +616,8 @@ export class WakaTime {
   private onDidChangeTabs(_e: vscode.TabChangeEvent): void {
     this.logger.debug('onDidChangeTabs');
     if (!this.isAICodeGenerating) return;
+    if (this.transcriptWatcher?.poll()) return;
+    if (this.hasRecentAITranscriptActivity()) return;
     this.updateLineNumbers();
     this.onEvent(false);
   }
@@ -1191,6 +1204,11 @@ export class WakaTime {
   private recentlyAIPasted(time: number): boolean {
     this.AIrecentPastes = this.AIrecentPastes.filter((x) => x + AI_RECENT_PASTES_TIME_MS >= time);
     return this.AIrecentPastes.length > 3;
+  }
+
+  private hasRecentAITranscriptActivity(): boolean {
+    const seconds = 10;
+    return Math.abs(Date.now() - this.lastAIActivityAt) < seconds * 1000;
   }
 
   private isDuplicateHeartbeat(file: string, time: number, selection: vscode.Position): boolean {
