@@ -202,9 +202,6 @@ export class Utils {
     const editorName = vscode.env.appName.toLowerCase();
     return editorName.includes('cursor') || editorName.includes('windsurf');
   }
-  public static getInstalledExtensionIds(): string[] {
-    return vscode.extensions.all.map((extension) => extension.id.toLowerCase());
-  }
 
   public static hasAIExtensions(): boolean {
     return COMMON_AI_EXTENSIONS.some((assistant) => {

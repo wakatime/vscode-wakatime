@@ -126,6 +126,7 @@ export class TranscriptWatcher {
           content,
           cutoff,
           tracked?.projectFolder,
+          Math.max(stat.mtimeMs, stat.birthtimeMs),
         );
 
         this.trackedFiles.set(filePath, {
@@ -178,6 +179,7 @@ export class TranscriptWatcher {
     content: string,
     cutoff: number,
     currentProjectFolder?: string,
+    fallbackTimestamp?: number,
   ): { heartbeats: TranscriptHeartbeat[]; projectFolder?: string } {
     const entityMap = new Map<string, { lineChanges: number; timestamp: Date }>();
     let projectFolder = currentProjectFolder;
@@ -192,8 +194,8 @@ export class TranscriptWatcher {
           projectFolder = entry.cwd;
         }
 
-        if (!entry.timestamp) continue;
-        const ts = new Date(entry.timestamp);
+        if (!entry.timestamp && aiName !== 'cursor') continue;
+        const ts = new Date(entry.timestamp ?? fallbackTimestamp);
         if (ts.getTime() < cutoff) continue;
 
         const results = this.extractFileEntity(aiName, entry);
@@ -228,7 +230,7 @@ export class TranscriptWatcher {
   }
 
   private extractFileEntity(
-    _aiName: string,
+    aiName: string,
     entry: any,
   ): { filePath: string; lineChanges: number }[] | null {
     if (entry.toolUseResult?.filePath) {
@@ -238,6 +240,10 @@ export class TranscriptWatcher {
 
     if (entry.payload?.name === 'apply_patch' && typeof entry.payload?.input === 'string') {
       return this.parseCodexPatch(entry.payload.input);
+    }
+
+    if (aiName === 'cursor') {
+      return this.parseCursorEntry(entry);
     }
 
     // Generic format: look for tool_result, result, output with file paths
@@ -250,6 +256,52 @@ export class TranscriptWatcher {
     }
 
     return null;
+  }
+
+  private parseCursorEntry(entry: any): { filePath: string; lineChanges: number }[] | null {
+    // Cursor JSONL format: {"role":"assistant","message":{"content":[...]}}
+    // Only assistant turns carry file edits
+    if (entry.role !== 'assistant') return null;
+
+    const content = entry.message?.content;
+    if (!Array.isArray(content)) return null;
+
+    const results: { filePath: string; lineChanges: number }[] = [];
+
+    for (const block of content) {
+      // Code block with URI: {"type":"code","uri":"file:///path/to/file","text":"..."}
+      if (block.uri && typeof block.uri === 'string') {
+        const filePath = block.uri.startsWith('file://')
+          ? decodeURIComponent(block.uri.slice('file://'.length))
+          : block.uri;
+        const lineChanges = typeof block.text === 'string' ? block.text.split('\n').length : 0;
+        results.push({ filePath, lineChanges });
+        continue;
+      }
+
+      // Tool use: {"type":"tool_use","name":"write","input":{"path":"...","code":"..."}}
+      if (block.type === 'tool_use' && block.input) {
+        const fp = block.input.path ?? block.input.file_path ?? block.input.target_file;
+        if (fp && typeof fp === 'string') {
+          const code = block.input.code ?? block.input.content ?? '';
+          const lineChanges = typeof code === 'string' ? code.split('\n').length : 0;
+          results.push({ filePath: fp, lineChanges });
+        }
+        continue;
+      }
+
+      // Tool result with file info: {"type":"tool_result","content":{"path":"...","linesCreated":N}}
+      if (block.type === 'tool_result') {
+        const c = block.content;
+        const fp = c?.path ?? c?.file_path ?? c?.filePath;
+        if (fp && typeof fp === 'string') {
+          const lineChanges = c?.linesCreated ?? c?.lines_created ?? 0;
+          results.push({ filePath: fp, lineChanges });
+        }
+      }
+    }
+
+    return results.length > 0 ? results : null;
   }
 
   private parseCodexPatch(input: string): { filePath: string; lineChanges: number }[] | null {

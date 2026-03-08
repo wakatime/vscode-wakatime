@@ -15,6 +15,14 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
     transcriptLogGlobs: ['~/.copilot/session-state/*.jsonl'],
   },
   {
+    name: 'cursor',
+    extensionIds: [],
+    transcriptLogGlobs: [
+      '~/.cursor/projects/*/agent-transcripts/*/*.jsonl',
+      '~/AppData/Roaming/Cursor/projects/*/agent-transcripts/*/*.jsonl',
+    ],
+  },
+  {
     name: 'gemini',
     extensionIds: [],
     transcriptLogGlobs: [],
