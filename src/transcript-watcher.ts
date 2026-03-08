@@ -102,6 +102,7 @@ export class TranscriptWatcher {
         const { heartbeats, projectFolder } = this.parseContent(
           aiName,
           content,
+          cutoff,
           tracked?.projectFolder,
         );
 
@@ -126,6 +127,7 @@ export class TranscriptWatcher {
   private parseContent(
     aiName: string,
     content: string,
+    cutoff: number,
     currentProjectFolder?: string,
   ): { heartbeats: TranscriptHeartbeat[]; projectFolder?: string } {
     const entityMap = new Map<string, number>();
@@ -139,6 +141,11 @@ export class TranscriptWatcher {
         // Extract cwd from session metadata
         if (entry.cwd && typeof entry.cwd === 'string') {
           projectFolder = entry.cwd;
+        }
+
+        if (entry.timestamp) {
+          const ts = new Date(entry.timestamp).getTime();
+          if (ts < cutoff) continue;
         }
 
         const results = this.extractFileEntity(aiName, entry);
