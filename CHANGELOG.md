@@ -1,6 +1,35 @@
 
 # Changelog
 
+## 27.0.0 (2026-03-08)
+
+- Support Cursor IDE by parsing project transcript jsonl files.
+
+## 26.0.5 (2026-03-08)
+
+- Skip human heartbeats when any AI activity detected.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
+## 26.0.4 (2026-03-08)
+
+- Respect WakaTime Claude Code cli plugin state file to prevent duplicate stats.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
+## 26.0.3 (2026-03-08)
+
+- Fix AI time tracking for Claude Code.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
+## 26.0.2 (2026-03-08)
+
+- Fix AI time tracking for Codex.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
+## 26.0.1 (2026-03-08)
+
+- Rewrite buffered heartbeats to AI category when transcript logs contain matching entity file paths.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
 ## 26.0.0 (2026-03-04)
 
 - Detect AI coding from Codex and Claude transcript logs.

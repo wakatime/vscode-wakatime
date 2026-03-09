@@ -11,7 +11,7 @@ import {
   Heartbeat,
   LogLevel,
   SEND_BUFFER_SECONDS,
-  TranscriptEntity,
+  TranscriptHeartbeat,
 } from './constants';
 import { Options, Setting } from './options';
 
@@ -30,6 +30,7 @@ export class WakaTime {
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
+  private lastAIActivityAt: number = 0;
   private lastDebug: boolean = false;
   private lastCompile: boolean = false;
   private lastAICodeGenerating: boolean = false;
@@ -458,33 +459,63 @@ export class WakaTime {
 
   private setupTranscriptWatcher(): void {
     this.transcriptWatcher = new TranscriptWatcher(this.logger);
-    this.transcriptWatcher.onActivity(this.onAITranscriptActivity.bind(this));
+    this.transcriptWatcher.onAnyActivityHandler(this.onAnyAITranscriptActivity.bind(this));
+    this.transcriptWatcher.onAICodingActivityHandler(this.onAITranscriptActivity.bind(this));
     this.transcriptWatcher.start();
   }
 
-  private onAITranscriptActivity(aiName: string, entities: TranscriptEntity[]) {
-    const now = Date.now() / 1000;
-    for (const entity of entities) {
-      const heartbeat: Heartbeat = {
-        entity: entity.filePath,
-        time: now,
-        is_write: false,
-        category: 'ai coding',
-        ai_line_changes: entity.lineChanges,
-        project_folder:
-          entity.projectFolder ??
-          (vscode.window.activeTextEditor?.document.uri
-            ? this.getProjectFolder(vscode.window.activeTextEditor.document.uri)
-            : undefined),
-        agent: aiName,
-        plugin: Utils.buildUserAgentString(this.editorName, this.extension.version, aiName),
-      };
-      this.heartbeats.push(heartbeat);
-      delete this.linesInFiles[entity.filePath];
+  private onAnyAITranscriptActivity(ts: number) {
+    this.lastAIActivityAt = ts;
+  }
+
+  private onAITranscriptActivity(aiName: string, heartbeats: TranscriptHeartbeat[]) {
+    this.isAICodeGenerating = true;
+    for (const heartbeat of heartbeats) {
+      heartbeat.projectFolder =
+        heartbeat.projectFolder ??
+        (vscode.window.activeTextEditor?.document.uri
+          ? this.getProjectFolder(vscode.window.activeTextEditor.document.uri)
+          : undefined);
+
+      if (!path.isAbsolute(heartbeat.filePath) && heartbeat.projectFolder) {
+        heartbeat.filePath = path.resolve(heartbeat.projectFolder, heartbeat.filePath);
+      }
+
+      // Find matching buffered heartbeats
+      const matching = this.heartbeats.filter(
+        (h) => h.entity === heartbeat.filePath && Utils.withinSeconds(heartbeat.time, h.time, 3),
+      );
+      if (matching.length > 0) {
+        this.logger.debug(`Found ${matching.length} matching existing heartbeats in buffer`);
+        const existing = matching[matching.length - 1];
+        existing.category = 'ai coding';
+        existing.agent = aiName;
+        existing.plugin = Utils.buildUserAgentString(
+          this.editorName,
+          this.extension.version,
+          aiName,
+        );
+        existing.human_line_changes = 0;
+        existing.ai_line_changes = heartbeat.lineChanges;
+      } else {
+        // No buffered heartbeat, push a new one
+        const h: Heartbeat = {
+          entity: heartbeat.filePath,
+          time: heartbeat.time,
+          is_write: false,
+          category: 'ai coding',
+          ai_line_changes: heartbeat.lineChanges,
+          project_folder: heartbeat.projectFolder,
+          agent: aiName,
+          plugin: Utils.buildUserAgentString(this.editorName, this.extension.version, aiName),
+        };
+        this.heartbeats.push(h);
+        this.logger.debug(`Appending AI heartbeat to local buffer: ${JSON.stringify(h, null, 2)}`);
+      }
+      delete this.linesInFiles[heartbeat.filePath];
     }
-    if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
-      this.sendHeartbeats();
-    }
+    this.lineChanges = { ai: {}, human: {} };
+    this.sendHeartbeatsIfNecessary();
   }
 
   private onDebuggingChanged(): void {
@@ -509,7 +540,7 @@ export class WakaTime {
   }
 
   private onDidStartTask(e: vscode.TaskStartEvent): void {
-    this.logger.debug('onDidTerminateDebugSession');
+    this.logger.debug('onDidStartTask');
     if (e.execution.task.isBackground) return;
     if (e.execution.task.detail && e.execution.task.detail.indexOf('watch') !== -1) return;
     this.isCompiling = true;
@@ -531,6 +562,8 @@ export class WakaTime {
     if (Utils.isAIChatSidebar(e.textEditor?.document?.uri)) {
       this.isAICodeGenerating = true;
     }
+    if (this.transcriptWatcher?.poll()) return;
+    if (this.hasRecentAITranscriptActivity()) return;
     this.updateLineNumbers();
     this.onEvent(false);
   }
@@ -565,12 +598,16 @@ export class WakaTime {
     }
 
     if (!this.isAICodeGenerating) return;
+    if (this.transcriptWatcher?.poll()) return;
+    if (this.hasRecentAITranscriptActivity()) return;
 
     this.onEvent(false);
   }
 
   private onChangeTab(_e: vscode.TextEditor | undefined): void {
     this.logger.debug('onChangeTab');
+    if (this.transcriptWatcher?.poll()) return;
+    if (this.hasRecentAITranscriptActivity()) return;
     this.isAICodeGenerating = false;
     this.updateLineNumbers();
     this.onEvent(false);
@@ -579,6 +616,8 @@ export class WakaTime {
   private onDidChangeTabs(_e: vscode.TabChangeEvent): void {
     this.logger.debug('onDidChangeTabs');
     if (!this.isAICodeGenerating) return;
+    if (this.transcriptWatcher?.poll()) return;
+    if (this.hasRecentAITranscriptActivity()) return;
     this.updateLineNumbers();
     this.onEvent(false);
   }
@@ -603,7 +642,6 @@ export class WakaTime {
   }
 
   private updateLineNumbers(): void {
-    this.transcriptWatcher?.poll();
     const doc = vscode.window.activeTextEditor?.document;
     if (!doc) return;
     const file = Utils.getFocusedFile(doc);
@@ -624,9 +662,7 @@ export class WakaTime {
   }
 
   private onEvent(isWrite: boolean): void {
-    if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
-      this.sendHeartbeats();
-    }
+    this.sendHeartbeatsIfNecessary();
 
     clearTimeout(this.debounceId);
     this.debounceId = setTimeout(() => {
@@ -742,12 +778,17 @@ export class WakaTime {
     this.logger.debug(`Appending heartbeat to local buffer: ${JSON.stringify(heartbeat, null, 2)}`);
     this.heartbeats.push(heartbeat);
 
-    if (now - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
+    await this.sendHeartbeatsIfNecessary();
+  }
+
+  private async sendHeartbeatsIfNecessary() {
+    if (Date.now() - this.lastSent > SEND_BUFFER_SECONDS * 1000) {
       await this.sendHeartbeats();
     }
   }
 
   private async sendHeartbeats(): Promise<void> {
+    this.transcriptWatcher?.poll();
     const apiKey = await this.options.getApiKey();
     if (apiKey) {
       await this._sendHeartbeats();
@@ -898,7 +939,11 @@ export class WakaTime {
         this.logger.error(error_msg);
       }
 
-      cleanup.map((tmpfile) => fs.unlinkSync(tmpfile));
+      cleanup.map((tmpfile) => {
+        try {
+          fs.unlinkSync(tmpfile);
+        } catch (_) {}
+      });
     });
   }
 
@@ -1161,13 +1206,18 @@ export class WakaTime {
     return this.AIrecentPastes.length > 3;
   }
 
+  private hasRecentAITranscriptActivity(): boolean {
+    const seconds = 10;
+    return Math.abs(Date.now() - this.lastAIActivityAt) < seconds * 1000;
+  }
+
   private isDuplicateHeartbeat(file: string, time: number, selection: vscode.Position): boolean {
     let duplicate = false;
-    const minutes = 30;
+    const minutes = 10;
     const milliseconds = minutes * 60000;
     if (
       this.dedupe[file] &&
-      this.dedupe[file].lastHeartbeatAt + milliseconds < time &&
+      this.dedupe[file].lastHeartbeatAt + milliseconds > time &&
       this.dedupe[file].selection.line == selection.line &&
       this.dedupe[file].selection.character == selection.character
     ) {

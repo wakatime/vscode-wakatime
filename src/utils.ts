@@ -16,7 +16,7 @@ export class Utils {
   };
 
   public static quote(str: string): string {
-    if (str.includes(' ')) return `"${str.replace('"', '\\"')}"`;
+    if (str.includes(' ')) return `"${str.replace(/"/g, '\\"')}"`;
     return str;
   }
 
@@ -206,9 +206,6 @@ export class Utils {
            editorName.includes('windsurf');
   }
 
-  public static getInstalledExtensionIds(): string[] {
-    return vscode.extensions.all.map((extension) => extension.id.toLowerCase());
-  }
 
   public static hasAIExtensions(): boolean {
     return COMMON_AI_EXTENSIONS.some((assistant) => {
@@ -230,6 +227,14 @@ export class Utils {
   ): string {
     const ai = aiName ? ` ${aiName}` : '';
     return editorName + '/' + vscode.version + ai + ' vscode-wakatime/' + extensionVersion;
+  }
+
+  public static withinSeconds(
+    relativeTo: number,
+    compareTo: number,
+    withinSeconds: number,
+  ): boolean {
+    return Math.abs(relativeTo - compareTo) <= withinSeconds;
   }
 }
 
