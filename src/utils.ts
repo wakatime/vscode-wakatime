@@ -201,8 +201,8 @@ export class Utils {
 
   public static isAICapableEditor(): boolean {
     const editorName = vscode.env.appName.toLowerCase();
-    return editorName.includes('cursor') || 
-           editorName.includes('kiro') ||     // 新增：识别 Kiro 为 AI 能力编辑器
+    return editorName.includes('cursor') ||
+           editorName.includes('kiro') ||
            editorName.includes('windsurf');
   }
 
