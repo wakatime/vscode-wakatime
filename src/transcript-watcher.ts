@@ -1,17 +1,19 @@
 import * as fs from 'fs';
 import * as fsAsync from 'fs/promises';
 import * as path from 'path';
+
 import {
   CursorRow,
   ParsedGlob,
   SqlJsInit,
   SqlJsModule,
-  TrackedFile,
   TRANSCRIPT_POLL_INTERVAL,
+  TrackedFile,
   TranscriptHeartbeat,
 } from './constants';
-import { Logger } from './logger';
+
 import { Desktop } from './desktop';
+import { Logger } from './logger';
 
 export class TranscriptWatcher {
   private globs: ParsedGlob[] = [];
@@ -185,7 +187,11 @@ export class TranscriptWatcher {
 
       const now = Date.now();
 
-      const heartbeats = await this.querySQLiteFile(filePath);
+      const heartbeats = await this.querySQLiteFile(
+        filePath,
+        cutoff,
+        Math.max(stat.mtimeMs, stat.birthtimeMs),
+      );
       this.logger.debug(`Read ${heartbeats.length} transcript heartbeats from ${filePath}`);
 
       this.trackedFiles.set(filePath, {
@@ -207,7 +213,11 @@ export class TranscriptWatcher {
     return false;
   }
 
-  private async querySQLiteFile(filePath: string): Promise<TranscriptHeartbeat[]> {
+  private async querySQLiteFile(
+    filePath: string,
+    cutoff: number,
+    fallbackTimestamp?: number,
+  ): Promise<TranscriptHeartbeat[]> {
     const SQL = await this.getSqlJs();
     const db = new SQL.Database(new Uint8Array(await fsAsync.readFile(filePath)));
 
@@ -232,20 +242,18 @@ export class TranscriptWatcher {
                 streamingContent?: string;
               }
             | undefined;
-          if (!params?.relativeWorkspacePath || !params?.streamingContent) {
-            return { filePath: '', time: 0, lineChanges: 0 };
-          }
-          const timestamp = new Date(entry.createdAt ?? 0).getTime();
-          if (isNaN(timestamp)) {
-            return { filePath: '', time: 0, lineChanges: 0 };
-          }
+          if (!params?.relativeWorkspacePath || !params?.streamingContent) return;
+          if (!entry.createdAt) return;
+          const ts = new Date(entry.createdAt ?? fallbackTimestamp);
+          if (ts.getTime() < cutoff) return;
           return {
-            time: timestamp,
+            time: ts.getTime() / 1000,
             filePath: params.relativeWorkspacePath,
             lineChanges: this.lineChangesFromDiff(params.streamingContent),
           };
         })
-        .filter((hb) => !!hb.filePath);
+        .filter(Boolean)
+        .filter((hb) => !!hb?.filePath) as TranscriptHeartbeat[];
     } finally {
       db.close();
     }
