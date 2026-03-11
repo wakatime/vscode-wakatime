@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 28.0.0 (2026-03-11)
+
+- Support Cursor IDE by parsing transcript vscdb sqlite3 files.
+
 ## 27.0.0 (2026-03-08)
 
 - Support Cursor IDE by parsing project transcript jsonl files.
