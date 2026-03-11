@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 28.0.1 (2026-03-11)
+
+- Prevent tracking AI changes from Cursor in the past.
+
 ## 28.0.0 (2026-03-11)
 
 - Support Cursor IDE by parsing transcript vscdb sqlite3 files.
