@@ -1,25 +1,26 @@
 // import * as azdata from 'azdata';
 import * as child_process from 'child_process';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as os from 'os';
+import * as path from 'path';
 import * as vscode from 'vscode';
 
 import {
   AI_RECENT_PASTES_TIME_MS,
+  ALLOWED_SCHEMES,
   COMMAND_DASHBOARD,
   Heartbeat,
   LogLevel,
   SEND_BUFFER_SECONDS,
   TranscriptHeartbeat,
 } from './constants';
+import { FileSelectionMap, LineCounts, Lines, Utils } from './utils';
 import { Options, Setting } from './options';
 
 import { Dependencies } from './dependencies';
 import { Desktop } from './desktop';
 import { Logger } from './logger';
 import { TranscriptWatcher } from './transcript-watcher';
-import { FileSelectionMap, LineCounts, Lines, Utils } from './utils';
 
 export class WakaTime {
   private editorName: string;
@@ -557,8 +558,9 @@ export class WakaTime {
   }
 
   private onChangeSelection(e: vscode.TextEditorSelectionChangeEvent): void {
-    this.logger.debug('onChangeSelection');
+    if (!ALLOWED_SCHEMES.includes((e as any).document?.uri?.scheme)) return;
     if (e.kind === vscode.TextEditorSelectionChangeKind.Command) return;
+    this.logger.debug('onChangeSelection');
     if (Utils.isAIChatSidebar(e.textEditor?.document?.uri)) {
       this.isAICodeGenerating = true;
     }
@@ -571,6 +573,7 @@ export class WakaTime {
   }
 
   private onChangeTextDocument(e: vscode.TextDocumentChangeEvent): void {
+    if (!ALLOWED_SCHEMES.includes(e.document?.uri?.scheme)) return;
     this.logger.debug('onChangeTextDocument');
     if (Utils.isAIChatSidebar(e.document?.uri)) {
       this.isAICodeGenerating = true;
@@ -608,7 +611,8 @@ export class WakaTime {
     });
   }
 
-  private onChangeTab(_e: vscode.TextEditor | undefined): void {
+  private onChangeTab(e: vscode.TextEditor | undefined): void {
+    if (!ALLOWED_SCHEMES.includes(e?.document?.uri?.scheme ?? '')) return;
     this.logger.debug('onChangeTab');
     this.transcriptWatcher?.poll().then((skip) => {
       if (skip) return;
