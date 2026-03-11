@@ -194,14 +194,14 @@ export class TranscriptWatcher {
       );
       this.logger.debug(`Read ${heartbeats.length} transcript heartbeats from ${filePath}`);
 
-      this.trackedFiles.set(filePath, {
-        aiName,
-        lastReadOffset: stat.size,
-        lastReadTime: now,
-        projectFolder: tracked?.projectFolder,
-      });
-
       if (heartbeats.length > 0 && this.activityCallback) {
+        this.trackedFiles.set(filePath, {
+          aiName,
+          lastReadOffset: stat.size,
+          lastReadTime: now,
+          projectFolder: tracked?.projectFolder,
+        });
+
         this.activityCallback(aiName, heartbeats);
         return true;
       }
