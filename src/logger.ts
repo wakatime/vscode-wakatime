@@ -1,7 +1,10 @@
+import * as vscode from 'vscode';
+
 import { LogLevel } from './constants';
 
 export class Logger {
   private level: LogLevel;
+  private static outputChannel: vscode.OutputChannel | null = null;
 
   constructor(level: LogLevel) {
     this.setLevel(level);
@@ -15,9 +18,21 @@ export class Logger {
     this.level = level;
   }
 
+  private static getOutputChannel(): vscode.OutputChannel {
+    if (!Logger.outputChannel) {
+      Logger.outputChannel = vscode.window.createOutputChannel('WakaTime');
+    }
+    return Logger.outputChannel;
+  }
+
   public log(level: LogLevel, msg: string): void {
     if (level >= this.level) {
       msg = `[WakaTime][${LogLevel[level]}] ${msg}`;
+      if (vscode.env.appName === 'Cursor') {
+        try {
+          Logger.getOutputChannel().appendLine(msg);
+        } catch {}
+      }
       if (level == LogLevel.DEBUG) console.log(msg);
       if (level == LogLevel.INFO) console.info(msg);
       if (level == LogLevel.WARN) console.warn(msg);
