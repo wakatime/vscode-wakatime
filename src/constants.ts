@@ -101,7 +101,7 @@ export enum LogLevel {
 export const AI_RECENT_PASTES_TIME_MS = 500;
 export const TIME_BETWEEN_HEARTBEATS_MS = 120000;
 export const SEND_BUFFER_SECONDS = 30;
-export const TRANSCRIPT_POLL_INTERVAL = 15; // seconds
+export const TRANSCRIPT_POLL_INTERVAL = 30; // seconds
 
 export interface Heartbeat {
   time: number;
