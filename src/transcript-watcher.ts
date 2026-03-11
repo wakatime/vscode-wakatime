@@ -1,7 +1,11 @@
 import * as fs from 'fs';
+import * as fsAsync from 'fs/promises';
 import * as path from 'path';
 import {
+  CursorRow,
   ParsedGlob,
+  SqlJsInit,
+  SqlJsModule,
   TrackedFile,
   TRANSCRIPT_POLL_INTERVAL,
   TranscriptHeartbeat,
@@ -19,6 +23,7 @@ export class TranscriptWatcher {
   private logger: Logger;
   private pollIntervalMs: number;
   private initializedAt: number;
+  private sqlJsPromise: Promise<SqlJsModule> | null = null;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -67,14 +72,18 @@ export class TranscriptWatcher {
     }
   }
 
-  public poll(): boolean {
+  public async poll(): Promise<boolean> {
+    this.logger.debug('Polling for AI transcript log changes...');
     let found = false;
     for (const glob of this.globs) {
       try {
         if (!fs.existsSync(glob.baseDir)) continue;
-        const files = this.findFiles(glob.baseDir, '', glob.filePattern, 0, 10);
+        const files = this.findFiles(glob, glob.baseDir, '', glob.filePattern, 0, 10);
         for (const file of files) {
-          if (this.processFile(file, glob.aiName)) {
+          if (await this.processJSONLogFile(file, glob.aiName)) {
+            found = true;
+          }
+          if (await this.processSQLiteFile(file, glob.aiName)) {
             found = true;
           }
         }
@@ -85,12 +94,23 @@ export class TranscriptWatcher {
     return found;
   }
 
-  private processFile(filePath: string, aiName: string): boolean {
+  private async getSqlJs(): Promise<SqlJsModule> {
+    if (!this.sqlJsPromise) {
+      const initSqlJs = eval('require')('sql.js') as SqlJsInit;
+      const wasmPath = eval('require').resolve('sql.js/dist/sql-wasm.wasm');
+      this.sqlJsPromise = fsAsync
+        .readFile(wasmPath)
+        .then((wasmBinary) => initSqlJs({ wasmBinary: new Uint8Array(wasmBinary) }));
+    }
+
+    return this.sqlJsPromise;
+  }
+
+  private async processJSONLogFile(filePath: string, aiName: string): Promise<boolean> {
     try {
-      // Only support jsonl transcripts for now
       if (!filePath.endsWith('.jsonl')) return false;
 
-      const stat = fs.statSync(filePath);
+      const stat = await fsAsync.stat(filePath);
 
       const tracked = this.trackedFiles.get(filePath);
       let cutoff = tracked?.lastReadTime ?? this.initializedAt;
@@ -98,10 +118,11 @@ export class TranscriptWatcher {
       // Only read transcripts modified since we last read them
       if (Math.max(stat.mtimeMs, stat.birthtimeMs) < cutoff) return false;
 
-      // No new content since last read
       let lastOffset = tracked?.lastReadOffset ?? 0;
       if (stat.size < lastOffset) lastOffset = 0;
       if (stat.size == lastOffset) return false;
+
+      this.logger.debug(`Found new ${aiName} AI changes in: ${filePath}`);
 
       const now = Date.now();
 
@@ -150,6 +171,86 @@ export class TranscriptWatcher {
     return false;
   }
 
+  private async processSQLiteFile(filePath: string, aiName: string): Promise<boolean> {
+    try {
+      if (!filePath.endsWith('.vscdb')) return false;
+
+      const stat = await fsAsync.stat(filePath);
+
+      const tracked = this.trackedFiles.get(filePath);
+      let cutoff = tracked?.lastReadTime ?? this.initializedAt;
+
+      // Only read transcripts modified since we last read them
+      if (Math.max(stat.mtimeMs, stat.birthtimeMs) < cutoff) return false;
+
+      const now = Date.now();
+
+      const heartbeats = await this.querySQLiteFile(filePath);
+      this.logger.debug(`Read ${heartbeats.length} transcript heartbeats from ${filePath}`);
+
+      this.trackedFiles.set(filePath, {
+        aiName,
+        lastReadOffset: stat.size,
+        lastReadTime: now,
+        projectFolder: tracked?.projectFolder,
+      });
+
+      if (heartbeats.length > 0 && this.activityCallback) {
+        this.activityCallback(aiName, heartbeats);
+        return true;
+      }
+    } catch (e) {
+      this.logger.warn(`Error processing transcript: ${filePath}`);
+      this.logger.warnException(e);
+      console.error(e);
+    }
+    return false;
+  }
+
+  private async querySQLiteFile(filePath: string): Promise<TranscriptHeartbeat[]> {
+    const SQL = await this.getSqlJs();
+    const db = new SQL.Database(new Uint8Array(await fsAsync.readFile(filePath)));
+
+    try {
+      const results = db.exec("SELECT value FROM cursorDiskKV WHERE key like 'bubbleId:%'");
+      if (results.length === 0) return [];
+
+      return results[0].values
+        .map((row) => row[0])
+        .filter((value): value is string => typeof value === 'string')
+        .map((row) => {
+          try {
+            return JSON.parse(row);
+          } catch (_e) {}
+        })
+        .filter((entry) => typeof entry === 'object')
+        .filter((entry: CursorRow) => entry.toolFormerData?.name?.startsWith('edit_file_'))
+        .map((entry: CursorRow) => {
+          const params = JSON.parse(entry.toolFormerData?.params ?? '') as
+            | {
+                relativeWorkspacePath?: string;
+                streamingContent?: string;
+              }
+            | undefined;
+          if (!params?.relativeWorkspacePath || !params?.streamingContent) {
+            return { filePath: '', time: 0, lineChanges: 0 };
+          }
+          const timestamp = new Date(entry.createdAt ?? 0).getTime();
+          if (isNaN(timestamp)) {
+            return { filePath: '', time: 0, lineChanges: 0 };
+          }
+          return {
+            time: timestamp,
+            filePath: params.relativeWorkspacePath,
+            lineChanges: this.lineChangesFromDiff(params.streamingContent),
+          };
+        })
+        .filter((hb) => !!hb.filePath);
+    } finally {
+      db.close();
+    }
+  }
+
   private readCliStateLastHeartbeatAt(transcriptPath: string): number | undefined {
     const stateFile = transcriptPath + '.wakatime';
     try {
@@ -194,7 +295,7 @@ export class TranscriptWatcher {
           projectFolder = entry.cwd;
         }
 
-        if (!entry.timestamp && aiName !== 'cursor') continue;
+        if (!entry.timestamp) continue;
         const ts = new Date(entry.timestamp ?? fallbackTimestamp);
         if (ts.getTime() < cutoff) continue;
 
@@ -230,7 +331,7 @@ export class TranscriptWatcher {
   }
 
   private extractFileEntity(
-    aiName: string,
+    _aiName: string,
     entry: any,
   ): { filePath: string; lineChanges: number }[] | null {
     if (entry.toolUseResult?.filePath) {
@@ -242,12 +343,12 @@ export class TranscriptWatcher {
       return this.parseCodexPatch(entry.payload.input);
     }
 
-    if (aiName === 'cursor') {
-      return this.parseCursorEntry(entry);
-    }
-
     // Generic format: look for tool_result, result, output with file paths
-    const genericResult = entry.tool_result ?? entry.result ?? entry.output;
+    const genericResult = (entry.tool_result ?? entry.result ?? entry.output) as {
+      file_path?: string;
+      filePath?: string;
+      path?: string;
+    };
     if (genericResult) {
       const fp = genericResult.file_path ?? genericResult.filePath ?? genericResult.path;
       if (fp && typeof fp === 'string') {
@@ -256,52 +357,6 @@ export class TranscriptWatcher {
     }
 
     return null;
-  }
-
-  private parseCursorEntry(entry: any): { filePath: string; lineChanges: number }[] | null {
-    // Cursor JSONL format: {"role":"assistant","message":{"content":[...]}}
-    // Only assistant turns carry file edits
-    if (entry.role !== 'assistant') return null;
-
-    const content = entry.message?.content;
-    if (!Array.isArray(content)) return null;
-
-    const results: { filePath: string; lineChanges: number }[] = [];
-
-    for (const block of content) {
-      // Code block with URI: {"type":"code","uri":"file:///path/to/file","text":"..."}
-      if (block.uri && typeof block.uri === 'string') {
-        const filePath = block.uri.startsWith('file://')
-          ? decodeURIComponent(block.uri.slice('file://'.length))
-          : block.uri;
-        const lineChanges = typeof block.text === 'string' ? block.text.split('\n').length : 0;
-        results.push({ filePath, lineChanges });
-        continue;
-      }
-
-      // Tool use: {"type":"tool_use","name":"write","input":{"path":"...","code":"..."}}
-      if (block.type === 'tool_use' && block.input) {
-        const fp = block.input.path ?? block.input.file_path ?? block.input.target_file;
-        if (fp && typeof fp === 'string') {
-          const code = block.input.code ?? block.input.content ?? '';
-          const lineChanges = typeof code === 'string' ? code.split('\n').length : 0;
-          results.push({ filePath: fp, lineChanges });
-        }
-        continue;
-      }
-
-      // Tool result with file info: {"type":"tool_result","content":{"path":"...","linesCreated":N}}
-      if (block.type === 'tool_result') {
-        const c = block.content;
-        const fp = c?.path ?? c?.file_path ?? c?.filePath;
-        if (fp && typeof fp === 'string') {
-          const lineChanges = c?.linesCreated ?? c?.lines_created ?? 0;
-          results.push({ filePath: fp, lineChanges });
-        }
-      }
-    }
-
-    return results.length > 0 ? results : null;
   }
 
   private parseCodexPatch(input: string): { filePath: string; lineChanges: number }[] | null {
@@ -382,13 +437,17 @@ export class TranscriptWatcher {
       return result.content.split('\n').length;
     }
     if (result.diff && typeof result.diff === 'string') {
-      const lines = result.diff.split('\n');
-      return (
-        lines.filter((l: string) => l.startsWith('+') && !l.startsWith('+++')).length -
-        lines.filter((l: string) => l.startsWith('-') && !l.startsWith('---')).length
-      );
+      return this.lineChangesFromDiff(result.diff);
     }
     return 0;
+  }
+
+  private lineChangesFromDiff(diff: string): number {
+    const lines = diff.split('\n');
+    return (
+      lines.filter((l: string) => l.startsWith('+') && !l.startsWith('+++')).length -
+      lines.filter((l: string) => l.startsWith('-') && !l.startsWith('---')).length
+    );
   }
 
   private parseGlob(glob: string, aiName: string): ParsedGlob | null {
@@ -406,14 +465,15 @@ export class TranscriptWatcher {
       }
     }
 
-    if (baseParts.length === 0 || patternParts.length === 0) return null;
+    if (baseParts.length === 0 && patternParts.length === 0) return null;
 
     const baseDir = baseParts.join(path.sep);
     const filePattern = this.globToRegex(patternParts.join('/'));
-    return { aiName, baseDir, filePattern };
+    return { aiName, baseDir, filePattern, isLiteral: patternParts.length == 0 };
   }
 
   private findFiles(
+    glob: ParsedGlob,
     baseDir: string,
     relPath: string,
     pattern: RegExp,
@@ -421,6 +481,10 @@ export class TranscriptWatcher {
     maxDepth: number,
   ): string[] {
     if (depth > maxDepth) return [];
+    if (depth === 0 && glob.isLiteral) {
+      if (fs.existsSync(baseDir)) return [baseDir];
+      return [];
+    }
     const results: string[] = [];
     const fullPath = relPath ? path.join(baseDir, relPath) : baseDir;
 
@@ -429,7 +493,7 @@ export class TranscriptWatcher {
       for (const entry of entries) {
         const entryRel = relPath ? relPath + '/' + entry.name : entry.name;
         if (entry.isDirectory()) {
-          results.push(...this.findFiles(baseDir, entryRel, pattern, depth + 1, maxDepth));
+          results.push(...this.findFiles(glob, baseDir, entryRel, pattern, depth + 1, maxDepth));
         } else if (entry.isFile() && pattern.test(entryRel)) {
           results.push(path.join(baseDir, entryRel));
         }

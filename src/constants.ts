@@ -12,14 +12,18 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
   {
     name: 'copilot',
     extensionIds: ['github.copilot', 'github.copilot-chat'],
-    transcriptLogGlobs: ['~/.copilot/session-state/*.jsonl'],
+    transcriptLogGlobs: [],
+    // transcriptLogGlobs: ['~/.copilot/session-state/*.jsonl'],
   },
   {
     name: 'cursor',
     extensionIds: [],
     transcriptLogGlobs: [
-      '~/.cursor/projects/*/agent-transcripts/*/*.jsonl',
-      '~/AppData/Roaming/Cursor/projects/*/agent-transcripts/*/*.jsonl',
+      // '~/.cursor/projects/*/agent-transcripts/*/*.jsonl',
+      // '~/AppData/Roaming/Cursor/projects/*/agent-transcripts/*/*.jsonl',
+      '~/Library/Application Support/Cursor/User/globalStorage/state.vscdb',
+      '~/.config/Cursor/User/globalStorage/state.vscdb',
+      '~/AppData/Roaming/Cursor/Cursor/User/workspaceStorage/state.vscdb',
     ],
   },
   {
@@ -60,20 +64,20 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
   {
     name: 'factory',
     extensionIds: [],
-    transcriptLogGlobs: ['~/.factory/sessions/**/*.jsonl', '~/.factory/projects/**/*.jsonl'],
+    transcriptLogGlobs: [],
+    // transcriptLogGlobs: ['~/.factory/sessions/**/*.jsonl', '~/.factory/projects/**/*.jsonl'],
   },
   {
     name: 'opencode',
     extensionIds: [],
-    transcriptLogGlobs: ['~/.local/share/opencode/storage/session/ses_*.json'],
+    transcriptLogGlobs: [],
+    // transcriptLogGlobs: ['~/.local/share/opencode/storage/session/ses_*.json'],
   },
   {
     name: 'openclaw',
     extensionIds: [],
-    transcriptLogGlobs: [
-      '~/.openclaw/agents/**/sessions/*.jsonl',
-      '~/.clawdbot/agents/**/sessions/*.jsonl',
-    ],
+    transcriptLogGlobs: [],
+    // transcriptLogGlobs: ['~/.openclaw/agents/**/sessions/*.jsonl', '~/.clawdbot/agents/**/sessions/*.jsonl'],
   },
 ];
 
@@ -129,6 +133,7 @@ export interface ParsedGlob {
   aiName: string;
   baseDir: string;
   filePattern: RegExp;
+  isLiteral: boolean;
 }
 
 export interface TrackedFile {
@@ -143,4 +148,30 @@ export interface TranscriptHeartbeat {
   lineChanges: number;
   time: number;
   projectFolder?: string;
+}
+
+export interface CursorRow {
+  createdAt?: string;
+  toolFormerData?: {
+    name?: string;
+    params?: string;
+    result?: string;
+  };
+}
+
+export type SqlJsInit = (config?: { wasmBinary?: Uint8Array }) => Promise<SqlJsModule>;
+type SqlJsRowValue = string | number | null;
+
+interface SqlJsQueryResult {
+  columns: string[];
+  values: SqlJsRowValue[][];
+}
+
+interface SqlJsDatabase {
+  exec(sql: string): SqlJsQueryResult[];
+  close(): void;
+}
+
+export interface SqlJsModule {
+  Database: new (data?: Uint8Array) => SqlJsDatabase;
 }

@@ -562,10 +562,12 @@ export class WakaTime {
     if (Utils.isAIChatSidebar(e.textEditor?.document?.uri)) {
       this.isAICodeGenerating = true;
     }
-    if (this.transcriptWatcher?.poll()) return;
-    if (this.hasRecentAITranscriptActivity()) return;
-    this.updateLineNumbers();
-    this.onEvent(false);
+    this.transcriptWatcher?.poll().then((skip) => {
+      if (skip) return;
+      if (this.hasRecentAITranscriptActivity()) return;
+      this.updateLineNumbers();
+      this.onEvent(false);
+    });
   }
 
   private onChangeTextDocument(e: vscode.TextDocumentChangeEvent): void {
@@ -598,28 +600,34 @@ export class WakaTime {
     }
 
     if (!this.isAICodeGenerating) return;
-    if (this.transcriptWatcher?.poll()) return;
-    if (this.hasRecentAITranscriptActivity()) return;
 
-    this.onEvent(false);
+    this.transcriptWatcher?.poll().then((skip) => {
+      if (skip) return;
+      if (this.hasRecentAITranscriptActivity()) return;
+      this.onEvent(false);
+    });
   }
 
   private onChangeTab(_e: vscode.TextEditor | undefined): void {
     this.logger.debug('onChangeTab');
-    if (this.transcriptWatcher?.poll()) return;
-    if (this.hasRecentAITranscriptActivity()) return;
-    this.isAICodeGenerating = false;
-    this.updateLineNumbers();
-    this.onEvent(false);
+    this.transcriptWatcher?.poll().then((skip) => {
+      if (skip) return;
+      if (this.hasRecentAITranscriptActivity()) return;
+      this.isAICodeGenerating = false;
+      this.updateLineNumbers();
+      this.onEvent(false);
+    });
   }
 
   private onDidChangeTabs(_e: vscode.TabChangeEvent): void {
     this.logger.debug('onDidChangeTabs');
     if (!this.isAICodeGenerating) return;
-    if (this.transcriptWatcher?.poll()) return;
-    if (this.hasRecentAITranscriptActivity()) return;
-    this.updateLineNumbers();
-    this.onEvent(false);
+    this.transcriptWatcher?.poll().then((skip) => {
+      if (skip) return;
+      if (this.hasRecentAITranscriptActivity()) return;
+      this.updateLineNumbers();
+      this.onEvent(false);
+    });
   }
 
   private onSave(_e: vscode.TextDocument | undefined): void {
@@ -788,7 +796,7 @@ export class WakaTime {
   }
 
   private async sendHeartbeats(): Promise<void> {
-    this.transcriptWatcher?.poll();
+    await this.transcriptWatcher?.poll();
     const apiKey = await this.options.getApiKey();
     if (apiKey) {
       await this._sendHeartbeats();

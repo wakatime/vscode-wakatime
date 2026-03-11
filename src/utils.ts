@@ -199,16 +199,16 @@ export class Utils {
     }
   }
 
-  public static isAICapableEditor(): boolean {
+  private static isAICapableEditor(): boolean {
     const editorName = vscode.env.appName.toLowerCase();
-    return editorName.includes('cursor') ||
-           editorName.includes('kiro') ||
-           editorName.includes('windsurf');
+    return editorName.includes('kiro') || editorName.includes('windsurf');
   }
 
-
-  public static hasAIExtensions(): boolean {
+  private static hasAIExtensions(): boolean {
     return COMMON_AI_EXTENSIONS.some((assistant) => {
+      // don't use heuristics for extensions with transcript logs
+      if (assistant.transcriptLogGlobs.length > 0) return false;
+
       return assistant.extensionIds.some((id) => {
         const extension = vscode.extensions.getExtension(id);
         return extension && extension.isActive;
