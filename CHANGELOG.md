@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 28.0.2 (2026-03-11)
+
+- Only update last read time when heartbeats found for Cursor.
+
 ## 28.0.1 (2026-03-11)
 
 - Prevent tracking AI changes from Cursor in the past.
