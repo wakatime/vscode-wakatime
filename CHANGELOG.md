@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 28.0.4 (2026-03-15)
+
+- Allow remote schemes.
+  [#477](https://github.com/wakatime/vscode-wakatime/issues/477)
+
 ## 28.0.3 (2026-03-15)
 
 - Fix onChangeSelection allowed schemes.
