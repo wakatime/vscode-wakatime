@@ -25,7 +25,7 @@ export class TranscriptWatcher {
   private logger: Logger;
   private pollIntervalMs: number;
   private initializedAt: number;
-  private sqlJsPromise: Promise<SqlJsModule> | null = null;
+  private sqlJsPromise: Promise<SqlJsModule | null> | null = null;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -96,13 +96,20 @@ export class TranscriptWatcher {
     return found;
   }
 
-  private async getSqlJs(): Promise<SqlJsModule> {
+  private async getSqlJs(): Promise<SqlJsModule | null> {
     if (!this.sqlJsPromise) {
-      const initSqlJs = eval('require')('sql.js') as SqlJsInit;
-      const wasmPath = eval('require').resolve('sql.js/dist/sql-wasm.wasm');
-      this.sqlJsPromise = fsAsync
-        .readFile(wasmPath)
-        .then((wasmBinary) => initSqlJs({ wasmBinary: new Uint8Array(wasmBinary) }));
+      try {
+        const requireFunc = eval('require') as NodeRequire;
+        const initSqlJs = requireFunc('sql.js') as SqlJsInit;
+        const wasmPath = requireFunc.resolve('sql.js/dist/sql-wasm.wasm');
+        this.sqlJsPromise = fsAsync
+          .readFile(wasmPath)
+          .then((wasmBinary) => initSqlJs({ wasmBinary: new Uint8Array(wasmBinary) }));
+      } catch (e) {
+        this.logger.warn('sql.js not available; SQLite transcript logs will be skipped.');
+        this.logger.debugException(e);
+        this.sqlJsPromise = Promise.resolve(null);
+      }
     }
 
     return this.sqlJsPromise;
@@ -219,6 +226,7 @@ export class TranscriptWatcher {
     fallbackTimestamp?: number,
   ): Promise<TranscriptHeartbeat[]> {
     const SQL = await this.getSqlJs();
+    if (!SQL) return [];
     const db = new SQL.Database(new Uint8Array(await fsAsync.readFile(filePath)));
 
     try {
