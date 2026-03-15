@@ -1,7 +1,7 @@
 # WakaTime for Azure Data Studio
 
-[![Version](https://img.shields.io/visual-studio-marketplace/v/WakaTime.vscode-wakatime.png?style=flat-square&color=007ec6&label=marketplace)](https://marketplace.visualstudio.com/items?itemName=WakaTime.vscode-wakatime)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/WakaTime.vscode-wakatime.png?style=flat-square&color=007ec6)](https://marketplace.visualstudio.com/items?itemName=WakaTime.vscode-wakatime)
+[![Version](https://wakatime.com/shields-proxy/visual-studio-marketplace/v/WakaTime.vscode-wakatime.png)](https://marketplace.visualstudio.com/items?itemName=WakaTime.vscode-wakatime)
+[![Installs](https://wakatime.com/shields-proxy/visual-studio-marketplace/i/WakaTime.vscode-wakatime.png)](https://marketplace.visualstudio.com/items?itemName=WakaTime.vscode-wakatime)
 [![WakaTime](https://wakatime.com/badge/github/wakatime/vscode-wakatime.png?style=flat-square&branch=master)](https://wakatime.com/badge/github/wakatime/vscode-wakatime)
 
 [WakaTime][wakatime] is an open source VS Code plugin for metrics, insights, and time tracking automatically generated from your programming activity.
