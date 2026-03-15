@@ -176,4 +176,4 @@ export interface SqlJsModule {
   Database: new (data?: Uint8Array) => SqlJsDatabase;
 }
 
-export const ALLOWED_SCHEMES = ['file', 'vscode-chat-code-block', 'openai-codex'];
+export const ALLOWED_SCHEMES = ['file', 'vscode-chat-code-block', 'openai-codex', 'vscode-remote'];
