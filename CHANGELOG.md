@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 29.0.0 (2026-03-15)
+
+- Bundle sql.js with extension for parsing Cursor transcript logs.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
 ## 28.0.4 (2026-03-15)
 
 - Allow remote schemes.
