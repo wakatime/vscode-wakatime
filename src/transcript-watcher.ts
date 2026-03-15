@@ -213,8 +213,8 @@ export class TranscriptWatcher {
         return true;
       }
     } catch (e) {
-      this.logger.warn(`Error processing transcript: ${filePath}`);
-      this.logger.warnException(e);
+      this.logger.debug(`Error processing transcript: ${filePath}`);
+      this.logger.debugException(e);
       console.error(e);
     }
     return false;
