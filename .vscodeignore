@@ -13,6 +13,10 @@ webpack.config.js
 **.vsix
 npm-debug.**
 node_modules/**
+!node_modules/sql.js/
+!node_modules/sql.js/package.json
+!node_modules/sql.js/dist/
+!node_modules/sql.js/dist/**
 .DS_Store
 tags
 tags.lock
