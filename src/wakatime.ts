@@ -558,7 +558,7 @@ export class WakaTime {
   }
 
   private onChangeSelection(e: vscode.TextEditorSelectionChangeEvent): void {
-    if (!ALLOWED_SCHEMES.includes((e as any).document?.uri?.scheme)) return;
+    if (!ALLOWED_SCHEMES.includes(e.textEditor?.document?.uri?.scheme)) return;
     if (e.kind === vscode.TextEditorSelectionChangeKind.Command) return;
     this.logger.debug('onChangeSelection');
     if (Utils.isAIChatSidebar(e.textEditor?.document?.uri)) {
