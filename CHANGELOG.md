@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 29.0.1 (2026-03-15)
+
+- Include sql.js with published extension from node_modules folder.
+  [#474](https://github.com/wakatime/vscode-wakatime/issues/474)
+
 ## 29.0.0 (2026-03-15)
 
 - Bundle sql.js with extension for parsing Cursor transcript logs.
