@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 29.0.3 (2026-03-16)
+
+- Disable parsing Cursor transcript logs because of performance impact.
+  [#479](https://github.com/wakatime/vscode-wakatime/issues/479)
+
 ## 29.0.2 (2026-03-15)
 
 - Support both diff and plain Cursor edit_file_v2.
