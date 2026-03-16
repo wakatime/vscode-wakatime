@@ -89,9 +89,7 @@ export class TranscriptWatcher {
             found = true;
           }
         }
-      } catch {
-        // directory may not exist or not be readable
-      }
+      } catch {}
     }
     return found;
   }
@@ -257,7 +255,7 @@ export class TranscriptWatcher {
           return {
             time: ts.getTime() / 1000,
             filePath: params.relativeWorkspacePath,
-            lineChanges: this.lineChangesFromDiff(params.streamingContent),
+            lineChanges: this.lineChangesFromEditStreamingContent(params.streamingContent),
           };
         })
         .filter(Boolean)
@@ -464,6 +462,32 @@ export class TranscriptWatcher {
       lines.filter((l: string) => l.startsWith('+') && !l.startsWith('+++')).length -
       lines.filter((l: string) => l.startsWith('-') && !l.startsWith('---')).length
     );
+  }
+
+  /**
+   * Cursor edit_file_v2 params.streamingContent is usually a code snippet (the
+   * written content), not a unified diff. Only use diff parsing when it looks
+   * like a real diff; otherwise count lines in the snippet as additions.
+   */
+  private lineChangesFromEditStreamingContent(content: string): number {
+    if (this.looksLikeUnifiedDiff(content)) {
+      return this.lineChangesFromDiff(content);
+    }
+    const lines = content.split('\n').filter((l) => l.trim().length > 0);
+    return lines.length;
+  }
+
+  /**
+   * Cursor may send streamingContent as either a code snippet or a unified diff.
+   * Diffs can use file headers (--- / +++ ) or hunk headers (@@); both have -/+ lines.
+   */
+  private looksLikeUnifiedDiff(content: string): boolean {
+    const trimmed = content.trimStart();
+    if (trimmed.startsWith('--- ') || trimmed.startsWith('+++ ')) return true;
+    if (trimmed.startsWith('@@')) return true;
+    if (content.includes('\n--- ') || content.includes('\n+++ ')) return true;
+    if (content.includes('\n@@')) return true;
+    return false;
   }
 
   private parseGlob(glob: string, aiName: string): ParsedGlob | null {
