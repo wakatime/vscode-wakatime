@@ -3,6 +3,7 @@ import * as fsAsync from 'fs/promises';
 import * as path from 'path';
 
 import {
+  AIExtension,
   CursorRow,
   ParsedGlob,
   SqlJsInit,
@@ -113,7 +114,10 @@ export class TranscriptWatcher {
     return this.sqlJsPromise;
   }
 
-  private async processJSONLogFile(filePath: string, aiName: string): Promise<boolean> {
+  private async processJSONLogFile(
+    filePath: string,
+    aiName: AIExtension['name'],
+  ): Promise<boolean> {
     try {
       if (!filePath.endsWith('.jsonl')) return false;
 
@@ -178,7 +182,7 @@ export class TranscriptWatcher {
     return false;
   }
 
-  private async processSQLiteFile(filePath: string, aiName: string): Promise<boolean> {
+  private async processSQLiteFile(filePath: string, aiName: AIExtension['name']): Promise<boolean> {
     try {
       if (!filePath.endsWith('.vscdb')) return false;
 
@@ -490,7 +494,7 @@ export class TranscriptWatcher {
     return false;
   }
 
-  private parseGlob(glob: string, aiName: string): ParsedGlob | null {
+  private parseGlob(glob: string, aiName: AIExtension['name']): ParsedGlob | null {
     const parts = glob.split('/');
     const baseParts: string[] = [];
     const patternParts: string[] = [];

@@ -124,13 +124,27 @@ export interface Heartbeat {
 }
 
 export interface AIExtension {
-  name: string;
+  name:
+    | 'claude'
+    | 'codex'
+    | 'copilot'
+    | 'cursor'
+    | 'gemini'
+    | 'codeium'
+    | 'continue'
+    | 'cody'
+    | 'supermaven'
+    | 'tabnine'
+    | 'vscode-ai-toolkit'
+    | 'factory'
+    | 'opencode'
+    | 'openclaw';
   extensionIds: string[];
   transcriptLogGlobs: string[];
 }
 
 export interface ParsedGlob {
-  aiName: string;
+  aiName: AIExtension['name'];
   baseDir: string;
   filePattern: RegExp;
   isLiteral: boolean;
