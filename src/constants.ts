@@ -21,9 +21,9 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
     transcriptLogGlobs: [
       // '~/.cursor/projects/*/agent-transcripts/*/*.jsonl',
       // '~/AppData/Roaming/Cursor/projects/*/agent-transcripts/*/*.jsonl',
-      '~/Library/Application Support/Cursor/User/globalStorage/state.vscdb',
-      '~/.config/Cursor/User/globalStorage/state.vscdb',
-      '~/AppData/Roaming/Cursor/Cursor/User/workspaceStorage/state.vscdb',
+      // '~/Library/Application Support/Cursor/User/globalStorage/state.vscdb',
+      // '~/.config/Cursor/User/globalStorage/state.vscdb',
+      // '~/AppData/Roaming/Cursor/Cursor/User/workspaceStorage/state.vscdb',
     ],
   },
   {
