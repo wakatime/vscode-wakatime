@@ -98,10 +98,9 @@ export enum LogLevel {
   ERROR,
 }
 
-export const AI_RECENT_PASTES_TIME_MS = 500;
 export const TIME_BETWEEN_HEARTBEATS_MS = 120000;
 export const SEND_BUFFER_SECONDS = 30;
-export const TRANSCRIPT_POLL_INTERVAL = 30; // seconds
+export const AI_RECENT_PASTES_TIME_MS = 500;
 
 export interface Heartbeat {
   time: number;
@@ -141,53 +140,6 @@ export interface AIExtension {
     | 'openclaw';
   extensionIds: string[];
   transcriptLogGlobs: string[];
-}
-
-export interface ParsedGlob {
-  aiName: AIExtension['name'];
-  baseDir: string;
-  filePattern: RegExp;
-  isLiteral: boolean;
-}
-
-export interface TrackedFile {
-  aiName: string;
-  lastReadOffset: number;
-  lastReadTime: number;
-  projectFolder?: string;
-}
-
-export interface TranscriptHeartbeat {
-  filePath: string;
-  lineChanges: number;
-  time: number;
-  projectFolder?: string;
-}
-
-export interface CursorRow {
-  createdAt?: string;
-  toolFormerData?: {
-    name?: string;
-    params?: string;
-    result?: string;
-  };
-}
-
-export type SqlJsInit = (config?: { wasmBinary?: Uint8Array }) => Promise<SqlJsModule>;
-type SqlJsRowValue = string | number | null;
-
-interface SqlJsQueryResult {
-  columns: string[];
-  values: SqlJsRowValue[][];
-}
-
-interface SqlJsDatabase {
-  exec(sql: string): SqlJsQueryResult[];
-  close(): void;
-}
-
-export interface SqlJsModule {
-  Database: new (data?: Uint8Array) => SqlJsDatabase;
 }
 
 export const ALLOWED_SCHEMES = ['file', 'vscode-chat-code-block', 'openai-codex', 'vscode-remote'];

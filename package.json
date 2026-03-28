@@ -145,9 +145,6 @@
       }
     }
   },
-  "dependencies": {
-    "sql.js": "^1.14.1"
-  },
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",
     "@types/azdata": "^1.46.6",
