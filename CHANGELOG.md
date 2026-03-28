@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.0.0 (2026-03-28)
+
+- Sync AI activity using wakatime-cli.
+
 ## 29.0.3 (2026-03-16)
 
 - Disable parsing Cursor transcript logs because of performance impact.
