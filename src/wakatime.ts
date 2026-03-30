@@ -29,7 +29,7 @@ export class WakaTime {
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
-  private lastFlushedHeartbeatBuffer: number = 0;
+  private lastFlushedHeartbeatBuffer: number = Date.now();
   private lastDebug: boolean = false;
   private lastCompile: boolean = false;
   private lastAICodeGenerating: boolean = false;
@@ -740,10 +740,7 @@ export class WakaTime {
     args.push('--time', String(heartbeat.time));
 
     args.push('--sync-ai-disabled');
-
-    if (this.lastFlushedHeartbeatBuffer) {
-      args.push('--sync-ai-after', String(this.lastFlushedHeartbeatBuffer));
-    }
+    args.push('--sync-ai-after', String(this.lastFlushedHeartbeatBuffer));
 
     if (heartbeat.plugin) {
       args.push('--plugin', Utils.quote(heartbeat.plugin));
