@@ -739,6 +739,8 @@ export class WakaTime {
 
     args.push('--time', String(heartbeat.time));
 
+    args.push('--sync-ai-disabled');
+
     if (this.lastFlushedHeartbeatBuffer) {
       args.push('--sync-ai-after', String(this.lastFlushedHeartbeatBuffer));
     }
