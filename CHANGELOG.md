@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.0.1 (2026-03-30)
+
+- Disable parsing AI transcripts.
+
 ## 30.0.0 (2026-03-28)
 
 - Sync AI activity using wakatime-cli.
