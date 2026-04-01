@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.0.2 (2026-03-31)
+
+- Enable parsing AI transcripts.
+
 ## 30.0.1 (2026-03-30)
 
 - Disable parsing AI transcripts.
