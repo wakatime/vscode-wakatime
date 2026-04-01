@@ -29,7 +29,6 @@ export class WakaTime {
   private disposable: vscode.Disposable;
   private lastFile: string;
   private lastHeartbeat: number = 0;
-  private lastFlushedHeartbeatBuffer: number = Date.now();
   private lastDebug: boolean = false;
   private lastCompile: boolean = false;
   private lastAICodeGenerating: boolean = false;
@@ -739,9 +738,6 @@ export class WakaTime {
 
     args.push('--time', String(heartbeat.time));
 
-    args.push('--sync-ai-disabled');
-    args.push('--sync-ai-after', String(this.lastFlushedHeartbeatBuffer));
-
     if (heartbeat.plugin) {
       args.push('--plugin', Utils.quote(heartbeat.plugin));
     } else {
@@ -827,8 +823,6 @@ export class WakaTime {
       this.logger.error('Unable to set stdio[0] to pipe');
       this.heartbeats.push(...extraHeartbeats);
     }
-
-    this.lastFlushedHeartbeatBuffer = Date.now();
 
     proc.on('close', async (code, _signal) => {
       if (code == 0) {
