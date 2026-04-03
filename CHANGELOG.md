@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.0.4 (2026-04-02)
+
+- Prevent counting large paste as human typed lines of code.
+
 ## 30.0.3 (2026-04-02)
 
 - Make sure we sync AI heartbeats when there is no human coding.
