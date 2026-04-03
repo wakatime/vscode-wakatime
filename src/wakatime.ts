@@ -14,7 +14,8 @@ import {
   SEND_BUFFER_SECONDS,
   SYNC_AI_HEARTBEATS_DEBOUNCE_SECONDS,
 } from './constants';
-import { FileSelectionMap, LineCounts, Lines, Utils } from './utils';
+import { FileSelectionMap, LineCounts, LinesInFiles } from './types';
+import { Utils } from './utils';
 import { Options, Setting } from './options';
 
 import { Dependencies } from './dependencies';
@@ -62,7 +63,7 @@ export class WakaTime {
   private isMetricsEnabled: boolean = false;
   private heartbeats: Heartbeat[] = [];
   private lastSent: number = 0;
-  private linesInFiles: Lines = {};
+  private linesInFiles: LinesInFiles = {};
   private lineChanges: LineCounts = { ai: {}, human: {} };
   private syncAIHeartbeatsDebounce?: NodeJS.Timeout = undefined;
 
@@ -649,18 +650,24 @@ export class WakaTime {
     const file = Utils.getFocusedFile(doc);
     if (!file) return;
 
+    const now = Date.now();
     const current = doc.lineCount;
     if (this.linesInFiles[file] === undefined) {
-      this.linesInFiles[file] = current;
+      this.linesInFiles[file] = { lines: current, updatedAt: now };
     }
 
-    const prev = this.linesInFiles[file] ?? current;
-    const delta = current - prev;
+    const prev = this.linesInFiles[file] ?? { lines: current, updatedAt: now };
+    let delta = current - prev.lines;
+
+    // prevent counting large copy/paste as human typed lines of code
+    if (Math.abs(delta) > 50 && Math.abs(now - prev.updatedAt) < 60000) {
+      delta = 0;
+    }
 
     const changes = this.isAICodeGenerating ? this.lineChanges.ai : this.lineChanges.human;
     changes[file] = (changes[file] ?? 0) + delta;
 
-    this.linesInFiles[file] = current;
+    this.linesInFiles[file] = { lines: current, updatedAt: now };
   }
 
   private onEvent(isWrite: boolean): void {

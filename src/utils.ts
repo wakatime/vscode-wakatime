@@ -237,21 +237,3 @@ export class Utils {
     return Math.abs(relativeTo - compareTo) <= withinSeconds;
   }
 }
-
-interface FileSelection {
-  selection: vscode.Position;
-  lastHeartbeatAt: number;
-}
-
-export interface FileSelectionMap {
-  [key: string]: FileSelection;
-}
-
-export interface Lines {
-  [fileName: string]: number;
-}
-
-export interface LineCounts {
-  ai: Lines;
-  human: Lines;
-}

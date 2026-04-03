@@ -10,7 +10,8 @@ import {
 
 import { Logger } from './logger';
 import { Memento } from 'vscode';
-import { FileSelectionMap, LineCounts, Lines, Utils } from '../utils';
+import { FileSelectionMap, LineCounts, LinesInFiles } from '../types';
+import { Utils } from '../utils';
 
 export class WakaTime {
   private agentName: string;
@@ -49,7 +50,7 @@ export class WakaTime {
   private lastApiKeyPrompted: number = 0;
   private heartbeats: Heartbeat[] = [];
   private lastSent: number = 0;
-  private linesInFiles: Lines = {};
+  private linesInFiles: LinesInFiles = {};
   private lineChanges: LineCounts = { ai: {}, human: {} };
 
   constructor(logger: Logger, config: Memento) {
@@ -496,18 +497,21 @@ export class WakaTime {
     const file = Utils.getFocusedFile(doc);
     if (!file) return;
 
+    const now = Date.now();
     const current = doc.lineCount;
     if (this.linesInFiles[file] === undefined) {
-      this.linesInFiles[file] = current;
+      this.linesInFiles[file] = { lines: current, updatedAt: now };
     }
 
-    const prev = this.linesInFiles[file] ?? current;
-    const delta = current - prev;
+    const prev = this.linesInFiles[file] ?? { lines: current, updatedAt: now };
+    let delta = current - prev.lines;
 
-    const changes = this.isAICodeGenerating ? this.lineChanges.ai : this.lineChanges.human;
-    changes[file] = (changes[file] ?? 0) + delta;
+    // prevent counting large copy/paste as human typed lines of code
+    if (Math.abs(delta) > 50 && Math.abs(now - prev.updatedAt) < 60000) {
+      delta = 0;
+    }
 
-    this.linesInFiles[file] = current;
+    this.linesInFiles[file] = { lines: current, updatedAt: now };
   }
 
   private onEvent(isWrite: boolean): void {
