@@ -507,7 +507,7 @@ export class WakaTime {
     let delta = current - prev.lines;
 
     // prevent counting large copy/paste as human typed lines of code
-    if (Math.abs(delta) > 50 && Math.abs(now - prev.updatedAt) < 60000) {
+    if (delta > 50 && Math.abs(now - prev.updatedAt) < 60000) {
       delta = 0;
     }
 
