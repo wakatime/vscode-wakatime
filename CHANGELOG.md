@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.0.5 (2026-04-05)
+
+- Correctly count human deletes of many lines.
+
 ## 30.0.4 (2026-04-02)
 
 - Prevent counting large paste as human typed lines of code.
