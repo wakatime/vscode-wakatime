@@ -2,82 +2,58 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
   {
     name: 'claude',
     extensionIds: ['anthropic.claude-code'],
-    transcriptLogGlobs: ['~/.claude/projects/*/*.jsonl'],
   },
   {
     name: 'codex',
     extensionIds: ['openai.chatgpt', 'openai.openai-gpt-vscode'],
-    transcriptLogGlobs: ['~/.codex/sessions/**/rollout-*.jsonl'],
   },
   {
     name: 'copilot',
     extensionIds: ['github.copilot', 'github.copilot-chat'],
-    transcriptLogGlobs: [],
-    // transcriptLogGlobs: ['~/.copilot/session-state/*.jsonl'],
   },
   {
     name: 'cursor',
     extensionIds: [],
-    transcriptLogGlobs: [
-      // '~/.cursor/projects/*/agent-transcripts/*/*.jsonl',
-      // '~/AppData/Roaming/Cursor/projects/*/agent-transcripts/*/*.jsonl',
-      // '~/Library/Application Support/Cursor/User/globalStorage/state.vscdb',
-      // '~/.config/Cursor/User/globalStorage/state.vscdb',
-      // '~/AppData/Roaming/Cursor/Cursor/User/workspaceStorage/state.vscdb',
-    ],
   },
   {
     name: 'gemini',
     extensionIds: [],
-    transcriptLogGlobs: [],
   },
   {
     name: 'codeium',
     extensionIds: ['codeium.codeium'],
-    transcriptLogGlobs: [],
   },
   {
     name: 'continue',
     extensionIds: ['continue.continue'],
-    transcriptLogGlobs: [],
   },
   {
     name: 'cody',
     extensionIds: ['sourcegraph.cody-ai'],
-    transcriptLogGlobs: [],
   },
   {
     name: 'supermaven',
     extensionIds: ['supermaven.supermaven'],
-    transcriptLogGlobs: [],
   },
   {
     name: 'tabnine',
     extensionIds: ['tabnine.tabnine-vscode'],
-    transcriptLogGlobs: [],
   },
   {
     name: 'vscode-ai-toolkit',
     extensionIds: ['ms-vscode.vscode-ai-toolkit'],
-    transcriptLogGlobs: [],
   },
   {
     name: 'factory',
     extensionIds: [],
-    transcriptLogGlobs: [],
-    // transcriptLogGlobs: ['~/.factory/sessions/**/*.jsonl', '~/.factory/projects/**/*.jsonl'],
   },
   {
     name: 'opencode',
     extensionIds: [],
-    transcriptLogGlobs: [],
-    // transcriptLogGlobs: ['~/.local/share/opencode/storage/session/ses_*.json'],
   },
   {
     name: 'openclaw',
     extensionIds: [],
-    transcriptLogGlobs: [],
-    // transcriptLogGlobs: ['~/.openclaw/agents/**/sessions/*.jsonl', '~/.clawdbot/agents/**/sessions/*.jsonl'],
   },
 ];
 
@@ -140,7 +116,6 @@ export interface AIExtension {
     | 'opencode'
     | 'openclaw';
   extensionIds: string[];
-  transcriptLogGlobs: string[];
 }
 
 export const ALLOWED_SCHEMES = ['file', 'vscode-chat-code-block', 'openai-codex', 'vscode-remote'];

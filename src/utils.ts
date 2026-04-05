@@ -206,9 +206,6 @@ export class Utils {
 
   private static hasAIExtensions(): boolean {
     return COMMON_AI_EXTENSIONS.some((assistant) => {
-      // don't use heuristics for extensions with transcript logs
-      if (assistant.transcriptLogGlobs.length > 0) return false;
-
       return assistant.extensionIds.some((id) => {
         const extension = vscode.extensions.getExtension(id);
         return extension && extension.isActive;

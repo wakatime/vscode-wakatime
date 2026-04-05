@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as child_process from 'child_process';
 import { StdioOptions } from 'child_process';
-import { AIExtension, COMMON_AI_EXTENSIONS } from './constants';
 
 export class Desktop {
   public static isWindows(): boolean {
@@ -31,17 +30,5 @@ export class Desktop {
       options['env'] = { ...process.env, WAKATIME_HOME: this.getHomeDirectory() };
     }
     return options;
-  }
-
-  public static getAIExtensionsWithTranscriptLogs(): AIExtension[] {
-    const home = Desktop.getHomeDirectory().replace(/\/$/, '');
-    return COMMON_AI_EXTENSIONS.filter((assistant) => assistant.transcriptLogGlobs.length > 0).map(
-      (assistant) => ({
-        ...assistant,
-        transcriptLogGlobs: assistant.transcriptLogGlobs.map((glob) =>
-          glob.replace(/~/g, home).replace(/\$HOME/g, home),
-        ),
-      }),
-    );
   }
 }
