@@ -818,7 +818,7 @@ export class WakaTime {
   private async syncAIHeartbeats(): Promise<void> {
     if (!this.dependencies.isCliInstalled()) return;
 
-    const args = ['--sync-ai-heartbeats'];
+    const args = ['--sync-ai-activity'];
 
     if (this.isMetricsEnabled) args.push('--metrics');
 
