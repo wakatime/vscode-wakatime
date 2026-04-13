@@ -4,7 +4,7 @@
 ## 30.0.6 (2026-04-12)
 
 - Fix sync ai heartbeats param name.
-  [#1327](https://github.com/wakatime/vscode-wakatime/issues/1327)
+  [#1327](https://github.com/wakatime/wakatime-cli/issues/1327)
 
 ## 30.0.5 (2026-04-05)
 
