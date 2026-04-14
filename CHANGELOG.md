@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.0.7 (2026-04-14)
+
+- Add missing plugin argument when syncing AI heartbeats.
+
 ## 30.0.6 (2026-04-12)
 
 - Fix sync ai heartbeats param name.
