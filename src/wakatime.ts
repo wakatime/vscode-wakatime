@@ -818,7 +818,9 @@ export class WakaTime {
   private async syncAIHeartbeats(): Promise<void> {
     if (!this.dependencies.isCliInstalled()) return;
 
-    const args = ['--sync-ai-activity'];
+    const user_agent =
+      this.editorName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
+    const args = ['--sync-ai-activity', '--plugin', Utils.quote(user_agent)];
 
     if (this.isMetricsEnabled) args.push('--metrics');
 
