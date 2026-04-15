@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.0.8 (2026-04-14)
+
+- Increase debounce time for syncing AI heartbeats to 60 seconds.
+
 ## 30.0.7 (2026-04-14)
 
 - Add missing plugin argument when syncing AI heartbeats.
