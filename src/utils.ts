@@ -9,6 +9,7 @@ export class Utils {
     Kiro: 'kiro',
     Onivim: 'onivim',
     'Onivim 2': 'onivim',
+    Qoder: 'qoder',
     'SQL Operations Studio': 'sqlops',
     Trae: 'trae',
     'Visual Studio Code': 'vscode',

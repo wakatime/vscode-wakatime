@@ -4,8 +4,20 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
     extensionIds: ['anthropic.claude-code'],
   },
   {
+    name: 'codeium',
+    extensionIds: ['codeium.codeium'],
+  },
+  {
     name: 'codex',
     extensionIds: ['openai.chatgpt', 'openai.openai-gpt-vscode'],
+  },
+  {
+    name: 'cody',
+    extensionIds: ['sourcegraph.cody-ai'],
+  },
+  {
+    name: 'continue',
+    extensionIds: ['continue.continue'],
   },
   {
     name: 'copilot',
@@ -16,20 +28,24 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
     extensionIds: [],
   },
   {
+    name: 'factory',
+    extensionIds: [],
+  },
+  {
     name: 'gemini',
     extensionIds: [],
   },
   {
-    name: 'codeium',
-    extensionIds: ['codeium.codeium'],
+    name: 'openclaw',
+    extensionIds: [],
   },
   {
-    name: 'continue',
-    extensionIds: ['continue.continue'],
+    name: 'opencode',
+    extensionIds: [],
   },
   {
-    name: 'cody',
-    extensionIds: ['sourcegraph.cody-ai'],
+    name: 'qoder',
+    extensionIds: [],
   },
   {
     name: 'supermaven',
@@ -42,18 +58,6 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
   {
     name: 'vscode-ai-toolkit',
     extensionIds: ['ms-vscode.vscode-ai-toolkit'],
-  },
-  {
-    name: 'factory',
-    extensionIds: [],
-  },
-  {
-    name: 'opencode',
-    extensionIds: [],
-  },
-  {
-    name: 'openclaw',
-    extensionIds: [],
   },
 ];
 
@@ -102,19 +106,20 @@ export interface Heartbeat {
 export interface AIExtension {
   name:
     | 'claude'
+    | 'codeium'
     | 'codex'
+    | 'cody'
+    | 'continue'
     | 'copilot'
     | 'cursor'
+    | 'factory'
     | 'gemini'
-    | 'codeium'
-    | 'continue'
-    | 'cody'
+    | 'openclaw'
+    | 'opencode'
+    | 'qoder'
     | 'supermaven'
     | 'tabnine'
-    | 'vscode-ai-toolkit'
-    | 'factory'
-    | 'opencode'
-    | 'openclaw';
+    | 'vscode-ai-toolkit';
   extensionIds: string[];
 }
 
