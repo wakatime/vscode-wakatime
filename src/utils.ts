@@ -12,7 +12,6 @@ export class Utils {
     Qoder: 'qoder',
     'SQL Operations Studio': 'sqlops',
     Trae: 'trae',
-    'Visual Studio Code': 'vscode',
     Windsurf: 'windsurf',
   };
 
