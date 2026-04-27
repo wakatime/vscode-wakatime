@@ -193,7 +193,16 @@ export class Utils {
   public static getEditorName(): string {
     if (this.appNames[vscode.env.appName]) {
       return this.appNames[vscode.env.appName];
-    } else if (vscode.env.appName.toLowerCase().includes('visual')) {
+    }
+
+    const appRoot = vscode.env.appRoot.toLowerCase();
+    for (const editor of Object.keys(this.appNames)) {
+      if (appRoot.includes(editor.toLowerCase())) {
+        return this.appNames[editor];
+      }
+    }
+
+    if (vscode.env.appName.toLowerCase().includes('visual')) {
       return 'vscode';
     } else {
       return vscode.env.appName.replace(/\s/g, '').toLowerCase();
