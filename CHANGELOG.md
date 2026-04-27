@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.1.1 (2026-04-27)
+
+- Improve IDE name detection.
+
 ## 30.1.0 (2026-04-27)
 
 - Add Qoder app name.
