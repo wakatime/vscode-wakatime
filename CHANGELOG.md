@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.1.2 (2026-04-27)
+
+- Remove redundant vsocde editor name.
+
 ## 30.1.1 (2026-04-27)
 
 - Improve IDE name detection.
