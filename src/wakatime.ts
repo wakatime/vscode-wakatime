@@ -14,7 +14,7 @@ import {
   SEND_BUFFER_SECONDS,
   SYNC_AI_HEARTBEATS_DEBOUNCE_SECONDS,
 } from './constants';
-import { FileSelectionMap, LineCounts, LinesInFiles } from './types';
+import { FileSelectionMap, HumanTypingMap, LineCounts, LinesInFiles } from './types';
 import { Utils } from './utils';
 import { Options, Setting } from './options';
 
@@ -66,6 +66,7 @@ export class WakaTime {
   private linesInFiles: LinesInFiles = {};
   private lineChanges: LineCounts = { ai: {}, human: {} };
   private syncAIHeartbeatsDebounce?: NodeJS.Timeout = undefined;
+  private filesWithHumanTyping: HumanTypingMap = {};
 
   constructor(extensionPath: string, logger: Logger) {
     this.extensionPath = extensionPath;
@@ -537,6 +538,14 @@ export class WakaTime {
     this.syncAIHeartbeatsDebounced();
     if (!ALLOWED_SCHEMES.includes(e.document?.uri?.scheme)) return;
     this.logger.debug('onChangeTextDocument');
+
+    if (e.contentChanges.find((v) => v.text.length === 1)) {
+      const file = Utils.getFocusedFile(e.document);
+      if (file) {
+        this.filesWithHumanTyping[file] = true;
+      }
+    }
+
     if (Utils.isAIChatSidebar(e.document?.uri)) {
       this.isAICodeGenerating = true;
       this.AIdebounceCount = 0;
@@ -586,8 +595,14 @@ export class WakaTime {
     this.onEvent(false);
   }
 
-  private onSave(_e: vscode.TextDocument | undefined): void {
+  private onSave(e: vscode.TextDocument | undefined): void {
     this.logger.debug('onSave');
+
+    const file = Utils.getFocusedFile(e);
+    if (file) {
+      this.filesWithHumanTyping[file] = true;
+    }
+
     this.syncAIHeartbeatsDebounced();
     this.isAICodeGenerating = false;
     this.updateLineNumbers();
@@ -747,6 +762,10 @@ export class WakaTime {
       ai_line_changes: this.lineChanges.ai[file],
       human_line_changes: this.lineChanges.human[file],
     };
+
+    // Remove human line changes if we never detected human typing
+    if (!this.filesWithHumanTyping[file]) heartbeat.human_line_changes = 0;
+    this.filesWithHumanTyping[file] = false;
 
     this.lineChanges = { ai: {}, human: {} };
 

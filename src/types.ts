@@ -26,3 +26,7 @@ export interface LineCounts {
   ai: Lines;
   human: Lines;
 }
+
+export interface HumanTypingMap {
+  [fileName: string]: boolean;
+}

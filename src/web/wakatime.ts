@@ -10,7 +10,7 @@ import {
 
 import { Logger } from './logger';
 import { Memento } from 'vscode';
-import { FileSelectionMap, LineCounts, LinesInFiles } from '../types';
+import { FileSelectionMap, HumanTypingMap, LineCounts, LinesInFiles } from '../types';
 import { Utils } from '../utils';
 
 export class WakaTime {
@@ -52,6 +52,7 @@ export class WakaTime {
   private lastSent: number = 0;
   private linesInFiles: LinesInFiles = {};
   private lineChanges: LineCounts = { ai: {}, human: {} };
+  private filesWithHumanTyping: HumanTypingMap = {};
 
   constructor(logger: Logger, config: Memento) {
     this.logger = logger;
@@ -428,6 +429,14 @@ export class WakaTime {
 
   private onChangeTextDocument(e: vscode.TextDocumentChangeEvent): void {
     this.logger.debug('onChangeTextDocument');
+
+    if (e.contentChanges.find((v) => v.text.length === 1)) {
+      const file = Utils.getFocusedFile(e.document);
+      if (file) {
+        this.filesWithHumanTyping[file] = true;
+      }
+    }
+
     if (Utils.isAIChatSidebar(e.document?.uri)) {
       this.isAICodeGenerating = true;
       this.AIdebounceCount = 0;
@@ -472,8 +481,14 @@ export class WakaTime {
     this.onEvent(false);
   }
 
-  private onSave(_e: vscode.TextDocument | undefined): void {
+  private onSave(e: vscode.TextDocument | undefined): void {
     this.logger.debug('onSave');
+
+    const file = Utils.getFocusedFile(e);
+    if (file) {
+      this.filesWithHumanTyping[file] = true;
+    }
+
     this.isAICodeGenerating = false;
     this.updateLineNumbers();
     this.onEvent(true);
@@ -588,6 +603,10 @@ export class WakaTime {
       cursorpos: selection.character + 1,
       lines_in_file: doc.lineCount,
     };
+
+    // Remove human line changes if we never detected human typing
+    if (!this.filesWithHumanTyping[file]) heartbeat.human_line_changes = 0;
+    this.filesWithHumanTyping[file] = false;
 
     this.lineChanges = { ai: {}, human: {} };
 
