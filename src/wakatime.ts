@@ -90,7 +90,7 @@ export class WakaTime {
         this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
         this.editorName = Utils.getEditorName();
 
-        this.hasAICapabilities = Utils.checkAICapabilities();
+        this.hasAICapabilities = Utils.hasAIExtensions();
 
         this.options.getSetting('settings', 'disabled', false, (disabled: Setting) => {
           this.disabled = disabled.value === 'true';

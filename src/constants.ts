@@ -1,15 +1,7 @@
 export const COMMON_AI_EXTENSIONS: AIExtension[] = [
   {
-    name: 'claude',
-    extensionIds: ['anthropic.claude-code'],
-  },
-  {
     name: 'codeium',
     extensionIds: ['codeium.codeium'],
-  },
-  {
-    name: 'codex',
-    extensionIds: ['openai.chatgpt', 'openai.openai-gpt-vscode'],
   },
   {
     name: 'cody',
@@ -20,31 +12,11 @@ export const COMMON_AI_EXTENSIONS: AIExtension[] = [
     extensionIds: ['continue.continue'],
   },
   {
-    name: 'copilot',
-    extensionIds: ['github.copilot', 'github.copilot-chat'],
-  },
-  {
-    name: 'cursor',
-    extensionIds: [],
-  },
-  {
     name: 'factory',
     extensionIds: [],
   },
   {
-    name: 'gemini',
-    extensionIds: [],
-  },
-  {
     name: 'openclaw',
-    extensionIds: [],
-  },
-  {
-    name: 'opencode',
-    extensionIds: [],
-  },
-  {
-    name: 'qoder',
     extensionIds: [],
   },
   {

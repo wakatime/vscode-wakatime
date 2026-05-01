@@ -208,22 +208,13 @@ export class Utils {
     }
   }
 
-  private static isAICapableEditor(): boolean {
-    const editorName = vscode.env.appName.toLowerCase();
-    return editorName.includes('kiro') || editorName.includes('windsurf');
-  }
-
-  private static hasAIExtensions(): boolean {
+  public static hasAIExtensions(): boolean {
     return COMMON_AI_EXTENSIONS.some((assistant) => {
       return assistant.extensionIds.some((id) => {
         const extension = vscode.extensions.getExtension(id);
         return extension && extension.isActive;
       });
     });
-  }
-
-  public static checkAICapabilities(): boolean {
-    return this.isAICapableEditor() || this.hasAIExtensions();
   }
 
   public static buildUserAgentString(

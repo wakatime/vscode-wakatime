@@ -67,7 +67,7 @@ export class WakaTime {
     this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
     this.agentName = Utils.getEditorName();
 
-    this.hasAICapabilities = Utils.checkAICapabilities();
+    this.hasAICapabilities = Utils.hasAIExtensions();
 
     this.disabled = this.config.get('wakatime.disabled') === 'true';
     if (this.disabled) {
