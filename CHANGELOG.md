@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.1.3 (2026-05-01)
+
+- Prevent attributing AI lines to Human by guarding for single character typing.
+
 ## 30.1.2 (2026-04-27)
 
 - Remove redundant vsocde editor name.
