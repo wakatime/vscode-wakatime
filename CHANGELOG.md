@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 30.2.0 (2026-05-15)
+
+- Track when code reviewing Codex diffst
+
 ## 30.1.3 (2026-05-01)
 
 - Prevent attributing AI lines to Human by guarding for single character typing.
