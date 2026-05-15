@@ -138,6 +138,16 @@ export class Utils {
     return uri.scheme === 'pr';
   }
 
+  public static isCodexCodeReview(e: vscode.TabChangeEvent): boolean {
+    const isCodexDiff = (tab: vscode.Tab): boolean => {
+      if (!tab.isActive) return false;
+      const viewType = (tab.input as { viewType?: string } | undefined)?.viewType;
+      if (!viewType?.includes('chatgpt')) return false;
+      return tab.label.toLowerCase().includes('codex diff');
+    };
+    return [...e.opened, ...e.changed].some(isCodexDiff);
+  }
+
   public static isAIChatSidebar(uri: vscode.Uri | undefined): boolean {
     // first check if the active tab is the Claude Code sidebar
     const activeTab = vscode.window.tabGroups?.activeTabGroup?.activeTab;

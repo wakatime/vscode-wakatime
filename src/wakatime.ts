@@ -34,6 +34,7 @@ export class WakaTime {
   private lastDebug: boolean = false;
   private lastCompile: boolean = false;
   private lastAICodeGenerating: boolean = false;
+  private lastCodeReviewing: boolean = false;
   private dedupe: FileSelectionMap = {};
   private debounceId: any = null;
   private debounceMs = 50;
@@ -587,12 +588,67 @@ export class WakaTime {
     this.onEvent(false);
   }
 
-  private onDidChangeTabs(_e: vscode.TabChangeEvent): void {
+  private onDidChangeTabs(e: vscode.TabChangeEvent): void {
     this.logger.debug('onDidChangeTabs');
     this.syncAIHeartbeatsDebounced();
+    if (Utils.isCodexCodeReview(e)) {
+      this.appendCodeReviewHeartbeat();
+      return;
+    }
     if (!this.isAICodeGenerating) return;
     this.updateLineNumbers();
     this.onEvent(false);
+  }
+
+  private async appendCodeReviewHeartbeat(): Promise<void> {
+    if (this.disabled) return;
+    if (!this.dependencies.isCliInstalled()) return;
+
+    const time = Date.now();
+    if (this.lastCodeReviewing && !Utils.enoughTimePassed(this.lastHeartbeat, time)) return;
+
+    const editor = vscode.window.activeTextEditor;
+    const doc = editor?.document;
+    const file = doc ? Utils.getFocusedFile(doc) : undefined;
+    const entity = file ?? 'Codex Diff';
+
+    const heartbeat: Heartbeat = {
+      entity,
+      time: time / 1000,
+      is_write: false,
+      category: 'code reviewing',
+    };
+
+    if (doc) {
+      heartbeat.lines_in_file = doc.lineCount;
+      if (editor) {
+        heartbeat.lineno = editor.selection.start.line + 1;
+        heartbeat.cursorpos = editor.selection.start.character + 1;
+      }
+      const project = this.getProjectName(doc.uri);
+      if (project) heartbeat.alternate_project = project;
+      const folder = this.getProjectFolder(doc.uri);
+      if (folder) heartbeat.project_folder = folder;
+      if (doc.isUntitled) heartbeat.is_unsaved_entity = true;
+    } else {
+      heartbeat.entity_type = 'app';
+      const wsf = vscode.workspace.workspaceFolders?.[0];
+      if (wsf) {
+        heartbeat.alternate_project = wsf.name;
+        heartbeat.project_folder = wsf.uri.fsPath;
+      }
+    }
+
+    this.lastFile = entity;
+    this.lastHeartbeat = time;
+    this.lastCodeReviewing = true;
+
+    this.logger.debug(
+      `Appending code-reviewing heartbeat to local buffer: ${JSON.stringify(heartbeat, null, 2)}`,
+    );
+    this.heartbeats.push(heartbeat);
+
+    await this.sendHeartbeatsIfNecessary();
   }
 
   private onSave(e: vscode.TextDocument | undefined): void {
@@ -778,6 +834,7 @@ export class WakaTime {
     } else if (Utils.isPullRequest(doc.uri)) {
       heartbeat.category = 'code reviewing';
     }
+    this.lastCodeReviewing = heartbeat.category === 'code reviewing';
 
     const project = this.getProjectName(doc.uri);
     if (project) heartbeat.alternate_project = project;
@@ -900,6 +957,10 @@ export class WakaTime {
     const args: string[] = [];
 
     args.push('--entity', Utils.quote(heartbeat.entity));
+
+    if (heartbeat.entity_type) {
+      args.push('--entity-type', heartbeat.entity_type);
+    }
 
     args.push('--time', String(heartbeat.time));
 

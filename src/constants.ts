@@ -58,6 +58,7 @@ export const SYNC_AI_HEARTBEATS_DEBOUNCE_SECONDS = 120;
 export interface Heartbeat {
   time: number;
   entity: string;
+  entity_type?: 'file' | 'app' | 'domain';
   local_file?: string;
   is_write: boolean;
   lineno?: number;
