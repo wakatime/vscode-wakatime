@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { COMMON_AI_EXTENSIONS, TIME_BETWEEN_HEARTBEATS_MS } from './constants';
 
 export class Utils {
-  private static appNames = {
+  private static appNames: { [key: string]: string } = {
     'Arduino IDE': 'arduino',
     'Azure Data Studio': 'azdata',
     Cursor: 'cursor',
@@ -14,6 +14,18 @@ export class Utils {
     Trae: 'trae',
     Windsurf: 'windsurf',
   };
+
+  private static aiCapableEditors = new Set(['cursor', 'kiro', 'qoder', 'trae', 'windsurf']);
+
+  private static editorNameFromHint(hint?: string): string | undefined {
+    const normalized = hint?.replace(/\s/g, '').toLowerCase();
+    if (!normalized) return undefined;
+
+    for (const editor of Object.keys(this.appNames)) {
+      const editorKey = editor.replace(/\s/g, '').toLowerCase();
+      if (normalized.includes(editorKey)) return this.appNames[editor];
+    }
+  }
 
   public static quote(str: string): string {
     if (str.includes(' ')) return `"${str.replace(/"/g, '\\"')}"`;
@@ -199,23 +211,29 @@ export class Utils {
     return false;
   }
 
-  public static getEditorName(): string {
-    if (this.appNames[vscode.env.appName]) {
-      return this.appNames[vscode.env.appName];
+  public static getEditorName(env: typeof vscode.env = vscode.env): string {
+    if (this.appNames[env.appName]) {
+      return this.appNames[env.appName];
     }
 
-    const appRoot = vscode.env.appRoot.toLowerCase();
-    for (const editor of Object.keys(this.appNames)) {
-      if (appRoot.includes(editor.toLowerCase())) {
-        return this.appNames[editor];
-      }
+    const editorName = this.editorNameFromHint(env.uriScheme) || this.editorNameFromHint(env.appRoot);
+    if (editorName) {
+      return editorName;
     }
 
-    if (vscode.env.appName.toLowerCase().includes('visual')) {
+    if (env.appName.toLowerCase().includes('visual')) {
       return 'vscode';
     } else {
-      return vscode.env.appName.replace(/\s/g, '').toLowerCase();
+      return env.appName.replace(/\s/g, '').toLowerCase();
     }
+  }
+
+  public static isAICapableEditor(editorName: string = this.getEditorName()): boolean {
+    return this.aiCapableEditors.has(editorName);
+  }
+
+  public static hasAICapabilities(editorName: string = this.getEditorName()): boolean {
+    return this.isAICapableEditor(editorName) || this.hasAIExtensions();
   }
 
   public static hasAIExtensions(): boolean {

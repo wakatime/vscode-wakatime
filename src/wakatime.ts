@@ -92,7 +92,7 @@ export class WakaTime {
         this.extension = (extension != undefined && extension.packageJSON) || { version: '0.0.0' };
         this.editorName = Utils.getEditorName();
 
-        this.hasAICapabilities = Utils.hasAIExtensions();
+        this.hasAICapabilities = Utils.hasAICapabilities(this.editorName);
 
         this.options.getSetting('settings', 'disabled', false, (disabled: Setting) => {
           this.disabled = disabled.value === 'true';
@@ -552,9 +552,13 @@ export class WakaTime {
       this.AIdebounceCount = 0;
     } else if (Utils.isPossibleAICodeInsert(e)) {
       const now = Date.now();
-      if (this.recentlyAIPasted(now) && this.hasAICapabilities) {
+      if (
+        this.hasAICapabilities &&
+        (Utils.isAICapableEditor(this.editorName) || this.recentlyAIPasted(now))
+      ) {
         this.isAICodeGenerating = true;
         this.AIdebounceCount = 0;
+        this.updateLineNumbersFromChange(e);
       }
       this.AIrecentPastes.push(now);
     } else if (Utils.isPossibleHumanCodeInsert(e)) {
@@ -577,6 +581,23 @@ export class WakaTime {
     if (!this.isAICodeGenerating) return;
 
     this.onEvent(false);
+  }
+
+  private updateLineNumbersFromChange(e: vscode.TextDocumentChangeEvent): void {
+    const file = Utils.getFocusedFile(e.document);
+    if (!file) return;
+
+    const now = Date.now();
+    let delta = 0;
+    for (const change of e.contentChanges) {
+      const newLineBreaks = (change.text.match(/\r\n|\r|\n/g) || []).length;
+      const replacedLineBreaks = change.range.end.line - change.range.start.line;
+      delta += newLineBreaks - replacedLineBreaks;
+    }
+
+    const changes = this.isAICodeGenerating ? this.lineChanges.ai : this.lineChanges.human;
+    changes[file] = (changes[file] ?? 0) + delta;
+    this.linesInFiles[file] = { lines: e.document.lineCount, updatedAt: now };
   }
 
   private onChangeTab(e: vscode.TextEditor | undefined): void {
