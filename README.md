@@ -6,7 +6,7 @@
 
 [WakaTime][wakatime] is an open source VS Code plugin for metrics, insights, and time tracking automatically generated from your programming activity.
 
-## Installation
+## Installation Process
 
 1. Press `F1` or `⌘ + Shift + P` and type `install`. Pick `Extensions: Install Extension`.
 
