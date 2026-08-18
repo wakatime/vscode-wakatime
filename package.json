@@ -62,6 +62,7 @@
   "browser": "./dist/web/extension",
   "scripts": {
     "vscode:prepublish": "webpack --mode production",
+    "check:desktop-bundle": "webpack --mode none --config-name Desktop && node ./scripts/check-desktop-bundle-punycode.js",
     "compile": "webpack --mode none",
     "compile:dev": "tsc -p ./",
     "watch": "webpack --mode none --watch",
@@ -161,6 +162,7 @@
     "del-cli": "^7.0.0",
     "original-fs": "^1.2.0",
     "prettier": "3.6.2",
+    "punycode": "2.1.1",
     "request": "2.88.2",
     "semver": "^7.7.3",
     "ts-loader": "^9.5.4",

@@ -15,4 +15,4 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Unit tests
-        run: npm run compile:dev
+        run: npm run compile:dev && npm run check:desktop-bundle
