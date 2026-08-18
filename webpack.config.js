@@ -2,6 +2,11 @@
 
 const path = require('path');
 const webpack = require('webpack');
+const { builtinModules } = require('module');
+
+// Webpack's Node preset externalizes punycode before aliases run. Preserve its
+// treatment of every other Node module while bundling the userland replacement.
+const desktopExternalNodeModules = new Set(builtinModules.filter((module) => module !== 'punycode'));
 
 const webConfig = /** @type WebpackConfig */ {
   name: 'Web',
@@ -58,6 +63,9 @@ const webConfig = /** @type WebpackConfig */ {
 const nodeConfig = /** @type WebpackConfig */ {
   name: 'Desktop',
   target: 'node',
+  externalsPresets: {
+    node: false,
+  },
   entry: './src/extension.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -66,12 +74,22 @@ const nodeConfig = /** @type WebpackConfig */ {
     devtoolModuleFilenameTemplate: '../[resource-path]',
   },
   devtool: 'source-map',
-  externals: {
-    vscode: 'commonjs vscode',
-    azdata: 'commonjs azdata',
-  },
+  externals: [
+    async ({ request }) => {
+      if (request && (request.startsWith('node:') || desktopExternalNodeModules.has(request))) {
+        return `commonjs ${request}`;
+      }
+    },
+    {
+      vscode: 'commonjs vscode',
+      azdata: 'commonjs azdata',
+    },
+  ],
   resolve: {
     extensions: ['.ts', '.js'],
+    alias: {
+      punycode: require.resolve('punycode/'),
+    },
   },
   module: {
     rules: [
