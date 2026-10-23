@@ -45,7 +45,15 @@ You can customize the position and priority of the WakaTime status bar item:
 
 Both settings require restarting VS Code to take effect.
 
-Extension settings are stored in the INI file at `$HOME/.wakatime.cfg`.
+Desktop extension settings are stored in an INI file, selected in this order:
+
+1. `$WAKATIME_HOME/.wakatime.cfg` when `WAKATIME_HOME` is set.
+2. `$VSCODE_PORTABLE/.wakatime.cfg` in portable mode.
+3. An existing `~/.wakatime.cfg`, including an empty file.
+4. `$XDG_CONFIG_HOME/wakatime/wakatime.cfg`, defaulting to `~/.config/wakatime/wakatime.cfg`
+   when `XDG_CONFIG_HOME` is unset, empty, or relative.
+
+Existing files are not moved. Log and internal-state locations are unchanged.
 
 More information can be found from [wakatime-cli][wakatime-cli configs].
 
@@ -53,7 +61,6 @@ If using an online IDE like [gitpods](https://gitpod.io/), add your [api key][ap
 
 Notes:
 
-1. `$HOME` defaults to `$HOME`
 1. To disable the extension at startup add `disabled=true` to your config, this operation can also be performed by pressing `⌘ + Shift + P` and selecting `WakaTime: Disable`.
 
 ## Troubleshooting

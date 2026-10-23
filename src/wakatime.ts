@@ -897,6 +897,7 @@ export class WakaTime {
     const user_agent =
       this.editorName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     const args = ['--sync-ai-activity', '--plugin', Utils.quote(user_agent)];
+    args.push('--config', this.options.getConfigFile(false));
 
     if (this.isMetricsEnabled) args.push('--metrics');
 
@@ -921,12 +922,7 @@ export class WakaTime {
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
     if (Desktop.isWindows() || Desktop.isPortable()) {
-      args.push(
-        '--config',
-        Utils.quote(this.options.getConfigFile(false)),
-        '--log-file',
-        Utils.quote(this.options.getLogFile()),
-      );
+      args.push('--log-file', Utils.quote(this.options.getLogFile()));
     }
 
     const binary = this.dependencies.getCliLocation();
@@ -954,7 +950,7 @@ export class WakaTime {
 
     this.lastSent = Date.now();
 
-    const args: string[] = [];
+    const args: string[] = ['--config', this.options.getConfigFile(false)];
 
     args.push('--entity', Utils.quote(heartbeat.entity));
 
@@ -1008,12 +1004,7 @@ export class WakaTime {
     if (heartbeat.is_write) args.push('--write');
 
     if (Desktop.isWindows() || Desktop.isPortable()) {
-      args.push(
-        '--config',
-        Utils.quote(this.options.getConfigFile(false)),
-        '--log-file',
-        Utils.quote(this.options.getLogFile()),
-      );
+      args.push('--log-file', Utils.quote(this.options.getLogFile()));
     }
 
     if (heartbeat.is_unsaved_entity) args.push('--is-unsaved-entity');
@@ -1129,6 +1120,7 @@ export class WakaTime {
     const user_agent =
       this.editorName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     const args = ['--today', '--output', 'json', '--plugin', Utils.quote(user_agent)];
+    args.push('--config', this.options.getConfigFile(false));
 
     if (this.isMetricsEnabled) args.push('--metrics');
 
@@ -1139,12 +1131,7 @@ export class WakaTime {
     if (apiUrl) args.push('--api-url', Utils.quote(apiUrl));
 
     if (Desktop.isWindows()) {
-      args.push(
-        '--config',
-        Utils.quote(this.options.getConfigFile(false)),
-        '--logfile',
-        Utils.quote(this.options.getLogFile()),
-      );
+      args.push('--logfile', Utils.quote(this.options.getLogFile()));
     }
 
     const binary = this.dependencies.getCliLocation();
@@ -1243,6 +1230,7 @@ export class WakaTime {
     const user_agent =
       this.editorName + '/' + vscode.version + ' vscode-wakatime/' + this.extension.version;
     const args = ['--output', 'json', '--plugin', Utils.quote(user_agent)];
+    args.push('--config', this.options.getConfigFile(false));
 
     args.push('--file-experts', Utils.quote(file));
 
@@ -1263,12 +1251,7 @@ export class WakaTime {
     if (folder) args.push('--project-folder', Utils.quote(folder));
 
     if (Desktop.isWindows()) {
-      args.push(
-        '--config',
-        Utils.quote(this.options.getConfigFile(false)),
-        '--logfile',
-        Utils.quote(this.options.getLogFile()),
-      );
+      args.push('--logfile', Utils.quote(this.options.getLogFile()));
     }
 
     if (doc.isUntitled) args.push('--is-unsaved-entity');

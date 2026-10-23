@@ -64,6 +64,7 @@
     "vscode:prepublish": "webpack --mode production",
     "compile": "webpack --mode none",
     "compile:dev": "tsc -p ./",
+    "test:config": "npm run compile:dev && node --test test/config.test.js",
     "watch": "webpack --mode none --watch",
     "open-in-browser": "vscode-test-web --open-devtools --quality insiders --extensionDevelopmentPath=. .",
     "publish:major": "vsce publish --allow-star-activation major && npm run publish:web && git push --tags",
@@ -120,7 +121,7 @@
       "properties": {
         "wakatime.apiKey": {
           "type": "string",
-          "description": "Defaults to value from ~/.wakatime.cfg, unless running in browser.",
+          "description": "Defaults to the API key in your WakaTime config file, unless running in browser.",
           "scope": "application"
         },
         "wakatime.apiUrl": {

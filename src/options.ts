@@ -22,7 +22,9 @@ export class Options {
 
   constructor(logger: Logger, resourcesFolder: string) {
     this.logger = logger;
-    this.configFile = path.join(Desktop.getHomeDirectory(), '.wakatime.cfg');
+    this.configFile = Desktop.getConfigFile();
+    // Keep CLI --config from expanding ~ or stripping quotes in literal directory names.
+    if (/^[~'"]/.test(this.configFile)) this.configFile = '.' + path.sep + this.configFile;
     this.internalConfigFile = path.join(resourcesFolder, 'wakatime-internal.cfg');
     this.logFile = path.join(resourcesFolder, 'wakatime.log');
   }
@@ -123,9 +125,7 @@ export class Options {
         contents.push(this.removeNulls(key + ' = ' + val));
       }
 
-      fs.writeFile(configFile as string, contents.join('\n'), (err) => {
-        if (err) throw err;
-      });
+      this.writeConfigFile(configFile, contents);
     });
   }
 
@@ -188,8 +188,19 @@ export class Options {
         }
       });
 
-      fs.writeFile(configFile as string, contents.join('\n'), (err) => {
+      this.writeConfigFile(configFile, contents);
+    });
+  }
+
+  private writeConfigFile(configFile: string, contents: string[]): void {
+    fs.writeFile(configFile, contents.join('\n'), { mode: 0o600 }, (err) => {
+      if (!err) return;
+      if (err.code !== 'ENOENT') throw err;
+      fs.mkdir(path.dirname(configFile), { recursive: true, mode: 0o700 }, (err) => {
         if (err) throw err;
+        fs.writeFile(configFile, contents.join('\n'), { mode: 0o600 }, (err) => {
+          if (err) throw err;
+        });
       });
     });
   }
@@ -246,7 +257,7 @@ export class Options {
       if (!Utils.apiKeyInvalid(apiKey)) {
         if (this.cache.api_key && this.cache.api_key !== apiKey) {
           vscode.window.showErrorMessage(
-            `WakaTime API Key conflict. Your ~/.wakatime.cfg key doesn't match your ${from} key.`,
+            `WakaTime API Key conflict. Your ${this.getConfigFile(false)} key doesn't match your ${from} key.`,
           );
         }
         this.cache.api_key = apiKey;
